@@ -1,0 +1,45 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::insertUserRoleConfig"(ip_userRole varchar(10),
+	                                                                        ip_email varchar(241),
+	                                                                        ip_access varchar(10),
+																			ip_companyCode  varchar(5000) ,
+																			ip_managementUnit varchar(5000) ,
+
+																			ip_costCenter NCLOB ,
+
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER )
+
+LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+--   READS SQL DATA 
+AS
+BEGIN
+
+declare lv_count integer;
+
+select count(*) into lv_count from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"  
+where user_emailid = :ip_email and 
+		company_code = :ip_companyCode;
+
+if lv_count = 0 then 
+	insert into "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"("USER_ROLE","USER_EMAILID","USER_ACCESS","COMPANY_CODE", "MANAGEMENT_UNIT","COST_CENTER")
+	values ( :ip_userRole,:ip_email, :ip_access, :ip_companyCode, :ip_managementUnit, :ip_costCenter  );
+	
+	EX_STATUS :='Record inserted successfully !';
+	EX_CODE := 1;
+else
+  UPDATE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"
+  set  "USER_ROLE" = :ip_userRole, 
+	  "USER_ACCESS" = :ip_access, 
+	  "MANAGEMENT_UNIT" = :ip_managementUnit,
+	  "COST_CENTER" = :ip_costCenter
+	 WHERE USER_EMAILID=:ip_email AND COMPANY_CODE=:ip_companyCode;
+			 
+    EX_STATUS :='Record Updated successfully  !';
+	EX_CODE := 1;
+end if;
+
+
+
+END

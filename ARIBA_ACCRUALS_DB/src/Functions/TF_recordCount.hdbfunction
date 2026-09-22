@@ -1,0 +1,13 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_recordCount"("IP_PO" NVARCHAR(10), 
+																		"IP_ITEMNO" NVARCHAR(5), 
+																		"IP_DEL" VARCHAR(1)) 
+RETURNS NUMBER_SPLIT_IDS BIGINT
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+	/*****************************
+		Write your function logic
+	****************************/
+	SELECT COUNT(DISTINCT "ZEKKN") INTO NUMBER_SPLIT_IDS FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" 
+												WHERE "EBELN" = :IP_PO AND  "EBELP" = :IP_ITEMNO;
+END;

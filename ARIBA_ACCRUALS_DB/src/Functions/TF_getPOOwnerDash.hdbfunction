@@ -1,0 +1,172 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPOOwnerDash"(IP_EMAIL varchar(255) default '*',IP_POOWNER VARCHAR(1) )
+       RETURNS 
+       table ( pocurrency varchar(3),
+       		   totPOAmount decimal(13), 
+       		   totAccAmount decimal(13),
+       		   totInvAmount decimal(13),
+       		   grpending decimal(13),
+       		   poCount integer,
+			   matPOCount integer,
+			   servPOCount integer,
+			   revPOCount integer, 
+       		   pendPOCount integer
+			   
+       		   --
+       )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN
+
+-- declare lv_count_serv integer default 0;
+-- declare lv_count_mat integer default 0;
+-- declare lv_revPOCount integer default 0;
+-- declare lv_pendPOCount integer default 0;
+-- declare lv_totpoamount decimal(13,2) default 0.00;
+-- declare lv_totaccamount decimal(13,2) default 0.00;
+-- declare lv_totInvamount decimal(13,2) default 0.00;
+-- declare lv_grvalue decimal(13,2) default 0.00;
+-- declare lv_wrkcompamt decimal(13,2) default 0.00;
+declare lv_email varchar(255);
+DECLARE lv_bukrs VARCHAR(5000);
+declare lv_delimiter varchar(1);
+    
+    lt_decimalFormat=SELECT 
+			"DECIMAL_FORMAT",
+			"EMAILADDR"
+			FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getUserDetails"
+			where EMAILADDR=:IP_EMAIL;
+
+	 lv_delimiter=:lt_decimalFormat.DECIMAL_FORMAT[1];
+ 
+	--set delimiter to 'X' when it is null
+	 if :lv_delimiter is null then 
+		lv_delimiter='X';
+	end if;
+
+-- Japan and Brazil ---
+ select config_value into lv_bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+			where config_name = 'Japan_Brazil';
+
+lt_values = select OUTPUT_SPLIT as company_code from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs);
+--- End ---
+
+if (:IP_EMAIL = '*') then 
+	lv_email = '%';
+else 
+	lv_email = :IP_EMAIL;
+end if;
+
+lt_output_mat = select pocurrency,ponumber,companycode,wrkstrtdate,status,grvalue,totwrkcompamt,invvalue,povalue,amountaccrued ,pstype from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"(placeholder."$$IP_PSTYPE$$"=>'0', placeholder."$$IP_EMAIL$$"=>:lv_email,placeholder."$$IP_POOWNER$$"=>:IP_POOWNER);
+lt_output_serv = select pocurrency,ponumber,companycode,wrkstrtdate,status,grvalue,totwrkcompamt,invvalue,povalue,amountaccrued ,pstype from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"(placeholder."$$IP_PSTYPE$$"=>'9', placeholder."$$IP_EMAIL$$"=>:lv_email,placeholder."$$IP_POOWNER$$"=>:IP_POOWNER);
+lt_output_thresh_serv=select pocurrency,ponumber,companycode,wrkstrtdate,status,grvalue,totwrkcompamt,invvalue,povalue,amountaccrued ,pstype from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO"(placeholder."$$IP_PSTYPE$$"=>'9', placeholder."$$IP_EMAIL$$"=>:lv_email,placeholder."$$IP_POOWNER$$"=>:IP_POOWNER);
+lt_output_thresh_mat = select pocurrency,ponumber,companycode,wrkstrtdate,status,grvalue,totwrkcompamt,invvalue,povalue,amountaccrued ,pstype from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO"(placeholder."$$IP_PSTYPE$$"=>'0', placeholder."$$IP_EMAIL$$"=>:lv_email,placeholder."$$IP_POOWNER$$"=>:IP_POOWNER);
+lt_union = select * from :lt_output_mat union all  select * from :lt_output_serv union all select * from :lt_output_thresh_mat
+union all select * from :lt_output_thresh_serv;
+
+lt_result= select pocurrency,ponumber,status,grvalue,companycode,wrkstrtdate,
+(case when totwrkcompamt > 0 then totwrkcompamt
+else 0
+end)as totwrkcompamt,invvalue,povalue,
+(case when amountaccrued > 0 then amountaccrued
+else 0
+end)as amountaccrued ,pstype from  :lt_union;
+
+lt_output_1 = select 
+pocurrency,
+ROUND(sum(povalue), 0, ROUND_UP) as totPOAmount, 
+ROUND(sum(amountaccrued), 0, ROUND_UP) as totAccAmount,
+ROUND(sum(invvalue), 0, ROUND_UP) as totInvAmount,
+ROUND(sum(grvalue + totwrkcompamt), 0, ROUND_UP) as grpending,--
+count(ponumber) as poCount,
+count( case when pstype = '0' then 1 else null end) matPOCount,
+count( case when  pstype = '9' then 1 else null end) servPOCount,
+count(case when pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values) then 1 else null end)
+ers_count,
+count( case when status = 'Reviewed' then 1 else null end) revPOCount,
+count( case when status = 'Pending' then 1 else null end) pendPOCount
+from :lt_result group by  pocurrency;
+
+lt_output = select 
+pocurrency,
+totPOAmount, 
+totAccAmount,
+totInvAmount,
+grpending,--
+poCount,
+(matPOCount - ers_count) as matPOCount,
+(servPOCount + ers_count) as servPOCount,
+revPOCount,
+pendPOCount
+from :lt_output_1 group by  pocurrency,totPOAmount, 
+totAccAmount,
+totInvAmount,
+grpending,
+poCount,
+revPOCount,
+pendPOCount,
+ers_count,
+matPOCount,
+servPOCount;
+-- lt_output = select g
+-- 					pocurrency,
+-- 					(case when :lv_delimiter =' ' then 
+-- 			    								case when totPOAmount=00.00 then  replace(replace(replace(TO_NVARCHAR(totPOAmount, '0'),',','x'),'.',','),'x','.')
+-- 			    								else replace(replace(replace(TO_NVARCHAR(totPOAmount, '0,0'),',','x'),'.',','),'x','.') 
+-- 			    								end 
+-- 			              	  when :lv_delimiter ='X' then 
+-- 			              							case when  totPOAmount=00.00 then TO_NVARCHAR(totPOAmount, '0')
+-- 			              							else TO_NVARCHAR(totPOAmount, '0,0')
+-- 			              							end 
+-- 			              	  when :lv_delimiter ='Y' then 
+-- 			              								case when totPOAmount=00.00 then  replace(replace(replace(TO_NVARCHAR(totPOAmount, '0'), ',' ,'x'), '.', ','), 'x', ' ')
+-- 			              							  else replace(replace(replace(TO_NVARCHAR(totPOAmount, '0,0'), ',' ,'x'), '.', ','), 'x', ' ')
+-- 			              							  end
+-- 						end) as totPOAmount,
+-- 						(case when :lv_delimiter =' ' then 
+-- 			    								case when totAccAmount=00.00 then  replace(replace(replace(TO_NVARCHAR(totAccAmount, '0'),',','x'),'.',','),'x','.')
+-- 			    								else replace(replace(replace(TO_NVARCHAR(totAccAmount, '0,0'),',','x'),'.',','),'x','.') 
+-- 			    								end 
+-- 			              	  when :lv_delimiter ='X' then 
+-- 			              							case when  totAccAmount=00.00 then TO_NVARCHAR(totAccAmount, '0')
+-- 			              							else TO_NVARCHAR(totAccAmount, '0,0')
+-- 			              							end 
+-- 			              	  when :lv_delimiter ='Y' then 
+-- 			              								case when totAccAmount=00.00 then  replace(replace(replace(TO_NVARCHAR(totAccAmount, '0'), ',' ,'x'), '.', ','), 'x', ' ')
+-- 			              							  else replace(replace(replace(TO_NVARCHAR(totAccAmount, '0,0'), ',' ,'x'), '.', ','), 'x', ' ')
+-- 			              							  end
+-- 						end) as totAccAmount,
+-- 						(case when :lv_delimiter =' ' then 
+-- 			    								case when totInvAmount=00.00 then  replace(replace(replace(TO_NVARCHAR(totInvAmount, '0'),',','x'),'.',','),'x','.')
+-- 			    								else replace(replace(replace(TO_NVARCHAR(totInvAmount, '0,0'),',','x'),'.',','),'x','.') 
+-- 			    								end 
+-- 			              	  when :lv_delimiter ='X' then 
+-- 			              							case when  totInvAmount=00.00 then TO_NVARCHAR(totInvAmount, '0')
+-- 			              							else TO_NVARCHAR(totInvAmount, '0,0')
+-- 			              							end 
+-- 			              	  when :lv_delimiter ='Y' then 
+-- 			              								case when totInvAmount=00.00 then  replace(replace(replace(TO_NVARCHAR(totInvAmount, '0'), ',' ,'x'), '.', ','), 'x', ' ')
+-- 			              							  else replace(replace(replace(TO_NVARCHAR(totInvAmount, '0,0'), ',' ,'x'), '.', ','), 'x', ' ')
+-- 			              							  end
+-- 						end) as totInvAmount,
+-- 						(case when :lv_delimiter =' ' then 
+-- 			    								case when grpending=00.00 then  replace(replace(replace(TO_NVARCHAR(grpending, '0'),',','x'),'.',','),'x','.')
+-- 			    								else replace(replace(replace(TO_NVARCHAR(grpending, '0,0'),',','x'),'.',','),'x','.') 
+-- 			    								end 
+-- 			              	  when :lv_delimiter ='X' then 
+-- 			              							case when  grpending=00.00 then TO_NVARCHAR(grpending, '0')
+-- 			              							else TO_NVARCHAR(grpending, '0,0')
+-- 			              							end 
+-- 			              	  when :lv_delimiter ='Y' then 
+-- 			              								case when grpending=00.00 then  replace(replace(replace(TO_NVARCHAR(grpending, '0'), ',' ,'x'), '.', ','), 'x', ' ')
+-- 			              							  else replace(replace(replace(TO_NVARCHAR(grpending, '0,0'), ',' ,'x'), '.', ','), 'x', ' ')
+-- 			              							  end
+-- 						end) as grpending,
+-- 						poCount,
+-- 						matPOCount,
+-- 						servPOCount,
+-- 						revPOCount,
+-- 						pendPOCount
+-- 						from :lt_output_1;
+return :lt_output;
+
+END;

@@ -1,0 +1,38 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getServPOStatus"( )
+       RETURNS table (PONUMBER  varchar(20),
+					  LINEITEM  varchar(5),
+					  --SEQUENCENO integer,
+					  STATUS varchar(20),
+					  EMAILID varchar(255),
+					  CHANGEDDATE date,
+					  CHANGEDTIME time,
+					  AMOUNT_ACCURED decimal(13,2),
+					  WORKCOMPLASTMONTHAMT decimal(13,2),
+					  WORKCOMPLASTMONTHCURR varchar(3),
+       				 CHANGED_ON timestamp
+              	 
+       )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+    /*****************************
+        Write your function logic
+    ****************************/
+    RETURN
+    
+    SELECT 
+        PONUMBER,
+		LINEITEM ,
+		--SEQUENCENO ,
+		STATUS ,
+		EMAILID ,
+		CHANGEDDATE ,
+		CHANGEDTIME ,
+		AMOUNT_ACCURED ,
+		WORKCOMPLASTMONTHAMT ,
+		WORKCOMPLASTMONTHCURR ,
+		CHANGED_ON
+	FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS";
+    --WHERE  PONUMBER = :IP_PONUMBER;	
+        
+END;

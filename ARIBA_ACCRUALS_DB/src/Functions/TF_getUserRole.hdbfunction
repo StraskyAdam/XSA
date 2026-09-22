@@ -1,0 +1,19 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getUserRole"( IN IP_EMAIL varchar(225) )
+       RETURNS table (
+       	FLAG  varchar(1)
+       )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+ DECLARE LT_OUTPUT TABLE(FLAG VARCHAR(1));
+ DECLARE lv_count INTEGER;
+ select count(*) into  lv_count  from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"
+ where user_emailid=:IP_EMAIL;
+ 
+ if :lv_count <> 0 then 
+ LT_OUTPUT.FLAG[1]='X';
+ ELSE 
+ LT_OUTPUT.FLAG[1]=' ';
+ end if;
+ RETURN :LT_OUTPUT;
+END;

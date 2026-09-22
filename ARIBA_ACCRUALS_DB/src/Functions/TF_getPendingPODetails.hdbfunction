@@ -1,0 +1,36 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPendingPODetails"(ip_managerId varchar(255))
+       RETURNS table (
+						managersId varchar (255),
+						poowner varchar (255),
+				        details varchar (255)
+       )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+    /*****************************
+        Write your function logic
+    ****************************/
+	declare lt_data_all table ( 
+								managersId varchar(255),
+								poowner varchar(255),
+								details varchar (255)
+	);
+	
+	lt_data= SELECT distinct "MANAGERSID" as managersId,
+					"POOWNER" as poowner,
+					("PONUMBER" || ':' || "POLINE") as response
+					FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TB_PENDING_PO_DETAILS" 
+					where "MANAGERSID" = :ip_managerId
+					GROUP BY "MANAGERSID","POOWNER","PONUMBER","POLINE" ;
+					
+		
+	lt_data_all=SELECT distinct managersId,
+				poowner,
+				STRING_AGG(response,':') as details
+		FROM :lt_data
+		where lcase(poowner) like '%@takeda.com%'
+		GROUP BY managersId,poowner
+		ORDER BY poowner ASC;
+		
+return :lt_data_all;
+END;

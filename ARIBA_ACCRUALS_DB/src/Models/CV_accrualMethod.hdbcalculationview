@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" xmlns:Variable="http://www.sap.com/ndb/BiModelVariable.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_accrualMethod" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="cv_accrualMethod"/>
+<localVariables>
+  <variable id="IV_POVALUE" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="DECIMAL" length="13">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+  <variable id="IV_POCURRENCY" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="VARCHAR" length="3">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+  <variable id="IV_WRKSTRTDATE" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="DATE" length="0">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+  <variable id="IV_WRKENDDATE" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="DATE" length="0">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+  <variable id="IV_ACCRUALMETHOD" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="VARCHAR" length="50">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+  <variable id="IV_TOTWRKCOMPAMT" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="VARCHAR" length="20">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+  <variable id="IV_TOTWRKCOMPPER" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="DECIMAL" length="13">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+  <variable id="IV_EDGEWTDAMT" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="DECIMAL" length="13">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+  <variable id="IV_PSTYP" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="NVARCHAR" length="13" mandatory="false">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+  <variable id="IV_COMPANY" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="NVARCHAR" length="13" mandatory="false">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+</localVariables>
+<variableMappings>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+    <targetVariable name="IV_POVALUE" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"/>
+    <localVariable>IV_POVALUE</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+    <targetVariable name="IV_POCURRENCY" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"/>
+    <localVariable>IV_POCURRENCY</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+    <targetVariable name="IV_WRKSTRTDATE" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"/>
+    <localVariable>IV_WRKSTRTDATE</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+    <targetVariable name="IV_WRKENDDATE" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"/>
+    <localVariable>IV_WRKENDDATE</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+    <targetVariable name="IV_ACCRUALMETHOD" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"/>
+    <localVariable>IV_ACCRUALMETHOD</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+    <targetVariable name="IV_TOTWRKCOMPAMT" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"/>
+    <localVariable>IV_TOTWRKCOMPAMT</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+    <targetVariable name="IV_TOTWRKCOMPPER" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"/>
+    <localVariable>IV_TOTWRKCOMPPER</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+    <targetVariable name="IV_EDGEWTDAMT" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"/>
+    <localVariable>IV_EDGEWTDAMT</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+    <targetVariable name="IV_PSTYP" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"/>
+    <localVariable>IV_PSTYP</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+    <targetVariable name="IV_COMPANY" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"/>
+    <localVariable>IV_COMPANY</localVariable>
+  </mapping>
+</variableMappings>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod" type="TABLE_FUNCTION">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod">
+  <attributes>
+    <attribute id="STRAIGHTLINEMTHD" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="STRAIGHTLINEMTHD"/>
+      <keyMapping columnObjectName="TF_accrualMethod" columnName="STRAIGHTLINEMTHD"/>
+    </attribute>
+    <attribute id="ACCRUALMETHOD" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ACCRUALMETHOD"/>
+      <keyMapping columnObjectName="TF_accrualMethod" columnName="ACCRUALMETHOD"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPAMT" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPAMT"/>
+      <keyMapping columnObjectName="TF_accrualMethod" columnName="TOTWRKCOMPAMT"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPAMT_COCDECURR" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPAMT_COCDECURR"/>
+      <keyMapping columnObjectName="TF_accrualMethod" columnName="TOTWRKCOMPAMT_COCDECURR"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPPER" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPPER"/>
+      <keyMapping columnObjectName="TF_accrualMethod" columnName="TOTWRKCOMPPER"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

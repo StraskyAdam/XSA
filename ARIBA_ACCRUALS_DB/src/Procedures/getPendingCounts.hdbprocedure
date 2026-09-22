@@ -1,0 +1,538 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::getPendingCounts"(  IN CODE integer)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   READS SQL DATA AS
+BEGIN
+
+declare lv_i integer;
+declare lv_count integer;
+declare lv_cutOffDate date;
+declare lv_email varchar(255);
+declare lv_companyCode varchar(5000);
+declare lt_data_all table ( emailId varchar(255),
+						company_code varchar(5000),	
+                matPendingPOCount integer,
+    			servPendingPOCount integer,
+    			numberOfPurchaseOrders integer,
+				response varchar(5000)
+);
+
+SELECT
+TO_DATE(concat(concat(to_varchar(year(current_date)),LPAD(to_varchar(month(current_date)), 2, '00')),'07'), 'YYYYMMDD') into lv_cutOffDate
+FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";
+
+
+
+-- tbs
+if :CODE=1 then
+
+lt_distinctEmails = select distinct user_emailid as emailid	,
+									company_code 
+					from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"
+						where  user_role='TBS' 
+						;
+
+select count(*) into lv_count from :lt_distinctEmails;
+
+
+
+for lv_i in 1..lv_count do 
+
+	lv_email = :lt_distinctEmails.emailid[lv_i];
+	lv_companyCode=:lt_distinctEmails.company_code[lv_i];
+	
+	-- if comapy code is * then pass 'All'
+	if :lv_companyCode ='*' then
+			lv_companyCode :='All';
+	end if;
+	
+	lt_mat_count =  SELECT 
+					lv_email as emailId,
+					lv_companyCode as company_code,
+					openPo.ebeln,
+					openPo.ebelp, 
+					'0' as pstype,
+					( case 
+						when edgepo.status is null then 'Pending'
+						when edgepo.status = 'Reviewed' then 
+							case
+								when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+								when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+							end  
+					end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1',
+                                                                                                '0',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('0'));
+                                                                                                                                        
+
+	
+		lt_serv_count =       SELECT 
+						lv_email as emailId,
+						lv_companyCode as company_code,
+						openPo.ebeln,
+						openPo.ebelp, 
+						'9' as pstype,
+						( case 
+							when edgepo.status is null then 'Pending'
+							when edgepo.status = 'Reviewed' then 
+								case
+									when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+									when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+								end 
+						end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1',
+                                                                                                '9',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where  (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('9'));
+    	
+    	lt_mat_thresh_count =  SELECT 
+					lv_email as emailId,
+					lv_companyCode as company_code,
+					openPo.ebeln,
+					openPo.ebelp, 
+					'0' as pstype,
+					( case 
+						when edgepo.status is null then 'Pending'
+						when edgepo.status = 'Reviewed' then 
+							case
+								when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+								when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+							end  
+					end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2',
+                                                                                                '0',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('0'));
+                                                                                                                                        
+
+	
+		lt_serv_thresh_count =       SELECT 
+						lv_email as emailId,
+						lv_companyCode as company_code,
+						openPo.ebeln,
+						openPo.ebelp, 
+						'9' as pstype,
+						( case 
+							when edgepo.status is null then 'Pending'
+							when edgepo.status = 'Reviewed' then 
+								case
+									when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+									when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+								end 
+						end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2',
+                                                                                                '9',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where  (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('9'));
+    	
+    	lt_open_pending_PO = select * from :lt_mat_count where status = 'Pending'
+    						 union all select * from :lt_serv_count where status = 'Pending'
+    						 union all select * from :lt_mat_thresh_count where status = 'Pending'
+    						 union all select * from :lt_serv_thresh_count where status = 'Pending';
+    	
+		lt_data_1 = select lv_email as emailId,
+						lv_companyCode	as company_code,
+		                count( case when pstype = '0' then 1 else null end) matPendingPOCount,
+						count( case when pstype = '9' then 1 else null end) servPendingPOCount,
+						(count( case when pstype = '0' then 1 else null end) + count( case when pstype = '9' then 1 else null end)) as numberOfPurchaseOrders
+						from :lt_open_pending_PO;
+		
+		lt_data = select emailId,
+						company_code,
+		                matPendingPOCount,
+						servPendingPOCount,
+						numberOfPurchaseOrders,
+						('Total Count : '|| numberOfPurchaseOrders || ', Service PO count : '|| servPendingPOCount || ', Material PO Count : '|| matPendingPOCount) AS response
+						from :lt_data_1
+						where lcase(emailId) like '%@takeda.com%';
+							    					     
+	 lt_data_all = select * from :lt_data_all union all select * from :lt_data;
+
+ end for;   
+ --finance
+else if :CODE=2 then
+
+lt_distinctEmails = select distinct user_emailid as emailid	,company_code
+					from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"
+						where  user_role='Finance'
+						;
+
+select count(*) into lv_count from :lt_distinctEmails;
+
+
+for lv_i in 1..lv_count do 
+	lv_email = :lt_distinctEmails.emailid[lv_i];
+	lv_companyCode=:lt_distinctEmails.company_code[lv_i];
+	
+		-- if comapy code is * then pass 'All'
+	if :lv_companyCode ='*' then
+			lv_companyCode :='All';
+	end if;
+	
+	lt_mat_count =  SELECT 
+					lv_email as emailId,
+					lv_companyCode as company_code,
+					openPo.ebeln,
+					openPo.ebelp, 
+					'0' as pstype,
+					( case 
+						when edgepo.status is null then 'Pending'
+						when edgepo.status = 'Reviewed' then 
+							case
+								when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+								when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+							end  
+					end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1',
+                                                                                                '0',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('0'));
+                                                                                                                                        
+
+	
+		lt_serv_count =       SELECT 
+						lv_email as emailId,
+						lv_companyCode as company_code,
+						openPo.ebeln,
+						openPo.ebelp, 
+						'9' as pstype,
+						( case 
+							when edgepo.status is null then 'Pending'
+							when edgepo.status = 'Reviewed' then 
+								case
+									when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+									when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+								end 
+						end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1',
+                                                                                                '9',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where  (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('9'));
+    		lt_mat_thresh_count =  SELECT 
+					lv_email as emailId,
+					lv_companyCode as company_code,
+					openPo.ebeln,
+					openPo.ebelp, 
+					'0' as pstype,
+					( case 
+						when edgepo.status is null then 'Pending'
+						when edgepo.status = 'Reviewed' then 
+							case
+								when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+								when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+							end  
+					end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2',
+                                                                                                '0',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('0'));
+                                                                                                                                        
+
+	
+		lt_serv_thresh_count =       SELECT 
+						lv_email as emailId,
+						lv_companyCode as company_code,
+						openPo.ebeln,
+						openPo.ebelp, 
+						'9' as pstype,
+						( case 
+							when edgepo.status is null then 'Pending'
+							when edgepo.status = 'Reviewed' then 
+								case
+									when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+									when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+								end 
+						end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2',
+                                                                                                '9',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where  (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('9'));
+    	
+    	lt_open_pending_PO = select * from :lt_mat_count where status = 'Pending'
+    						 union all select * from :lt_serv_count where status = 'Pending'
+    						  union all select * from :lt_mat_thresh_count where status = 'Pending'
+    						 union all select * from :lt_serv_thresh_count where status = 'Pending';
+    	
+		lt_data_1 = select lv_email as emailId,
+						 lv_companyCode as company_code,
+		                count( case when pstype = '0' then 1 else null end) matPendingPOCount,
+						count( case when pstype = '9' then 1 else null end) servPendingPOCount,
+						(count( case when pstype = '0' then 1 else null end) + count( case when pstype = '9' then 1 else null end)) as numberOfPurchaseOrders
+						from :lt_open_pending_PO;
+		
+		lt_data = select emailId,
+						 company_code,
+		                matPendingPOCount,
+						servPendingPOCount,
+						numberOfPurchaseOrders,
+						('Total Count : '|| numberOfPurchaseOrders || ', Service PO count : '|| servPendingPOCount || ', Material PO Count : '|| matPendingPOCount) AS response
+						from :lt_data_1
+						where lcase(emailId) like '%@takeda.com%';
+						
+	 lt_data_all = select * from :lt_data_all union all select * from :lt_data;
+	 
+	END FOR;
+else if :CODE=3 then
+
+lt_distinctEmails = select distinct user_emailid as emailid	,company_code
+					from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"
+						where  user_role='Admin';
+						
+
+select count(*) into lv_count from :lt_distinctEmails;
+
+for lv_i in 1..lv_count do 
+	lv_email = :lt_distinctEmails.emailid[lv_i];
+	lv_companyCode= :lt_distinctEmails.company_code[lv_i];
+	
+		-- if comapy code is * then pass 'All'
+	if :lv_companyCode ='*' then
+			lv_companyCode :='All';
+	end if;
+	
+	lt_mat_count =  SELECT 
+					lv_email as emailId,
+					lv_companyCode as company_code,
+					openPo.ebeln,
+					openPo.ebelp, 
+					'0' as pstype,
+					( case 
+						when edgepo.status is null then 'Pending'
+						when edgepo.status = 'Reviewed' then 
+							case
+								when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+								when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+							end  
+					end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1',
+                                                                                                '0',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('0'));
+                                                                                                                                        
+
+	
+		lt_serv_count =       SELECT 
+						lv_email as emailId,
+						lv_companyCode as company_code,
+						openPo.ebeln,
+						openPo.ebelp, 
+						'9' as pstype,
+						( case 
+							when edgepo.status is null then 'Pending'
+							when edgepo.status = 'Reviewed' then 
+								case
+									when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+									when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+								end 
+						end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1',
+                                                                                                '9',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        			
+        				where  (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('9'));
+    		lt_mat_thresh_count =  SELECT 
+					lv_email as emailId,
+					lv_companyCode as company_code,
+					openPo.ebeln,
+					openPo.ebelp, 
+					'0' as pstype,
+					( case 
+						when edgepo.status is null then 'Pending'
+						when edgepo.status = 'Reviewed' then 
+							case
+								when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+								when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+							end  
+					end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2',
+                                                                                                '0',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('0'));
+                                                                                                                                        
+
+	
+		lt_serv_thresh_count =       SELECT 
+						lv_email as emailId,
+						lv_companyCode as company_code,
+						openPo.ebeln,
+						openPo.ebelp, 
+						'9' as pstype,
+						( case 
+							when edgepo.status is null then 'Pending'
+							when edgepo.status = 'Reviewed' then 
+								case
+									when edgepo.changeddate < :lv_cutoffdate then 'Pending'
+									when edgepo.changeddate >= :lv_cutoffdate then 'Reviewed'
+								end 
+						end ) as status
+						FROM 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2',
+                                                                                                '9',
+                                                                                                 :lv_email,
+                                                                                                '') as openPo
+        				left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+						on edgepo.ponumber = openPo.ebeln 
+						and edgepo.lineitem = openPo.ebelp
+        				where  (openPo.ebeln, openPo.ebelp)  not in ( select ponumber, itemno from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('9'));
+    	
+    	lt_open_pending_PO = select * from :lt_mat_count where status = 'Pending'
+    						 union all select * from :lt_serv_count where status = 'Pending'
+    						  union all select * from :lt_mat_thresh_count where status = 'Pending'
+    						 union all select * from :lt_serv_thresh_count where status = 'Pending';
+    	
+		lt_data_1 = select lv_email as emailId,
+						lv_companyCode as company_code,
+		                count( case when pstype = '0' then 1 else null end) matPendingPOCount,
+						count( case when pstype = '9' then 1 else null end) servPendingPOCount,
+						(count( case when pstype = '0' then 1 else null end) + count( case when pstype = '9' then 1 else null end)) as numberOfPurchaseOrders
+						from :lt_open_pending_PO;
+		
+		lt_data = select emailId,
+						company_code,
+		                matPendingPOCount,
+						servPendingPOCount,
+						numberOfPurchaseOrders,
+						('Total Count : '|| numberOfPurchaseOrders || ', Service PO count : '|| servPendingPOCount || ', Material PO Count : '|| matPendingPOCount) AS response
+						from :lt_data_1
+						where lcase(emailId) like '%@takeda.com%';
+						
+	 lt_data_all = select * from :lt_data_all union all select * from :lt_data;
+end for;
+-- -- to get po owner ids
+else if :CODE=4 then 
+
+	lt_data= SELECT distinct poowner_email as emailId, 
+				'' as company_code,
+		count( case when pstype = '0' then 1 else null end) matPendingPOCount,
+		count( case when pstype = '9' then 1 else null end) servPendingPOCount,
+		(count( case when pstype = '0' then 1 else null end) +	count( case when pstype = '9' then 1 else null end)) as numberOfPurchaseOrders,
+		(ponumber||':'||itemno) as response
+		FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"
+		(placeholder."$$IP_PSTYPE$$"=>'*', 
+		placeholder."$$IP_EMAIL$$"=>'*', 
+		placeholder."$$IP_POOWNER$$"=>'X') where status = 'Pending' and poowner_email <>' '
+		group by poowner_email,ponumber,itemno
+		union 
+		SELECT distinct poowner_email as emailId, 
+				'' as company_code,
+		count( case when pstype = '0' then 1 else null end) matPendingPOCount,
+		count( case when pstype = '9' then 1 else null end) servPendingPOCount,
+		(count( case when pstype = '0' then 1 else null end) +	count( case when pstype = '9' then 1 else null end)) as numberOfPurchaseOrders,
+		(ponumber||':'||itemno) as response
+		FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO"
+		(placeholder."$$IP_PSTYPE$$"=>'*', 
+		placeholder."$$IP_EMAIL$$"=>'*', 
+		placeholder."$$IP_POOWNER$$"=>'X') where status = 'Pending' and poowner_email <>' '
+		group by poowner_email,ponumber,itemno;
+		
+	lt_data_all=SELECT distinct  emailId, 
+				'' as company_code,
+			sum( matPendingPOCount) as matPendingPOCount,
+		sum(servPendingPOCount) as servPendingPOCount,
+		sum(matPendingPOCount) + sum (servPendingPOCount) as numberOfPurchaseOrders,
+		STRING_AGG(response,',') AS response
+		FROM :lt_data
+		where lcase(emailId) like '%@takeda.com%'
+		group by emailId;
+	-- to get po preparer
+else if :CODE=5 then 
+
+lt_data=	SELECT distinct po_preparer as emailId, 
+	'' as company_code,
+	count( case when pstype = '0' then 1 else null end) matPendingPOCount,
+	count( case when pstype = '9' then 1 else null end) servPendingPOCount,
+	(count( case when pstype = '0' then 1 else null end) +	count( case when pstype = '9' then 1 else null end)) as numberOfPurchaseOrders,
+	(ponumber||':'||itemno) as response
+	FROM  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"
+	(placeholder."$$IP_PSTYPE$$"=>'*', 
+	placeholder."$$IP_EMAIL$$"=>'*', 
+	placeholder."$$IP_POOWNER$$"=>'X') where status = 'Pending' and po_preparer <>' ' and po_preparer <> poowner_email
+	group by po_preparer,ponumber,itemno
+	union
+	SELECT distinct po_preparer as emailId, 
+	'' as company_code,
+	count( case when pstype = '0' then 1 else null end) matPendingPOCount,
+	count( case when pstype = '9' then 1 else null end) servPendingPOCount,
+	(count( case when pstype = '0' then 1 else null end) +	count( case when pstype = '9' then 1 else null end)) as numberOfPurchaseOrders,
+	(ponumber||':'||itemno) as response
+	FROM  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO"
+	(placeholder."$$IP_PSTYPE$$"=>'*', 
+	placeholder."$$IP_EMAIL$$"=>'*', 
+	placeholder."$$IP_POOWNER$$"=>'X') where status = 'Pending' and po_preparer <>' ' and po_preparer <> poowner_email
+	group by po_preparer,ponumber,itemno;
+	
+		lt_data_all=SELECT distinct  emailId, 
+				'' as company_code,
+			sum( matPendingPOCount) as matPendingPOCount,
+		sum(servPendingPOCount) as servPendingPOCount,
+		sum(matPendingPOCount) + sum (servPendingPOCount) as numberOfPurchaseOrders,
+		STRING_AGG(response,',') AS response
+		FROM :lt_data
+		where lcase(emailId) like '%@takeda.com%'
+		group by emailId;
+		
+end if;
+end if;
+end if;
+end if;
+end if;
+	select * from :lt_data_all order by emailId;
+
+END

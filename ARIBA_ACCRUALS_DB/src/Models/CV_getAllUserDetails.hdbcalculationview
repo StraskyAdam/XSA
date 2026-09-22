@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getAllUserDetails" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="Get User Details"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR01.USR01">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR01.USR01</resourceUri>
+  </DataSource>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR21.USR21">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR21.USR21</resourceUri>
+  </DataSource>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ADR6.ADR6">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ADR6.ADR6</resourceUri>
+  </DataSource>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ADRP.ADRP">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ADRP.ADRP</resourceUri>
+  </DataSource>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR02.USR02">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR02.USR02</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews>
+  <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+    <viewAttributes>
+      <viewAttribute id="BNAME"/>
+      <viewAttribute id="DCPFM"/>
+      <viewAttribute id="DATFM"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR01.USR01"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:ProjectionView" id="Projection_2" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="BNAME"/>
+      <viewAttribute id="PERSNUMBER"/>
+      <viewAttribute id="ADDRNUMBER"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR21.USR21"/>
+    <filter>SUBSTR(&quot;BNAME&quot;, 1, 1) NOT IN('0','1','2','3','4','5','6','7','8','9')</filter>
+  </calculationView>
+  <calculationView xsi:type="Calculation:ProjectionView" id="Projection_3" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="ADDRNUMBER"/>
+      <viewAttribute id="PERSNUMBER"/>
+      <viewAttribute id="SMTP_ADDR"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ADR6.ADR6"/>
+    <filter> </filter>
+  </calculationView>
+  <calculationView xsi:type="Calculation:ProjectionView" id="Projection_4">
+    <viewAttributes>
+      <viewAttribute id="PERSNUMBER"/>
+      <viewAttribute id="NAME_TEXT"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ADRP.ADRP"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:ProjectionView" id="Projection_5" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="BNAME"/>
+      <viewAttribute id="GLTGV"/>
+      <viewAttribute id="GLTGB"/>
+      <viewAttribute id="USTYP"/>
+      <viewAttribute id="CLASS"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR02.USR02"/>
+    <filter>&quot;USTYP&quot;='A' and &quot;CLASS&quot; NOT LIKE '%RPA%' and (&quot;GLTGV&quot; &lt;CURRENT_DATE and &quot;GLTGB&quot;&gt;=CURRENT_DATE)</filter>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_1_1" cardinality="C1_1" joinType="inner" multiJoinNode="Join_1" multiJoinCentralTable="Projection_1" multiJoinOrder="Outside In">
+    <viewAttributes>
+      <viewAttribute id="NAME_TEXT"/>
+      <viewAttribute id="ADDRNUMBER"/>
+      <viewAttribute id="PERSNUMBER"/>
+      <viewAttribute id="BNAME"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="Projection_2">
+      <mapping xsi:type="Calculation:AttributeMapping" target="ADDRNUMBER" source="ADDRNUMBER"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="PERSNUMBER" source="PERSNUMBER"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="BNAME" source="BNAME"/>
+    </input>
+    <input node="Projection_4">
+      <mapping xsi:type="Calculation:AttributeMapping" target="NAME_TEXT" source="NAME_TEXT"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="PERSNUMBER" source="PERSNUMBER"/>
+    </input>
+    <joinAttribute name="PERSNUMBER"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_1_2" cardinality="C1_1" joinType="leftOuter" multiJoinNode="Join_1" multiJoinCentralTable="Projection_1" multiJoinOrder="Outside In">
+    <viewAttributes>
+      <viewAttribute id="PERSNUMBER"/>
+      <viewAttribute id="ADDRNUMBER"/>
+      <viewAttribute id="NAME_TEXT"/>
+      <viewAttribute id="SMTP_ADDR"/>
+      <viewAttribute id="BNAME"/>
+      <viewAttribute hidden="true" id="JOIN$ADDRNUMBER$ADDRNUMBER"/>
+      <viewAttribute hidden="true" id="JOIN$PERSNUMBER$PERSNUMBER"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="Join_1_1">
+      <mapping xsi:type="Calculation:AttributeMapping" target="NAME_TEXT" source="NAME_TEXT"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="BNAME" source="BNAME"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$ADDRNUMBER$ADDRNUMBER" source="ADDRNUMBER"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$PERSNUMBER$PERSNUMBER" source="PERSNUMBER"/>
+    </input>
+    <input node="Projection_3">
+      <mapping xsi:type="Calculation:AttributeMapping" target="SMTP_ADDR" source="SMTP_ADDR"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="PERSNUMBER" source="PERSNUMBER"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="ADDRNUMBER" source="ADDRNUMBER"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$ADDRNUMBER$ADDRNUMBER" source="ADDRNUMBER"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$PERSNUMBER$PERSNUMBER" source="PERSNUMBER"/>
+    </input>
+    <joinAttribute name="JOIN$ADDRNUMBER$ADDRNUMBER"/>
+    <joinAttribute name="JOIN$PERSNUMBER$PERSNUMBER"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_1_3" cardinality="CN_N" joinType="inner" multiJoinNode="Join_1" multiJoinCentralTable="Projection_1" multiJoinOrder="Outside In">
+    <viewAttributes>
+      <viewAttribute id="BNAME"/>
+      <viewAttribute id="DCPFM"/>
+      <viewAttribute id="DATFM"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="Projection_1">
+      <mapping xsi:type="Calculation:AttributeMapping" target="BNAME" source="BNAME"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="DCPFM" source="DCPFM"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="DATFM" source="DATFM"/>
+    </input>
+    <input node="Projection_5">
+      <mapping xsi:type="Calculation:AttributeMapping" target="BNAME" source="BNAME"/>
+    </input>
+    <joinAttribute name="BNAME"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_1_4" cardinality="C1_1" joinType="leftOuter" multiJoinNode="Join_1" multiJoinCentralTable="Projection_1" multiJoinOrder="Outside In">
+    <viewAttributes>
+      <viewAttribute id="PERSNUMBER"/>
+      <viewAttribute id="ADDRNUMBER"/>
+      <viewAttribute id="NAME_TEXT"/>
+      <viewAttribute id="BNAME"/>
+      <viewAttribute id="SMTP_ADDR"/>
+      <viewAttribute id="DCPFM"/>
+      <viewAttribute id="DATFM"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="Join_1_3">
+      <mapping xsi:type="Calculation:AttributeMapping" target="BNAME" source="BNAME"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="DCPFM" source="DCPFM"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="DATFM" source="DATFM"/>
+    </input>
+    <input node="Join_1_2">
+      <mapping xsi:type="Calculation:AttributeMapping" target="PERSNUMBER" source="PERSNUMBER"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="ADDRNUMBER" source="ADDRNUMBER"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="NAME_TEXT" source="NAME_TEXT"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="SMTP_ADDR" source="SMTP_ADDR"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="BNAME" source="BNAME"/>
+    </input>
+    <joinAttribute name="BNAME"/>
+  </calculationView>
+</calculationViews>
+<logicalModel id="Join_1_4" filterExpressionLanguage="SQL">
+  <attributes>
+    <attribute id="USERNAME" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="BNAME"/>
+      <keyMapping columnObjectName="Join_1_4" columnName="BNAME"/>
+    </attribute>
+    <attribute id="DECIMAL_FORMAT" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DCPFM"/>
+      <keyMapping columnObjectName="Join_1_4" columnName="DCPFM"/>
+    </attribute>
+    <attribute id="DATFM" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DATFM"/>
+      <keyMapping columnObjectName="Join_1_4" columnName="DATFM"/>
+    </attribute>
+    <attribute id="EMAILADDR_SAP" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SMTP_ADDR"/>
+      <keyMapping columnObjectName="Join_1_4" columnName="SMTP_ADDR"/>
+    </attribute>
+  
+    <attribute id="FULL_NAME" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="NAME_TEXT"/>
+  
+      <keyMapping columnObjectName="Join_1_4" columnName="NAME_TEXT"/>
+  
+    </attribute>
+  </attributes>
+  <calculatedAttributes>
+    <calculatedAttribute id="EMAILADDR" order="6" semanticType="empty" displayAttribute="false" attributeHierarchyActive="false">
+      <keyCalculation datatype="VARCHAR" expressionLanguage="SQL" length="241">
+        <formula>ABAP_LOWER(&quot;EMAILADDR_SAP&quot;)
+</formula>
+      </keyCalculation>
+    </calculatedAttribute>
+  </calculatedAttributes>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+
+  <filter>&quot;EMAILADDR&quot;=ABAP_LOWER(&quot;EMAILADDR_SAP&quot;)</filter>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="576.6157254646171" y="112"/>
+    
+      <rectangleSize width="160"/>
+    </shape>
+  
+    <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="302.00000000000017" y="461.9999976158142"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Projection_2" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="512.0000000000001" y="461.9999976158142"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Projection_3" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="722.0000000000001" y="461.9999976158142"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Projection_4" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="92" y="461.9999976158142"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+  
+    <shape expanded="true" modelObjectName="Join_1" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="512.0000000000001" y="256.9999988079071"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape modelObjectName="Projection_1" modelObjectNameSpace="Join_1" modelObjectType="JoinNodeInput" multiJoinViewNodeName="Join_1">
+      <upperLeftCorner x="20" y="30"/>
+      <rectangleSize width="136"/>
+    </shape>
+    <shape modelObjectName="Projection_3" modelObjectNameSpace="Join_1" modelObjectType="JoinNodeInput" multiJoinViewNodeName="Join_1">
+      <upperLeftCorner x="620" y="30"/>
+      <rectangleSize width="164"/>
+    </shape>
+    <shape modelObjectName="Projection_2" modelObjectNameSpace="Join_1" modelObjectType="JoinNodeInput" multiJoinViewNodeName="Join_1">
+      <upperLeftCorner x="320" y="30"/>
+      <rectangleSize width="164"/>
+    </shape>
+    <shape modelObjectName="Projection_4" modelObjectNameSpace="Join_1" modelObjectType="JoinNodeInput" multiJoinViewNodeName="Join_1">
+      <upperLeftCorner x="693" y="243"/>
+      <rectangleSize width="163"/>
+    </shape>
+  
+    <shape modelObjectName="Projection_5" modelObjectNameSpace="Join_1" modelObjectType="JoinNodeInput" multiJoinViewNodeName="Join_1">
+      <upperLeftCorner x="993" y="30"/>
+      <rectangleSize width="250"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Projection_5" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="932.0000000000001" y="461.9999976158142"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

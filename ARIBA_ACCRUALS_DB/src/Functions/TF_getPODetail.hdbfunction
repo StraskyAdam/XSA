@@ -1,0 +1,572 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPODetail"( ip_po table ( ebeln nvarchar(10), 
+																				 ebelp nvarchar(5),
+																		         poowner_email varchar(255)),
+																	IP_THRESHOLD varchar(1) default '1'
+																	)
+       RETURNS table (
+       	           poowner_email varchar(255),
+       			   companyCode nvarchar(4),
+       			   purchasingUnit varchar(255),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(10),
+       			   costcenter varchar(10),
+       			   costcenterDesc nvarchar(5000),
+       			   manageUnit varchar(35),
+       			   PONUMBER nvarchar(10),
+       			  -- docNumber varchar(10),
+	               itemno nvarchar(5),
+	               poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,2),
+       			   pocurrency varchar(3),
+       			   invoice_currency varchar(3),
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   totWrkCompAmt decimal(13,2),
+       			   totWrkCompAmt_cocdecurr decimal(13,2),
+       			   totWrkCompPer decimal(13,2),--
+              	   internalOrder varchar(12),
+              	   assetId varchar(12),
+              	   profitCenter varchar(10),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(1),
+              	   markasreviewed varchar(1),
+              	   povalue_coco decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	   changeddate date,
+				   changedtime time,
+				   reviwed_by varchar(225),
+				   bbp_acc_no varchar(2),
+			       documentdate varchar(8),
+			       purchasingorganization varchar(4),
+			       orderquantity decimal(13,2),
+			       exchangerate decimal(9,6),
+			       po_preparer varchar(241),
+			       changed_on timestamp,
+			      --mvp2
+			       povalue_usd decimal(13,2),
+			       po_closure varchar(5),
+			       distPercentage decimal(3,1),
+			       quantity decimal(13,3),
+			       ZACTIVITYNBR nvarchar(200)
+       )
+	LANGUAGE SQLSCRIPT
+	--SQL SECURITY INVOKER
+	AS
+BEGIN
+
+declare lv_edgewtdamt decimal(13,2);
+declare lv_edgewtdper decimal(13,2);
+declare lv_edgewtdamt_cocdecurr  decimal(13,2);
+declare lv_povalue decimal(13,2);
+declare lv_povalue_cocdecurr decimal(13,2);
+declare lv_wrkstartdate date;
+declare lv_wrkenddate date;
+declare lv_count integer;
+declare lv_i integer;
+declare lv_po_currency varchar(3) ;
+declare lv_po_codecurrency varchar(3); 
+declare lv_accrualMethod varchar(50); 
+-- declare lv_totWrkCompAmt decimal(13,2);--
+ declare LV_TOTWRKCOMPPER decimal(13,2);--
+declare lv_totWrkCompAmt varchar(20);--
+declare lv_totWrkCompAmt_cocdecurr varchar(20);--
+declare lv_config_value integer;
+DECLARE lv_bukrs VARCHAR(5000);
+
+declare lt_opn_po table (
+				   poowner_email varchar(255),
+       			   companyCode nvarchar(4),
+       			   purchasingUnit varchar(255),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(10),
+       			   costcenter varchar(10),
+       			   costcenterDesc varchar(5000),
+       			   manageUnit varchar(35),
+       			   PONUMBER nvarchar(10),
+	               itemno nvarchar(5),
+	               poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,2),
+       			   pocurrency varchar(3),
+       			   invoice_currency varchar(3),
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   --totWrkCompAmt decimal(13,2),--,
+       			   --totWrkCompAmt_cocdecurr decimal(13,2),--,
+       			   totWrkCompAmt varchar(20),--,
+       			   totWrkCompAmt_cocdecurr  varchar(20),--,
+       			   totWrkCompPer varchar(50),--,
+              	   internalOrder varchar(12),
+              	   assetId varchar(12),
+              	   profitCenter varchar(10),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(1),
+              	   markasreviewed varchar(1),
+              	   povalue_coco  decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	   changeddate date,
+				   changedtime time,
+				   reviwed_by varchar(225),
+				   bbp_acc_no varchar(2),
+		           documentdate varchar(8),
+				   purchasingorganization varchar(4),
+				   orderquantity decimal(13,2),
+				   exchangerate decimal(9,6),
+				   po_preparer varchar(241),
+				   changed_on timestamp,
+		    		--mvp2
+		    	   povalue_usd decimal(13,2),
+			       po_closure varchar(5),
+			       distPercentage decimal(3,1),
+			        quantity decimal(13,3),
+			        ZACTIVITYNBR nvarchar(200)
+   );
+
+
+--- Japan and Brazil ---
+ select config_value into lv_bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+			where config_name = 'Japan_Brazil';
+
+lt_values = select OUTPUT_SPLIT as company_code from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs);
+---- End ----
+
+-- Get PO Details 
+lt_opn_po = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPODetailQuery"(:ip_po, :IP_THRESHOLD );
+
+lt_opn_po = select poowner_email,
+       			   companyCode,
+       			   purchasingUnit,
+       			   region,
+       			   cocdecurr,
+       			   glaccount ,
+       			   costcenter ,
+       			   costcenterDesc ,
+       			   manageUnit,
+       			   PONUMBER ,
+	               itemno ,
+	               poCreatedAt,
+				   supplierID,
+				   suppliername,
+       			   polinedesc,
+       			   pstype,
+       			   povalue,
+       			   pocurrency,
+       			   invoice_currency,
+       			   wrkStrtdate,
+       			   wrkEnddate,
+       			   "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"(
+       			   																povalue,
+																				pocurrency,
+																				-- pstype,
+																				case 
+																					when wrkStrtdate <> '00000000' and pstype = '0'
+																						and companycode in
+																						(select company_code from :lt_values) then
+																						'9'
+																						else
+																						pstype end,
+																				wrkStrtdate,
+																				wrkEnddate,
+																				accrualMethod,
+																				totWrkCompAmt,
+																				totWrkCompPer,
+       			   																 edgeWTDAmt,
+       			   																exchangerate
+       			   ).TOTWRKCOMPAMT_OUT AS TOTWRKCOMPAMT,
+       			   
+       			   "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"(povalue,
+																				pocurrency,
+																				-- pstype,
+																				case 
+																					when wrkStrtdate <> '00000000' and pstype = '0'
+																						and companycode in
+																						(select company_code from :lt_values) then
+																						'9'
+																						else
+																						pstype end,
+																				wrkStrtdate,
+																				wrkEnddate,
+																				accrualMethod,
+																				totWrkCompAmt,
+																				totWrkCompPer,
+																				edgeWTDAmt,
+       			   																exchangerate
+       			   ).totWrkCompAmt_usd_out as totWrkCompAmt_cocdecurr,
+				   "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"(povalue,
+																				pocurrency,
+																				-- pstype,
+																				case 
+																					when wrkStrtdate <> '00000000' and pstype = '0'
+																						and companycode in
+																						(select company_code from :lt_values) then
+																						'9'
+																						else
+																						pstype end,
+																				wrkStrtdate,
+																				wrkEnddate,
+																				accrualMethod,
+																				totWrkCompAmt,
+																				totWrkCompPer,
+																				edgeWTDAmt,
+				   																exchangerate
+				   ).totWrkCompPer_out as totWrkCompPer,
+				   internalOrder,
+              	   assetId,
+              	   profitCenter,
+              	   epnumber,
+              	   status,
+              	   lastMonthwrkcomp,
+              	   "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"(povalue,
+																				pocurrency,
+																					-- pstype,
+																				case 
+																					when wrkStrtdate <> '00000000' and pstype = '0'
+																						and companycode in
+																						(select company_code from :lt_values) then
+																						'9'
+																						else
+																						pstype end,
+																				wrkStrtdate,
+																				wrkEnddate,
+																				accrualMethod,
+																				totWrkCompAmt,
+																				totWrkCompPer,
+																				edgeWTDAmt,
+              	   																exchangerate
+              	   ).straightlinemthd as straightlinemthd,
+              	   markasreviewed,
+              	   povalue_coco,
+				    "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"(povalue,
+																				pocurrency,
+																				-- pstype,
+																				case 
+																					when wrkStrtdate <> '00000000' and pstype = '0'
+																						and companycode in
+																						(select company_code from :lt_values) then
+																						'9'
+																						else
+																						pstype end,
+																				wrkStrtdate,
+																				wrkEnddate,
+																				accrualMethod,
+																				totWrkCompAmt,
+																				totWrkCompPer,
+																				edgeWTDAmt,exchangerate).accrualMethod_out as accrualMethod,
+              	   edgewtdamt,
+              	   changeddate,
+				   changedtime,
+				   reviwed_by,
+				   bbp_acc_no,
+		           documentdate,
+		           purchasingorganization,
+		           orderquantity,
+		           exchangerate,
+		           po_preparer,
+		           changed_on,
+		       --mvp2
+		           povalue_usd ,
+		           po_closure,
+		           distPercentage,
+		            quantity,
+		            ZACTIVITYNBR
+		           from :lt_opn_po;
+
+lt_config_value=select CONFIG_VALUE from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+where CONFIG_NAME='ACCRUAL_REVIEW_DATE';
+
+lv_config_value=:lt_config_value.CONFIG_VALUE[1];
+
+
+
+lt_final_po = select 
+				   poowner_email ,
+       			   companyCode ,
+       			   purchasingUnit ,
+       			   region ,
+       			   cocdecurr ,
+       			   glaccount ,
+       			   costcenter ,
+       			   costcenterDesc ,
+       			   manageUnit ,
+       			   PONUMBER ,
+       			  -- docNumber varchar(10),
+	               itemno,
+	               poCreatedAt ,
+				   supplierID ,
+				   suppliername ,
+       			   polinedesc ,
+       			   pstype ,
+       			   povalue ,
+       			   pocurrency ,
+       			   invoice_currency,
+       			   wrkStrtdate ,
+       			   wrkEnddate ,
+       			   case 
+	       				when ltrim(totWrkCompAmt) = '' then '0.00'
+	       				else to_decimal(totWrkCompAmt,13,2) 
+       				end as totWrkCompAmt,
+       			   case 
+       			        when ltrim(totWrkCompAmt_cocdecurr) = '' then '0.00'
+	       				else to_decimal(totWrkCompAmt_cocdecurr,13,2) 
+       			   end as totWrkCompAmt_cocdecurr,
+       			   
+       			   totWrkCompPer,
+              	   internalOrder ,
+              	   assetId ,
+              	   profitCenter ,
+              	   epnumber ,
+              	   (case
+              	   when po_closure = 'true' then 'Reviewed'
+        			when status='Reviewed' then
+								 case 
+								 	when year(changeddate) < year(current_date) then 
+								 												case 
+								 													when extract( day from current_date) between '1' and '6' 
+																										then case when months_between(changeddate,current_date) = 0 then 'Reviewed'
+																											else 'Pending' end 
+																					when extract( day from  current_date) >= 7  then 'Pending'
+																				end	
+									when year(changeddate) = year(current_date)  then
+                                            										case 
+                                            											when month(changeddate) < month(current_date)  then  
+                                            																						 case 
+                                            																							when month(changeddate)-month(current_date) = -1 then 
+																																			case 
+																																				when extract( day from current_date) between '1' and '6' 
+																																				then 
+																																					case when months_between(changeddate,current_date) = 0 then 'Reviewed'
+																																					else 'Pending'
+																																					end 
+																																				when extract( day from  current_date) >= 7  then 'Pending'
+																																			end	
+																																		else 'Pending'
+																																		end 
+																																		
+	
+                                            											when month(changeddate) = month(current_date) then 
+                                                																					case 
+                                                																						when extract(day from changeddate) =:lv_config_value and  extract(day from current_date) = :lv_config_value then 'Reviewed'
+                                                																						when  extract(day from changeddate) < :lv_config_value  and  extract(day from current_date) >= :lv_config_value then 'Pending'
+                                                																						when  extract(day from changeddate) < :lv_config_value  and  extract(day from current_date) < :lv_config_value then 'Reviewed'
+                                                																						when extract(day from changeddate) > :lv_config_value  and  extract(day from current_date) > :lv_config_value then 'Reviewed'
+                                                																						when extract(day from changeddate) = :lv_config_value  and  extract(day from current_date) > :lv_config_value then 'Reviewed'
+                                                																					
+                                                																					end
+                                            											end
+                                            
+
+                                    end                                           
+
+            	when status='Pending' then status
+                  end )as status,
+              	   lastMonthwrkcomp ,
+              	   straightlinemthd ,
+              	   /* Mark As Reviewed */
+				  (case
+        			when status='Reviewed' then
+								 case 
+								 	when year(changeddate) < year(current_date) then 
+								 													case 
+								 													when extract( day from current_date) between '1' and '6' 
+																										then case when months_between(changeddate,current_date) = 0 then markasreviewed
+																											else NULL end 
+																					when extract( day from  current_date) >= 7  then NULL
+																				end	
+								 	
+									when year(changeddate) = year(current_date)  then
+                                            										case 
+                                            											when month(changeddate) < month(current_date)  then 
+                                            																								case
+                                            																								when month(changeddate)-month(current_date) = -1 then 
+																																			case 
+																																				when extract( day from current_date) between '1' and '6' 
+																																				then 
+																																					case when months_between(changeddate,current_date) = 0 then markasreviewed
+																																					else NULL
+																																					end 
+																																				when extract( day from  current_date) >= 7  then NULL
+																																			end	
+																																		else NULL
+																																		end 
+                                            											when month(changeddate) = month(current_date) then 
+                                                																					case 
+                                                																						when extract (day from changeddate) =:lv_config_value and  extract(day from current_date) = :lv_config_value then markasreviewed
+                                                																						when  extract(day from changeddate) < :lv_config_value  and  extract(day from current_date) >= :lv_config_value then NULL
+                                                																						when  extract(day from changeddate) < :lv_config_value  and  extract(day from current_date) < :lv_config_value then markasreviewed
+                                                																						when extract(day from changeddate) > :lv_config_value  and  extract(day from current_date) > :lv_config_value then markasreviewed
+                                                																						when extract(day from changeddate) = :lv_config_value  and  extract(day from current_date) > :lv_config_value then markasreviewed
+                                                																					
+                                                																					end
+                                            											end
+                                            
+
+                                    end                                           
+
+            	when status='Pending' then markasreviewed
+                  end  ) as markasreviewed,
+              	   povalue_coco ,
+              	   accrualMethod ,
+              	   edgewtdamt ,
+				(case
+        			when status='Reviewed' then
+								 case 
+								 	when year(changeddate) < year(current_date) then 
+								 												case 
+								 													when extract( day from current_date) between '1' and '6' 
+																										then case when months_between(changeddate,current_date) = 0 then changeddate
+																											else ' ' end 
+																					when extract( day from  current_date) >= 7  then ' '
+																					end
+									when year(changeddate) = year(current_date)  then
+                                            										case 
+                                            											when month(changeddate) < month(current_date)  then 
+                                            																							case
+                                            																								when month(changeddate)-month(current_date) = -1 then 
+																																			case 
+																																				when extract( day from current_date) between '1' and '6' 
+																																				then 
+																																					case when months_between(changeddate,current_date) = 0 then changeddate
+																																					else ' '
+																																					end 
+																																				when extract( day from  current_date) >= 7  then ' '
+																																			end	
+																																		else ' '
+																																		end 
+                                            											when month(changeddate) = month(current_date) then 
+                                            											
+                                                																					case 
+                                                																						when extract (day from changeddate) =:lv_config_value and  extract(day from current_date) = :lv_config_value then changeddate
+                                                																						when  extract(day from changeddate) < :lv_config_value  and  extract(day from current_date) >= :lv_config_value then ' '
+                                                																						when  extract(day from changeddate) < :lv_config_value  and  extract(day from current_date) < :lv_config_value then changeddate
+                                                																						when extract(day from changeddate) > :lv_config_value  and  extract(day from current_date) > :lv_config_value then changeddate
+                                                																						when extract(day from changeddate) = :lv_config_value  and  extract(day from current_date) > :lv_config_value then changeddate
+                                                																					
+                                                																					end
+                                            											end
+                                            
+
+                                    end                                           
+
+            	when status='Pending' then changeddate
+                  end ) as changeddate,
+				(case
+        			when status='Reviewed' then
+								 case 
+								 	when year(changeddate) < year(current_date) then 
+								 													case 
+								 													when extract( day from current_date) between '1' and '6' 
+																										then case when months_between(changeddate,current_date) = 0 then changedtime
+																											else ' ' end 
+																					when extract( day from  current_date) >= 7  then ' '
+																					end
+									when year(changeddate) = year(current_date)  then
+                                            										case 
+                                            											when month(changeddate) < month(current_date)  then 	
+                                            																							case
+                                            																								when month(changeddate)-month(current_date) = -1 then 
+																																			case 
+																																				when extract( day from current_date) between '1' and '6' 
+																																				then 
+																																					case when months_between(changeddate,current_date) = 0 then changedtime
+																																					else ' '
+																																					end 
+																																				when extract( day from  current_date) >= 7  then ' '
+																																			end	
+																																		else ' '
+																																		end
+                                            											when month(changeddate) = month(current_date) then 
+                                                																					case 
+                                                																						when extract (day from changeddate) =:lv_config_value and  extract(day from current_date) = :lv_config_value then changedtime
+                                                																						when  extract(day from changeddate) < :lv_config_value  and  extract(day from current_date) >= :lv_config_value then ' '
+                                                																						when  extract(day from changeddate) < :lv_config_value  and  extract(day from current_date) < :lv_config_value then changedtime
+                                                																						when extract(day from changeddate) > :lv_config_value  and  extract(day from current_date) > :lv_config_value then changedtime
+                                                																						when extract(day from changeddate) = :lv_config_value  and  extract(day from current_date) > :lv_config_value then changedtime
+                                                																					
+                                                																					end
+                                            											end
+                                            
+
+                                    end                                           
+
+            	when status='Pending' then changedtime
+                  end ) as changedtime,
+			-- (case
+   --     			when status='Reviewed' then
+			-- 					 case 
+			-- 					 	when year(changeddate) < year(current_date) then 
+			-- 					 													case 
+			-- 					 													when extract( day from current_date) between '1' and '6' 
+			-- 																							then 
+			-- 																							case when months_between(changeddate,current_date) = 0 then reviwed_by
+			-- 																								else ' ' end 
+			-- 																		when extract( day from  current_date) >= 7  then ' '
+																					
+			-- 					 													end
+			-- 						when year(changeddate) = year(current_date)  then
+   --                                         										case 
+   --                                         											when month(changeddate) < month(current_date)  then 
+   --                                         																								case
+   --                                         																								when month(changeddate)-month(current_date) = -1 then 
+			-- 																																case 
+			-- 																																	when extract( day from current_date) between '1' and '6' 
+			-- 																																	then 
+			-- 																																		case when months_between(changeddate,current_date) = 0 then reviwed_by
+			-- 																																		else ' '
+			-- 																																		end 
+			-- 																																	when extract( day from  current_date) >= 7  then ' '
+																																				
+			-- 																																end	
+			-- 																															else ' '
+																																		
+			-- 																															end
+   --                                         											when month(changeddate) = month(current_date) then 
+   --                                             																					case 
+   --                                             																						when extract (day from changeddate) =:lv_config_value and  extract(day from current_date) = :lv_config_value then reviwed_by
+   --                                             																						when  extract(day from changeddate) < :lv_config_value  and  extract(day from current_date) >= :lv_config_value then ' '
+   --                                             																						when  extract(day from changeddate) < :lv_config_value  and  extract(day from current_date) < :lv_config_value then reviwed_by
+   --                                             																						when extract(day from changeddate) > :lv_config_value  and  extract(day from current_date) > :lv_config_value then reviwed_by
+   --                                             																						when extract(day from changeddate) = :lv_config_value  and  extract(day from current_date) > :lv_config_value then reviwed_by
+                                                																					
+   --                                             																					end
+   --                                         											end
+                                            
+
+   --                                 end                                           
+
+   --         	when status='Pending' then reviwed_by
+   --               end  ) 
+			reviwed_by,
+			 bbp_acc_no,
+		     documentdate ,
+		     purchasingorganization,
+		     orderquantity ,
+		     exchangerate,
+		     po_preparer ,
+		     changed_on,
+		     --mvp2
+		     povalue_usd ,
+		     po_closure,
+		     distPercentage,
+		      quantity,
+		      ZACTIVITYNBR
+			from :lt_opn_po;
+     
+return :lt_final_po;
+
+end;
+     

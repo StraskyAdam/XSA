@@ -1,0 +1,18 @@
+service {
+
+"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getVideoLinks" as "videoLinks"
+    keys generate local "ID"   
+	parameters via entity;
+	
+	"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_AllVideoLinks" as "link"
+    keys generate local "ID"  ;
+	
+}
+		
+settings {
+              support null;
+              content cache-control "no-store";
+              metadata cache-control "max-age=3600,must-revalidate";
+}
+	    
+	

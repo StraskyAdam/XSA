@@ -1,0 +1,30 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::updateServPOStatus"( statusPO "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Tabletypes::TT_statusPO"  ,                                               
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA 
+   AS
+BEGIN
+   /*************************************
+       Write your procedure logic 
+   *************************************/
+--Data Declarations
+
+    UPSERT "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" 
+         ("PONUMBER","LINEITEM","STATUS","EMAILID","CHANGEDDATE","CHANGEDTIME","AMOUNT_ACCURED","WORKCOMPLASTMONTHAMT",
+     	  "WORKCOMPLASTMONTHCURR","WORK_STARTDATE","WORK_ENDDATE","TOTALWORKCOMPLTODATE","TOTALWORKCOMPLPERCENT","ACCRUALMETHOD",
+          "STRAIGHTLINEMTHD","REVIWED_BY","MARKASREVIEWED","CHANGED_ON",
+          "PO_CLOSURE" --MVP2
+         	
+         )
+     SELECT  "PONUMBER","LINEITEM","STATUS","EMAILID",CURRENT_DATE,CURRENT_UTCTIME,"AMOUNT_ACCURED","WORKCOMPLASTMONTHAMT",
+           	 "WORKCOMPLASTMONTHCURR","WORK_STARTDATE","WORK_ENDDATE","TOTALWORKCOMPLTODATE","TOTALWORKCOMPLPERCENT","ACCRUALMETHOD",
+    		 "STRAIGHTLINEMTHD","REVIWED_BY","MARKASREVIEWED",CURRENT_UTCTIMESTAMP ,"PO_CLOSURE" from :statusPO;
+    
+        EX_STATUS :='Record inserted successfully !';
+	    EX_CODE := 1;
+   
+END

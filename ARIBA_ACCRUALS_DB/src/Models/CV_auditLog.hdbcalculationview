@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" xmlns:Variable="http://www.sap.com/ndb/BiModelVariable.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_auditLog" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="CV_auditLog"/>
+<localVariables>
+  <variable id="IP_PONUM" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="VARCHAR" length="10">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+
+  <variable id="IP_LINEITEM" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="VARCHAR" length="5">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+</localVariables>
+<variableMappings>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_auditLog">
+    <targetVariable name="IP_PONUM" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_auditLog"/>
+    <localVariable>IP_PONUM</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_auditLog">
+    <targetVariable name="IP_LINEITEM" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_auditLog"/>
+    <localVariable>IP_LINEITEM</localVariable>
+  </mapping>
+</variableMappings>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_auditLog" type="TABLE_FUNCTION">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_auditLog</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_auditLog">
+  <attributes>
+    <attribute id="OLDVALUE" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="OLDVALUE"/>
+      <keyMapping columnObjectName="TF_auditLog" columnName="OLDVALUE"/>
+    </attribute>
+    <attribute id="NEWVALUE" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="NEWVALUE"/>
+      <keyMapping columnObjectName="TF_auditLog" columnName="NEWVALUE"/>
+    </attribute>
+    <attribute id="CHANGEDON" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CHANGEDON"/>
+      <keyMapping columnObjectName="TF_auditLog" columnName="CHANGEDON"/>
+    </attribute>
+    <attribute id="CHANGEDBY" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CHANGEDBY"/>
+      <keyMapping columnObjectName="TF_auditLog" columnName="CHANGEDBY"/>
+    </attribute>
+    <attribute id="ACTIVEFLAG" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ACTIVEFLAG"/>
+      <keyMapping columnObjectName="TF_auditLog" columnName="ACTIVEFLAG"/>
+    </attribute>
+    <attribute id="PONUMBER" order="6" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PONUMBER"/>
+      <keyMapping columnObjectName="TF_auditLog" columnName="PONUMBER"/>
+    </attribute>
+    <attribute id="LINEITEM" order="7" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="LINEITEM"/>
+      <keyMapping columnObjectName="TF_auditLog" columnName="LINEITEM"/>
+    </attribute>
+    <attribute id="FNAME" order="8" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="FNAME"/>
+      <keyMapping columnObjectName="TF_auditLog" columnName="FNAME"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

@@ -1,0 +1,34 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::insertConfigLanguages"(IV_LANG_CODE VARCHAR(5),
+																			 IV_LANGUAGE VARCHAR(20),                                              
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+ --  READS SQL DATA 
+ AS
+BEGIN
+
+declare lv_count integer;
+
+select count(*) into lv_count from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_LANGUAGES" 
+   where LANG_CODE = :IV_LANG_CODE;
+
+if lv_count = 0 then 
+	insert into "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_LANGUAGES"
+	values ( :IV_LANG_CODE,:IV_LANGUAGE  );
+	
+	EX_STATUS :='Record inserted successfully !';
+	EX_CODE := 1;
+else
+
+  UPDATE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_LANGUAGES"
+  set  "LANGUAGE" = :IV_LANGUAGE
+	 WHERE LANG_CODE=:IV_LANG_CODE;
+			 
+    EX_STATUS :='Record Updated successfully  !';
+	EX_CODE := 1;
+	
+end if;
+
+end

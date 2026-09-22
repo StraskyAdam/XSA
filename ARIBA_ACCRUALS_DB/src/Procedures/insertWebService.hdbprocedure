@@ -1,0 +1,40 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::insertWebService"(IN IP_PONUMBER  VARCHAR(10),
+																		IN IP_LINEITEM  VARCHAR(5),
+																		IN IP_EPNUMBER  VARCHAR(12),
+																		IN IP_FLAG	VARCHAR(1),
+																		IN IP_STATUS VARCHAR(12),
+																		 OUT EX_STATUS varchar(100),
+																		 OUT EX_CODE integer )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   ---DEFAULT SCHEMA <default_schema_name>
+   ---READS SQL DATA 
+   AS
+BEGIN
+
+declare lv_count integer;
+declare	lv_date date;
+declare	lv_time time;
+
+-- select count(*) into lv_count from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_REC_ARIBA_STAT" 
+-- where PONUMBER = :IP_PONUMBER and LINEITEM = :IP_LINEITEM;
+	
+	IF :IP_FLAG = 'X' THEN
+		INSERT INTO "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_REC_ARIBA_STAT"( "PONUMBER",
+																				"LINEITEM",
+																				"EPNUMBER",
+																				"SENTDATE",
+																				"SENTTIME",
+																				"FLAG",
+																				"STATUS" 
+     		    																 )
+		VALUES (:IP_PONUMBER,:IP_LINEITEM,:IP_EPNUMBER,CURRENT_DATE, CURRENT_UTCTIME,:IP_FLAG,:IP_STATUS);
+	ELSE
+		UPDATE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_REC_ARIBA_STAT" SET "FLAG" = :IP_FLAG
+		WHERE PONUMBER=:IP_PONUMBER AND LINEITEM=:IP_LINEITEM AND EPNUMBER=:IP_EPNUMBER;
+	END IF;
+		
+		EX_CODE:=0;
+		EX_STATUS:='Record inserted successfully';
+
+END

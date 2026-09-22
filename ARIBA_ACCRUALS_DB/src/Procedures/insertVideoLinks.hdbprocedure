@@ -1,0 +1,26 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::insertVideoLinks"( IN IP_ROLE VARCHAR(100),
+																		 IN IP_VIDEOID VARCHAR(20),
+																		 IN IP_VIDEODESC VARCHAR(225),
+																		 IN IP_VIDEOLINKS VARCHAR(5000),
+																		 IN IP_LANG VARCHAR(5),
+																		 OUT EX_STATUS varchar(100),
+																		 OUT EX_CODE integer)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA 
+   AS
+BEGIN
+UPSERT "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VIDEOLINKS"( "ROLE" ,
+																				"VIDEO_ID",
+																				"VIDEO_DESC",
+																				"VIDEO_LINK",
+																				"LANGUAGE"
+																			)
+		VALUES (:IP_ROLE,:IP_VIDEOID,:IP_VIDEODESC,:IP_VIDEOLINKS,:IP_LANG)
+		WHERE ROLE=:IP_ROLE AND VIDEO_ID=:IP_VIDEOID AND LANGUAGE=:IP_LANG;
+		
+		EX_CODE:=0;
+		EX_STATUS:='record inserted successfully';
+		
+END

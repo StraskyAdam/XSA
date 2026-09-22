@@ -1,0 +1,722 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmailbck2"(IP_THRESHOLD varchar(1),
+														IP_PSTYPE varchar(1), 
+														IP_EMAIL varchar(255) default '*' ,
+														IP_POOWNER varchar(1))
+       RETURNS table ( ebeln nvarchar(10), 
+					   ebelp nvarchar(5),
+					   poowner_email varchar(255) ) 
+																	
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+declare lv_email varchar(255);
+declare lv_count integer;
+declare lv_coun_jb	integer;
+declare lv_bukrs varchar(5000);
+declare lv_companycode varchar(5000);
+declare lv_threshold decimal(13,2);
+declare lv_threshold_curr varchar(3);
+declare lt_companycode table (
+	company_code nvarchar(4)
+);
+
+if (:IP_EMAIL = '*') then 
+	lv_email = '%';
+else 
+	lv_email = :IP_EMAIL;
+end if;
+
+-- Get the list of Company Codes assigned to the user
+lt_companycode = select * from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCompanyCodes"(:ip_email );
+
+-- Get the list of Company Codes assigned to the user
+lt_managementUnit = select * from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigManagementUnit"(:ip_email );
+
+-- Get the list of Company Codes assigned to the user
+lt_costCenter = select * from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCostCenter"(:ip_email );
+
+-- Get the Threshold value from the common currency 
+lt_threshold = select po_threshold, currency   from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_PO_THRESHOLD" where currency = 'USD';
+lv_threshold = :lt_threshold.po_threshold[1];
+lv_threshold_curr =  :lt_threshold.currency[1];
+
+ -- Japan_Brazil
+ select config_value into lv_bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+			where config_name = 'Japan_Brazil';
+
+lt_values = select OUTPUT_SPLIT as company_code from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs);
+
+ --select count(*) into lv_coun_jb from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+	-- 											 where bukrs in (SELECT * FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs))
+	-- 											 and pstyp = '0'
+	-- 											 and zstart_date <> '00000000'
+	-- 											 and ( LOWER(PO_REQUESTOR)  like :lv_email
+	-- 		                        			 or LOWER(PO_PREPARER)  like :lv_email);
+
+if (:IP_PSTYPE = '9') then -- Indirect Service PO
+
+		if  :IP_POOWNER = 'X' then  -- POOwner
+				if :IP_THRESHOLD ='1' then -- Greater than Threshold
+							lt_open_po = 
+							select ebeln, ebelp, poowner_email from (
+								select  ekpo.ebeln as ebeln,
+									    ekpo.ebelp as ebelp,
+									    LOWER(ekpo.PO_REQUESTOR )as poowner_email
+										from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+										
+										left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+										on ekko.ebeln = ekpo.ebeln
+										
+										inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+									    on exRate.source_curr = ekko.waers
+										
+										
+										inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+										on ekko.bukrs = T001.bukrs
+										
+										inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+										on configCtry.country_code = t001.land1
+										
+								
+										where ekpo.pstyp = :IP_PSTYPE
+										AND ekpo.netwr >  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																												          ekko.waers,
+																												          :lv_threshold_curr,
+																												          exRate.exchange_rate).ev_targetamount
+										and ekpo.erekz = ' ' --Final Invoice Indicator
+										and ekpo.zstart_date <> '00000000' and ekpo.zend_date <> '00000000' 
+								     	and ekko.bsart = 'ZARP'
+								     	    
+				                        and ( LOWER(ekpo.PO_REQUESTOR)  like :lv_email
+				                         or LOWER(ekpo.PO_PREPARER)  like :lv_email ) 
+										
+										union
+										
+										select  ekpo.ebeln as ebeln,
+									    ekpo.ebelp as ebelp,
+									    LOWER(ekpo.PO_REQUESTOR )as poowner_email
+										from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+										
+										left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+										on ekko.ebeln = ekpo.ebeln
+										
+										inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+									    on exRate.source_curr = ekko.waers
+										
+										
+										inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+										on ekko.bukrs = T001.bukrs
+										
+										inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+										on configCtry.country_code = t001.land1
+										
+								
+										where ekpo.pstyp = '0'
+										AND ekpo.netwr >  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																												          ekko.waers,
+																												          :lv_threshold_curr,
+																												          exRate.exchange_rate).ev_targetamount
+										and ekpo.erekz = ' ' --Final Invoice Indicator
+										and ekpo.zstart_date <> '00000000'
+								     	and ekko.bsart = 'ZARP'
+								     	and ekpo.bukrs in (select company_code from :lt_values)
+								     	    
+				                        and ( LOWER(ekpo.PO_REQUESTOR)  like :lv_email
+				                         or LOWER(ekpo.PO_PREPARER)  like :lv_email ) 
+										
+										)
+										order by 
+										ebeln,
+										ebelp;
+			else -- POs less than Threshold
+					
+						lt_open_po = 
+						select ebeln, ebelp, poowner_email from (
+							select  ekpo.ebeln as ebeln,
+							    ekpo.ebelp as ebelp,
+							    LOWER(ekpo.PO_REQUESTOR )as poowner_email
+								from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+								
+								left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+								on ekko.ebeln = ekpo.ebeln
+								
+								inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+								on exRate.source_curr = ekko.waers
+								 
+								inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+								on ekko.bukrs = T001.bukrs
+								
+								inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+								on configCtry.country_code = t001.land1
+								
+								where ekpo.pstyp = :IP_PSTYPE
+								AND ekpo.netwr <= "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																									          ekko.waers,
+																									          :lv_threshold_curr,
+																									          exRate.exchange_rate).ev_targetamount
+								and ekpo.erekz = ' ' --Final Invoice Indicator
+								and ekpo.zstart_date <> '00000000' and ekpo.zend_date <> '00000000' 
+						     	and ekko.bsart = 'ZARP'
+						     	    
+		                        and ( LOWER(ekpo.PO_REQUESTOR)  like :lv_email
+		                         or LOWER(ekpo.PO_PREPARER)  like :lv_email ) 
+		                         
+		                         union
+		                         
+		                       select  ekpo.ebeln as ebeln,
+							    ekpo.ebelp as ebelp,
+							    LOWER(ekpo.PO_REQUESTOR )as poowner_email
+								from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+								
+								left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+								on ekko.ebeln = ekpo.ebeln
+								
+								inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+								on exRate.source_curr = ekko.waers
+								 
+								inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+								on ekko.bukrs = T001.bukrs
+								
+								inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+								on configCtry.country_code = t001.land1
+								
+								where ekpo.pstyp = '0'
+								AND ekpo.netwr <= "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																									          ekko.waers,
+																									          :lv_threshold_curr,
+																									          exRate.exchange_rate).ev_targetamount
+								and ekpo.erekz = ' ' --Final Invoice Indicator
+								and ekpo.zstart_date <> '00000000'
+						     	and ekko.bsart = 'ZARP'
+						     	and ekpo.bukrs in (select company_code from :lt_values)
+						     	    
+		                        and ( LOWER(ekpo.PO_REQUESTOR)  like :lv_email
+		                         or LOWER(ekpo.PO_PREPARER)  like :lv_email )   
+						)
+						
+								order by 
+								ebeln,
+								ebelp;
+				end if;
+				
+		else if :IP_POOWNER <> 'X' then  --not poowner
+				
+			if :IP_THRESHOLD ='1' then -- POs greater than Threshold
+				
+						lt_open_po = 
+						select ebeln, ebelp, poowner_email from (
+						select  distinct ekpo.ebeln as ebeln,
+					    ekpo.ebelp as ebelp,
+					     LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						
+						left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+						on ekko.ebeln = ekpo.ebeln
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+						on ekkn.ebeln = ekpo.ebeln 
+						and ekkn.ebelp = ekpo.ebelp
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+						on csks.kostl = ekkn.kostl
+						and csks.kokrs = ekkn.kokrs
+						and csks.datbi >= CURRENT_DATE
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+					    on exRate.source_curr = ekko.waers
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+						on ekko.bukrs = T001.bukrs
+						
+						where ekpo.pstyp = :IP_PSTYPE
+						-- and ekpo.netwr > thresholdPO.po_threshold
+						and ekpo.netwr >  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																									          ekko.waers,
+																									          :lv_threshold_curr,
+																									          exRate.exchange_rate).ev_targetamount
+						and ekpo.erekz = ' ' --Final Invoice Indicator
+						and ekpo.zstart_date <> '00000000' and ekpo.zend_date <> '00000000' 
+				     	and ekko.bsart = 'ZARP'
+				     	and  ekko.bukrs in (select company_code from :lt_companycode)
+				     	and LTRIM (ekkn.kostl,'0') in (select  LTRIM (cost_center,'0') from :lt_costCenter)
+				     	and ( csks.name1 in (select  LTRIM (management_unit,'0') from :lt_managementUnit) or csks.name1 is null )
+						
+						union
+						
+						select  distinct ekpo.ebeln as ebeln,
+					    ekpo.ebelp as ebelp,
+					     LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						
+						left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+						on ekko.ebeln = ekpo.ebeln
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+						on ekkn.ebeln = ekpo.ebeln 
+						and ekkn.ebelp = ekpo.ebelp
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+						on csks.kostl = ekkn.kostl
+						and csks.kokrs = ekkn.kokrs
+						and csks.datbi >= CURRENT_DATE
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+					    on exRate.source_curr = ekko.waers
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+						on ekko.bukrs = T001.bukrs
+						
+						where ekpo.pstyp = '0'
+						-- and ekpo.netwr > thresholdPO.po_threshold
+						and ekpo.netwr >  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																									          ekko.waers,
+																									          :lv_threshold_curr,
+																									          exRate.exchange_rate).ev_targetamount
+						and ekpo.erekz = ' ' --Final Invoice Indicator
+						and ekpo.zstart_date <> '00000000'
+				     	and ekko.bsart = 'ZARP'
+				     	and ekpo.bukrs in (select company_code from :lt_values)
+				     	and LTRIM (ekkn.kostl,'0') in (select  LTRIM (cost_center,'0') from :lt_costCenter)
+				     	and ( csks.name1 in (select  LTRIM (management_unit,'0') from :lt_managementUnit) or csks.name1 is null )
+							
+						)
+						order by 
+						ebeln,
+						ebelp;
+			else -- POs less than Threshold
+					lt_open_po = 
+					select ebeln, ebelp, poowner_email from (
+						select distinct ekpo.ebeln as ebeln,
+					    ekpo.ebelp as ebelp,
+					     LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						
+						left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+						on ekko.ebeln = ekpo.ebeln
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+						on ekkn.ebeln = ekpo.ebeln 
+						and ekkn.ebelp = ekpo.ebelp
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+						on csks.kostl = ekkn.kostl
+						and csks.kokrs = ekkn.kokrs
+						and csks.datbi >= CURRENT_DATE
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+						on exRate.source_curr = ekko.waers
+						 
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+						on ekko.bukrs = T001.bukrs
+						
+								 
+						where ekpo.pstyp = :IP_PSTYPE
+						and ekpo.netwr <= "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																									          ekko.waers,
+																									          :lv_threshold_curr,
+																									          exRate.exchange_rate).ev_targetamount
+						and ekpo.erekz = ' ' --Final Invoice Indicator
+						and ekpo.zstart_date <> '00000000' and ekpo.zend_date <> '00000000' 
+				     	and ekko.bsart = 'ZARP'
+				     	and  ekko.bukrs in (select company_code from :lt_companycode)
+				    	and LTRIM (ekkn.kostl,'0') in (select  LTRIM (cost_center,'0') from :lt_costCenter)
+				     	and ( csks.name1 in (select  LTRIM (management_unit,'0') from :lt_managementUnit) or csks.name1 is null )
+				     	
+				     	union
+				     	
+				     	select distinct ekpo.ebeln as ebeln,
+					    ekpo.ebelp as ebelp,
+					     LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						
+						left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+						on ekko.ebeln = ekpo.ebeln
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+						on ekkn.ebeln = ekpo.ebeln 
+						and ekkn.ebelp = ekpo.ebelp
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+						on csks.kostl = ekkn.kostl
+						and csks.kokrs = ekkn.kokrs
+						and csks.datbi >= CURRENT_DATE
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+						on exRate.source_curr = ekko.waers
+						 
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+						on ekko.bukrs = T001.bukrs
+						
+								 
+						where ekpo.pstyp = '0'
+						and ekpo.netwr <= "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																									          ekko.waers,
+																									          :lv_threshold_curr,
+																									          exRate.exchange_rate).ev_targetamount
+						and ekpo.erekz = ' ' --Final Invoice Indicator
+						and ekpo.zstart_date <> '00000000'
+				     	and ekko.bsart = 'ZARP'
+				     	and ekpo.bukrs in (select company_code from :lt_values)
+				    	and LTRIM (ekkn.kostl,'0') in (select  LTRIM (cost_center,'0') from :lt_costCenter)
+				     	and ( csks.name1 in (select  LTRIM (management_unit,'0') from :lt_managementUnit) or csks.name1 is null )
+					)
+						order by 
+						ebeln,
+						ebelp;
+					
+			end if;
+		end if;
+	end if;
+	
+				
+else if (:IP_PSTYPE = '0') then -- Indirect Material PO
+
+			if  :IP_POOWNER='X' then  -- POOwner
+			
+				-- if :IP_THRESHOLD ='1' then 
+			
+				lt_open_po = 
+				select ebeln, ebelp, poowner_email from (
+					select  ekpo.ebeln as ebeln,
+						    ekpo.ebelp as ebelp,
+						    LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						   
+							from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+							
+							left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+							on ekko.ebeln = ekpo.ebeln
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+						    on exRate.source_curr = ekko.waers
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+							on ekko.bukrs = T001.bukrs
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+							on configCtry.country_code = t001.land1
+
+							
+							where ekpo.pstyp = :IP_PSTYPE
+							and ekpo.bukrs not in (select company_code from :lt_values)
+							and ekpo.erekz = ' ' --Final Invoice Indicator
+					     	and ekko.bsart = 'ZARP'
+                    		 and ( LOWER(ekpo.PO_REQUESTOR)  like :lv_email
+                        	 or LOWER(ekpo.PO_PREPARER)  like :lv_email )  
+                        	 
+                        	 Union
+                        	 
+                        	 select  ekpo.ebeln as ebeln,
+						    ekpo.ebelp as ebelp,
+						    LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						   
+							from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+							
+							left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+							on ekko.ebeln = ekpo.ebeln
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+						    on exRate.source_curr = ekko.waers
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+							on ekko.bukrs = T001.bukrs
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+							on configCtry.country_code = t001.land1
+
+							
+							where ekpo.pstyp = :IP_PSTYPE
+							and (ekpo.zstart_date = '00000000')
+							and ekpo.bukrs in (select company_code from :lt_values)
+							and ekpo.erekz = ' ' --Final Invoice Indicator
+					     	and ekko.bsart = 'ZARP'
+                    		 and ( LOWER(ekpo.PO_REQUESTOR)  like :lv_email
+                        	 or LOWER(ekpo.PO_PREPARER)  like :lv_email )  
+                        	 
+							)
+							order by 
+							ebeln,
+							ebelp;
+							
+				
+			else if :IP_POOWNER <> 'X' then   
+			
+					-- if :IP_THRESHOLD ='1' then 
+					
+					lt_open_po = 
+					select ebeln, ebelp, poowner_email from (
+						select  distinct ekpo.ebeln as ebeln,
+					    ekpo.ebelp as ebelp,
+					     LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						
+						left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+						on ekko.ebeln = ekpo.ebeln
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+						on ekkn.ebeln = ekpo.ebeln 
+						and ekkn.ebelp = ekpo.ebelp
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+						on csks.kostl = ekkn.kostl
+						and csks.kokrs = ekkn.kokrs
+						and csks.datbi >= CURRENT_DATE
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+						on exRate.source_curr = ekko.waers
+							
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+						on ekko.bukrs = T001.bukrs
+
+						where ekpo.pstyp = :IP_PSTYPE
+						and ekpo.bukrs not in (select company_code from :lt_values)
+						and ekpo.erekz = ' ' --Final Invoice Indicator
+				     	and ekko.bsart = 'ZARP'
+				     	and  ekko.bukrs in (select company_code from :lt_companycode)
+				    	and LTRIM (ekkn.kostl,'0') in (select  LTRIM (cost_center,'0') from :lt_costCenter)
+				     	and ( csks.name1 in (select  LTRIM (management_unit,'0') from :lt_managementUnit) or csks.name1 is null )
+						
+						union
+						
+						select  distinct ekpo.ebeln as ebeln,
+					    ekpo.ebelp as ebelp,
+					     LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						
+						left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+						on ekko.ebeln = ekpo.ebeln
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+						on ekkn.ebeln = ekpo.ebeln 
+						and ekkn.ebelp = ekpo.ebelp
+						
+						left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+						on csks.kostl = ekkn.kostl
+						and csks.kokrs = ekkn.kokrs
+						and csks.datbi >= CURRENT_DATE
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+						on exRate.source_curr = ekko.waers
+							
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+						on ekko.bukrs = T001.bukrs
+
+						where ekpo.pstyp = :IP_PSTYPE
+						and (ekpo.zstart_date = '00000000')
+						and ekpo.bukrs in (select company_code from :lt_values)
+						and ekpo.erekz = ' ' --Final Invoice Indicator
+				     	and ekko.bsart = 'ZARP'
+				     	and  ekko.bukrs in (select company_code from :lt_companycode)
+				    	and LTRIM (ekkn.kostl,'0') in (select  LTRIM (cost_center,'0') from :lt_costCenter)
+				     	and ( csks.name1 in (select  LTRIM (management_unit,'0') from :lt_managementUnit) or csks.name1 is null )
+					)
+						order by 
+						ebeln,
+						ebelp;
+						
+			
+			end if;
+		end if;
+else if :IP_PSTYPE = '*' then
+		
+			if  :IP_POOWNER='X' then  -- POOwner
+			
+				if :IP_THRESHOLD='1' then 
+					lt_open_po = 
+						select  ekpo.ebeln as ebeln,
+						    ekpo.ebelp as ebelp,
+						    LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						    -- ekpo.pstyp as pstyp,
+						    -- ekpo.zstart_date as zstart_date
+							from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+							left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+							on ekko.ebeln = ekpo.ebeln
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+							on exRate.source_curr = ekko.waers
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+							on ekko.bukrs = T001.bukrs
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+							on configCtry.country_code = t001.land1
+
+							where (ekpo.ebeln,ekpo.ebelp) in (select ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+																			  where pstyp='0'
+																			  and ekpo.erekz = ' ' --Final Invoice Indicator
+													              			 and ( LOWER(ekpo.PO_REQUESTOR)  like :lv_email
+													                     	 or LOWER(ekpo.PO_PREPARER)  like :lv_email ) 
+													                     	 union 
+													                     select ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+																			  where pstyp='9'
+																			  and ekpo.zstart_date <> '00000000' and ekpo.zend_date <> '00000000' 
+																			  and ekpo.netwr > "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																									          ekko.waers,
+																									          :lv_threshold_curr,
+																									          exRate.exchange_rate).ev_targetamount
+																			  and ekpo.erekz = ' ' --Final Invoice Indicator
+													              			 and ( LOWER(ekpo.PO_REQUESTOR)  like :lv_email
+													                     	 or LOWER(ekpo.PO_PREPARER)  like :lv_email ) 
+						                     	 
+													) and ekko.bsart = 'ZARP'
+										order  by 
+										ekpo.ebeln,
+										ekpo.ebelp;
+										
+					else 
+						lt_open_po = 
+						select  ekpo.ebeln as ebeln,
+						    ekpo.ebelp as ebelp,
+						    LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						    -- ekpo.pstyp as pstyp,
+						    -- ekpo.zstart_date as zstart_date
+						   
+							from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+							left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+							on ekko.ebeln = ekpo.ebeln
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+							on exRate.source_curr = ekko.waers
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+							on ekko.bukrs = T001.bukrs
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+							on configCtry.country_code = t001.land1
+
+							where (ekpo.pstyp,ekpo.ebeln,ekpo.ebelp) in (select pstyp,ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+																			  where pstyp='0'
+																			  and ekpo.erekz = ' ' --Final Invoice Indicator
+													              			 and ( LOWER(ekpo.PO_REQUESTOR)  like :lv_email
+													                     	 or LOWER(ekpo.PO_PREPARER)  like :lv_email ) 
+													                     	 union 
+													                     select pstyp,ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+																			  where pstyp='9'
+																			  and ekpo.zstart_date <> '00000000' and ekpo.zend_date <> '00000000' 
+																			  and ekpo.netwr <= "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																									          ekko.waers,
+																									          :lv_threshold_curr,
+																									          exRate.exchange_rate).ev_targetamount
+																			  and ekpo.erekz = ' ' --Final Invoice Indicator
+													              			 and ( LOWER(ekpo.PO_REQUESTOR)  like :lv_email
+													                     	 or LOWER(ekpo.PO_PREPARER)  like :lv_email ) 
+						                     	 
+													)and   ekko.bsart = 'ZARP'
+										order by 
+										ekpo.ebeln,
+										ekpo.ebelp;
+							
+					end if;
+					
+			else if :IP_POOWNER<>'X' then 
+				
+				if :IP_THRESHOLD='1' then 
+											lt_open_po = 
+												select distinct  ekpo.ebeln as ebeln,
+													    ekpo.ebelp as ebelp,
+													     LOWER(ekpo.PO_REQUESTOR) as poowner_email
+													     --ekpo.pstyp as pstyp,
+													     --ekpo.zstart_date as zstart_date
+														    
+														from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+														left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+														on ekko.ebeln = ekpo.ebeln
+														
+														
+														left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+														on ekkn.ebeln = ekpo.ebeln 
+														and ekkn.ebelp = ekpo.ebelp
+														
+														left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+														on csks.kostl = ekkn.kostl
+														and csks.kokrs = ekkn.kokrs
+														and csks.datbi >= CURRENT_DATE
+														
+														inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+														on exRate.source_curr = ekko.waers
+														
+														inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+														on ekko.bukrs = T001.bukrs
+								
+														where (ekpo.pstyp,ekpo.ebeln,ekpo.ebelp) in (select pstyp,ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+																										where pstyp='0'
+																										 and ekpo.erekz = ' ' --Final Invoice Indicator
+																										 union
+																										select pstyp,ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+																										  where pstyp='9'
+																										  and ekpo.zstart_date <> '00000000' and ekpo.zend_date <> '00000000' 
+																										   and ekpo.erekz = ' '
+																										  and ekpo.netwr > "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																													          ekko.waers,
+																													          :lv_threshold_curr,
+																													          exRate.exchange_rate).ev_targetamount
+																																	 
+																										 
+														) and  ekko.bsart = 'ZARP'
+												     	and  ekko.bukrs in (select company_code from :lt_companycode)
+												     	and LTRIM (ekkn.kostl,'0') in (select  LTRIM (cost_center,'0') from :lt_costCenter)
+												     	and ( csks.name1 in (select  LTRIM (management_unit,'0') from :lt_managementUnit) or csks.name1 is null )
+												     	 order by 
+														ekpo.ebeln,
+														ekpo.ebelp;
+				else 
+				
+							lt_open_po = 
+									select  distinct ekpo.ebeln as ebeln,
+									    ekpo.ebelp as ebelp,
+									    LOWER(ekpo.PO_REQUESTOR) as poowner_email
+									    -- ekpo.pstyp as pstyp,
+									    -- ekpo.zstart_date as zstart_date
+										from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+										left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+										on ekko.ebeln = ekpo.ebeln
+										
+										left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+										on ekkn.ebeln = ekpo.ebeln 
+										and ekkn.ebelp = ekpo.ebelp
+										
+										left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+										on csks.kostl = ekkn.kostl
+										and csks.kokrs = ekkn.kokrs
+										and csks.datbi >= CURRENT_DATE
+										
+										inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+										on exRate.source_curr = ekko.waers
+										
+										
+										
+										inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+										on ekko.bukrs = T001.bukrs
+										where (ekpo.pstyp,ekpo.ebeln,ekpo.ebelp) in (select pstyp,ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+																										where pstyp='0'
+																										 and ekpo.erekz = ' ' --Final Invoice Indicator
+																										 union
+																										select pstyp,ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+																										  where pstyp='9'
+																										  and ekpo.zstart_date <> '00000000' and ekpo.zend_date <> '00000000' 
+																										   and ekpo.erekz = ' '
+																										  and ekpo.netwr <= "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																									          ekko.waers,
+																									          :lv_threshold_curr,
+																									          exRate.exchange_rate).ev_targetamount
+																																	 
+																										 
+														) and  ekko.bsart = 'ZARP'
+												     	and  ekko.bukrs in (select company_code from :lt_companycode)
+												     	and LTRIM (ekkn.kostl,'0') in (select  LTRIM (cost_center,'0') from :lt_costCenter)
+												     	and ( csks.name1 in (select  LTRIM (management_unit,'0') from :lt_managementUnit) or csks.name1 is null )
+												     	 order by 
+														ekpo.ebeln,
+														ekpo.ebelp;
+			
+				end if;
+			end if;
+			end if;
+			end if;
+		end if;
+
+	end if;
+			
+return :lt_open_po;
+
+END;

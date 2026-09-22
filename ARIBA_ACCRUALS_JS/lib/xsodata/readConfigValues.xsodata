@@ -1,0 +1,20 @@
+service {
+
+"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_readConfigValues" as "configValues"
+    keys generate local "ID";
+
+"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getEmailTemplates" as "emailTemplate"
+    keys generate local "ID";
+
+"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getConfigLanguages" as "configLang"
+    keys generate local "ID";
+	
+}
+		
+settings {
+              support null;
+              content cache-control "no-store";
+              metadata cache-control "max-age=3600,must-revalidate";
+}
+	    
+	

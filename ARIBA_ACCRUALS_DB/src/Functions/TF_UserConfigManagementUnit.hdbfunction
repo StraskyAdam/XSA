@@ -1,0 +1,106 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigManagementUnit"(ip_email varchar(255) default '*'  )
+       RETURNS   table (
+						management_unit varchar(35)
+					)
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+--Local variable declarations
+declare lv_email varchar(255);
+declare lv_count integer;
+declare lv_management_unit varchar(5000);
+declare lv_arr INT := 0;
+declare lv_i integer;
+declare lv_occurence integer;
+declare lv_input_string varchar(5000);
+--Local table declarations
+declare lt_management_unit table(management_unit varchar(5000));
+
+
+-- Read the config table ZT_CONFIG_ROLES and parses the commma separated into a table 
+-- If * is maintained, get all the unique company codes from the EKKO table 
+if (:ip_email = '*') then 
+	lv_email = '%';
+	lt_management_unit_raw = select distinct csks.zzrptun as management_unit
+                        from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+						inner  join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+						on csks.kostl = ekkn.kostl
+						and csks.kokrs = ekkn.kokrs
+					    and csks.datbi >= CURRENT_DATE
+					    inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						on ekkn.ebeln = ekpo.ebeln 
+						and ekkn.ebelp = ekpo.ebelp;
+					
+						
+	lt_management_unit = select null as management_unit from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY" union all select * from :lt_management_unit_raw;
+else 
+	lv_email = :ip_email;
+-- Check if the email ID is TBS / Admin 
+	 lt_management_unit = select management_unit from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES" where user_emailid like :lv_email; 
+	-- If maintained, check if user has access to all the Management Units or to few
+	 lv_count = record_count(:lt_management_unit);
+	 if lv_count > 0 then 
+		lv_management_unit = :lt_management_unit.management_unit[1];
+		-- if lv_management_unit = '*' then 
+		if lv_management_unit = '*' or 	lv_email = '%' then
+			lt_management_unit_raw = select distinct csks.zzrptun as management_unit
+                        from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+						inner  join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+						on csks.kostl = ekkn.kostl
+						and csks.kokrs = ekkn.kokrs
+					    and csks.datbi >= CURRENT_DATE
+					    inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						on ekkn.ebeln = ekpo.ebeln 
+						and ekkn.ebelp = ekpo.ebelp;
+					
+						
+			lt_management_unit = select null as management_unit from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY" union all select * from :lt_management_unit_raw;
+		else 
+		-- Check the number of occurances
+			select OCCURRENCES_REGEXPR(',' IN :lv_management_unit ) + 1 into lv_occurence  FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";
+	
+	
+				if :lv_occurence = 1 then
+					lv_management_unit = concat(:lv_management_unit, ',');
+				else
+				    lv_management_unit = :lv_management_unit;
+				end if;
+		
+				lt_split_values = SELECT SUBSTR_BEFORE(:lv_management_unit,',') SINGLE_VAL FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  	
+				SELECT SUBSTR_AFTER(:lv_management_unit,',') || ',' INTO lv_input_string FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  
+				
+				WHILE( LENGTH(:lv_input_string) > 0 )	
+				DO
+				
+				   lt_split_values =	
+				   
+				   				SELECT SUBSTR_BEFORE(:lv_input_string,',') SINGLE_VAL FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY"				   
+								   UNION 	   
+								SELECT SINGLE_VAL FROM :lt_split_values;
+				
+				   SELECT SUBSTR_AFTER(:lv_input_string,',') INTO lv_input_string FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  
+				   	
+				END WHILE;
+				
+				
+				SELECT SINGLE_VAL AS "management_unit" FROM :lt_split_values; 
+				
+				if record_count(:lt_split_values) > 0 then 
+				
+				FOR lv_i IN REVERSE 1 ..record_count(:lt_split_values)  DO
+					lv_arr = :lv_arr + 1;
+					if :lt_split_values.SINGLE_VAL[lv_i] <> '' then 
+		    		lt_management_unit.management_unit[lv_arr] = ltrim(:lt_split_values.SINGLE_VAL[lv_i]);
+		    		end if ;
+				END FOR; 
+				end if;
+			RETURN
+				:lt_management_unit;					
+		end if;
+	 end if;
+end if;
+
+return :lt_management_unit;
+
+END;

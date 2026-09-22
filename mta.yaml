@@ -1,0 +1,88 @@
+ID: ARIBA_ACCRUALS
+_schema-version: '2.1'
+version: 1.5.4
+modules:
+  - name: ARIBA_ACCRUALS_DB
+    type: hdb
+    path: ARIBA_ACCRUALS_DB
+    requires:
+      - name: hdi_ARIBA_ACCRUALS_DB
+        properties:
+          TARGET_CONTAINER: '~{hdi-container-name}'
+      - name: cross-container-service-1
+        group: SERVICE_REPLACEMENTS
+        properties:
+          key: ServiceName_1
+          service: '~{the-service-name}'
+  - name: ARIBA_ACCRUALS_JS
+    type: nodejs
+    path: ARIBA_ACCRUALS_JS
+    properties:
+      OPTIMIZE_MEMORY: true
+    parameters:
+      a_instances: 4
+      a_disk-quota: 1024M
+      a_memory: 1024M
+      default-port: 51130
+      #port: 51130
+    provides:
+      - name: ARIBA_ACCRUALS_JS_api
+        properties:
+          url: '${default-url}'
+          #port: 51130
+    requires:
+      - name: hdi_ARIBA_ACCRUALS_DB
+      - name: ACCRUAL_SMTP
+      - name: ACCRUAL_JOBSCHEDULER
+      - name: EXTERNAL_HTTP
+  - name: ARIBA_ACCRUALS_SAP_JS
+    type: nodejs
+    path: ARIBA_ACCRUALS_SAP_JS
+    properties:
+      OPTIMIZE_MEMORY: true
+    parameters:
+      s_instances: 4
+      s_disk-quota: 1024M
+      s_memory: 1024M
+      default-port: 51476
+      #port: 51476
+    provides:
+      - name: ARIBA_ACCRUALS_SAP_JS_api
+        properties:
+          url: '${default-url}'
+          #port: 51476
+    requires:
+      - name: hdi_ARIBA_ACCRUALS_DB
+      - name: ARIBA_ACCRUALS_DB
+      - name: ACCRUAL_SMTP
+      - name: ACCRUAL_JOBSCHEDULER
+      - name: ftp
+resources:
+  - name: hdi_ARIBA_ACCRUALS_DB
+    parameters:
+      service-name: hdi_ARIBA_ACCRUALS_DB
+    properties:
+      hdi-container-name: '${service-name}'
+    type: com.sap.xs.hdi-container
+  - name: cross-container-service-1
+    parameters:
+      service-name: ACCRUAL_GRANTOR
+    properties:
+      the-service-name: '${service-name}'
+    type: org.cloudfoundry.existing-service
+  - name: ACCRUAL_SMTP
+    type: org.cloudfoundry.existing-service
+    parameters:
+      service-name: ACCRUAL_SMTP
+  - name: ACCRUAL_JOBSCHEDULER
+    type: com.sap.xs.job-scheduler
+  - name: ftp
+    type: org.cloudfoundry.existing-service
+    parameters:
+      service-name: ftp
+  - name: EXTERNAL_HTTP
+    type: org.cloudfoundry.existing-service
+    parameters:
+      service-name: EXTERNAL_HTTP
+    properties:
+      EXTERNAL_HTTP_SERVICE: '${service-name}'

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" xmlns:Variable="http://www.sap.com/ndb/BiModelVariable.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getPOData" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="CV_getPOData"/>
+<localVariables>
+  <variable id="IP_PSTYP" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="VARCHAR" length="1" mandatory="false" defaultValue="">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+</localVariables>
+<variableMappings>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPO">
+    <targetVariable name="IP_PSTYPE" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPO"/>
+    <localVariable>IP_PSTYP</localVariable>
+  </mapping>
+</variableMappings>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPO" type="TABLE_FUNCTION">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPO</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPO">
+  <attributes>
+    <attribute id="SUPPLIERNAME" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SUPPLIERNAME"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="SUPPLIERNAME"/>
+    </attribute>
+    <attribute id="PURCHASINGUNIT" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PURCHASINGUNIT"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="PURCHASINGUNIT"/>
+    </attribute>
+    <attribute id="POLINEDESC" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POLINEDESC"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="POLINEDESC"/>
+    </attribute>
+    <attribute id="REGION" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REGION"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="REGION"/>
+    </attribute>
+    <attribute id="PSTYPE" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PSTYPE"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="PSTYPE"/>
+    </attribute>
+    <attribute id="COCDECURR" order="6" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COCDECURR"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="COCDECURR"/>
+    </attribute>
+    <attribute id="POVALUE" order="7" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POVALUE"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="POVALUE"/>
+    </attribute>
+    <attribute id="GLACCOUNT" order="8" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="GLACCOUNT"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="GLACCOUNT"/>
+    </attribute>
+    <attribute id="POCURRENCY" order="9" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POCURRENCY"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="POCURRENCY"/>
+    </attribute>
+    <attribute id="COSTCENTER" order="10" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COSTCENTER"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="COSTCENTER"/>
+    </attribute>
+    <attribute id="POVALUE_COCO" order="11" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POVALUE_COCO"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="POVALUE_COCO"/>
+    </attribute>
+    <attribute id="WRKSTRTDATE" order="12" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WRKSTRTDATE"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="WRKSTRTDATE"/>
+    </attribute>
+    <attribute id="COSTCENTERDESC" order="13" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COSTCENTERDESC"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="COSTCENTERDESC"/>
+    </attribute>
+    <attribute id="EPNUMBER" order="14" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="EPNUMBER"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="EPNUMBER"/>
+    </attribute>
+    <attribute id="WRKENDDATE" order="15" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WRKENDDATE"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="WRKENDDATE"/>
+    </attribute>
+    <attribute id="MANAGEUNIT" order="16" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="MANAGEUNIT"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="MANAGEUNIT"/>
+    </attribute>
+    <attribute id="INTERNALORDER" order="17" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="INTERNALORDER"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="INTERNALORDER"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPAMT" order="18" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPAMT"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="TOTWRKCOMPAMT"/>
+    </attribute>
+    <attribute id="PONUMBER" order="19" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PONUMBER"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="PONUMBER"/>
+    </attribute>
+    <attribute id="ASSETID" order="20" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ASSETID"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="ASSETID"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPPER" order="21" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPPER"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="TOTWRKCOMPPER"/>
+    </attribute>
+    <attribute id="ITEMNO" order="22" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ITEMNO"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="ITEMNO"/>
+    </attribute>
+    <attribute id="PROFITCENTER" order="23" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PROFITCENTER"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="PROFITCENTER"/>
+    </attribute>
+    <attribute id="COMPANYCODE" order="24" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COMPANYCODE"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="COMPANYCODE"/>
+    </attribute>
+    <attribute id="SUPPLIERID" order="25" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SUPPLIERID"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="SUPPLIERID"/>
+    </attribute>
+  
+    <attribute id="CHANGED_ON" order="26" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CHANGED_ON"/>
+      <keyMapping columnObjectName="TF_getOpenPO" columnName="CHANGED_ON"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

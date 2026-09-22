@@ -1,0 +1,469 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::getOpenPOCSV"(IP_FILE varchar(2) )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   READS SQL DATA AS
+BEGIN
+declare lv_companyCode varchar(5000);
+lt_company= SELECT 
+			"REGION",
+			"COMPANY_CODE",
+			"SPLIT_FILE_NUMBER"
+			FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SPLITFILE"
+			where SPLIT_FILE_NUMBER=:IP_FILE;
+			
+lv_companyCode=:lt_company.company_code[1];
+	
+lt_split_company= select output_split from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_companyCode);
+
+
+
+ 	SELECT 
+	to_date((current_utctimestamp)) as JOB_DATE,
+	"COMPANYCODE",
+	"COSTCENTER",
+	"GLACCOUNT",
+	"POOWNER_EMAIL",
+	to_dats(to_date(last_day(current_utctimestamp))) AS "KEYDAY",
+	"BBP_ACC_NO",
+	"PONUMBER",
+	"ITEMNO",
+	"INTERNALORDER",
+	to_dats(to_date("DOCUMENTDATE")) as DOCUMENTDATE,
+	"POLINEDESC",
+	"SUPPLIERID",
+	"SUPPLIERNAME",
+	"SUPPLIERID" AS VENDOR,
+	"PURCHASINGORGANIZATION",
+	"ASSETID",
+	"PROFITCENTER",
+	-- yyyymmdd format in FTP server
+	to_dats(to_date("WRKSTRTDATE")) as WRKSTRTDATE ,
+	to_dats(to_date("WRKENDDATE")) as WRKENDDATE,
+	"COCDECURR",
+	"POCURRENCY",
+	SUM("ORDERQUANTITY") AS "ORDERQUANTITY",
+	SUM("POVALUE") AS "POVALUE",
+	(case when "INVVALUE" > 0 and DISTPERCENTAGE >0 then to_decimal((INVVALUE * DISTPERCENTAGE)/100,18,2)
+		 when "INVVALUE" > 0 and DISTPERCENTAGE =0 then  to_decimal(INVVALUE,18,2)
+	 else 0.00 end )AS InvoiceAmountClearedOrig ,
+	SUM("EXCHANGERATE") AS "EXCHANGERATE",
+	-- mvp2
+	 --(case when "AMOUNTACCRUED" > 0 and DISTPERCENTAGE >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+		-- 	when "AMOUNTACCRUED" > 0 and DISTPERCENTAGE =0 then to_decimal(AMOUNTACCRUED,18,2)
+	 --else 0.00 end )AS AmountToBeAccruedOrig ,
+	 	(case when "AMOUNTACCRUED" > 0 then 
+					-- case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					--  WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * 1)/1,18,2)
+					--   WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--   WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--  when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+					
+						case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					 WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * 1)/1,18,2)
+					  WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * 1),18,2)
+					  WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 AND "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_recordCount"("PONUMBER", "ITEMNO", '') = 1
+					  then to_decimal((AMOUNTACCRUED * 1),18,2)
+					  
+					  WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 AND "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_recordCount"("PONUMBER", "ITEMNO", '') > 1
+					  then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					 when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+					
+					
+					end 
+			else 0.00
+			end )as AmountToBeAccruedOrig,
+	  (case when "AMOUNTACCRUED_COCDECURR" >0 then AMOUNTACCRUED_COCDECURR
+	 else 0 end )AS AmountToBeAccruedComp
+	 	 
+
+FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPOReport"
+	(placeholder."$$IP_PSTYPE$$"=>'9', 
+	placeholder."$$IP_EMAIL$$"=>'*', 
+	placeholder."$$IP_POOWNER$$"=>'')
+	where COMPANYCODE in (select output_split from :lt_split_company)
+	-- AND (GLACCOUNT<>' ' AND COSTCENTER<>' ')
+GROUP BY "QUANTITY",
+"COMPANYCODE",
+	"COSTCENTER",
+
+	"GLACCOUNT",
+	"POOWNER_EMAIL",
+	-- KEY DATE,
+	"BBP_ACC_NO",
+	"PONUMBER",
+	"ITEMNO",
+	"INTERNALORDER",
+	"DOCUMENTDATE",
+	"POLINEDESC",
+	"SUPPLIERID",
+	"SUPPLIERNAME",
+	-- "SUPPLIERID" AS VENDOR,
+	"PURCHASINGORGANIZATION",
+	"ASSETID",
+	"PROFITCENTER",
+	"WRKSTRTDATE",
+	"WRKENDDATE",
+	-- "WRKSTRTDATE_FTP","WRKENDDATE_FTP",
+	"COCDECURR",
+	"POCURRENCY",
+	 "AMOUNTACCRUED",
+	 DISTPERCENTAGE,
+	"AMOUNTACCRUED_COCDECURR",
+	INVVALUE
+union 
+	SELECT 
+	to_date((current_utctimestamp)) as JOB_DATE,
+	"COMPANYCODE",
+	"COSTCENTER",
+	"GLACCOUNT",
+	"POOWNER_EMAIL",
+	to_dats(to_date(last_day(current_utctimestamp))) AS "KEYDAY",
+	"BBP_ACC_NO",
+	"PONUMBER",
+	"ITEMNO",
+	"INTERNALORDER",
+	to_dats(to_date("DOCUMENTDATE")) as DOCUMENTDATE,
+	"POLINEDESC",
+	"SUPPLIERID",
+	"SUPPLIERNAME",
+	"SUPPLIERID" AS VENDOR,
+	"PURCHASINGORGANIZATION",
+	"ASSETID",
+	"PROFITCENTER",
+	-- yyyymmdd format in FTP server
+	to_dats(to_date("WRKSTRTDATE")) as WRKSTRTDATE ,
+	to_dats(to_date("WRKENDDATE")) as WRKENDDATE,
+	"COCDECURR",
+	"POCURRENCY",
+	SUM("ORDERQUANTITY") AS "ORDERQUANTITY",
+	SUM("POVALUE") AS "POVALUE",
+	(case when "INVVALUE" > 0 and DISTPERCENTAGE >0 then to_decimal((INVVALUE * DISTPERCENTAGE)/100,18,2)
+		 when "INVVALUE" > 0 and DISTPERCENTAGE =0 then  to_decimal(INVVALUE,18,2)
+	 else 0.00 end )AS InvoiceAmountClearedOrig ,
+	SUM("EXCHANGERATE") AS "EXCHANGERATE",
+	-- -- mvp2
+	--  (case when "AMOUNTACCRUED" > 0 and DISTPERCENTAGE >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+	-- 		when "AMOUNTACCRUED" > 0 and DISTPERCENTAGE =0 then to_decimal(AMOUNTACCRUED,18,2)
+	--  else 0.00 end )AS AmountToBeAccruedOrig ,
+		(case when "AMOUNTACCRUED" > 0 then 
+					-- case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					--  WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * QUANTITY)/100,18,2)
+					--   WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--  when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+					-- case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					--  WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * 1)/1,18,2)
+					--   WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--   WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--  when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+					
+						case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					 WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * 1)/1,18,2)
+					  WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * 1),18,2)
+					  WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 AND "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_recordCount"("PONUMBER", "ITEMNO", '') = 1
+					  then to_decimal((AMOUNTACCRUED * 1),18,2)
+					  
+					  WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 AND "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_recordCount"("PONUMBER", "ITEMNO", '') > 1
+					  then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					 when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+					end 
+			else 0.00
+			end )as AmountToBeAccruedOrig,
+	  (case when "AMOUNTACCRUED_COCDECURR" >0 then AMOUNTACCRUED_COCDECURR
+	 else 0 end )AS AmountToBeAccruedComp
+	 	 
+
+FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPOReport"
+	(placeholder."$$IP_PSTYPE$$"=>'0', 
+	placeholder."$$IP_EMAIL$$"=>'*', 
+	placeholder."$$IP_POOWNER$$"=>'')
+	where COMPANYCODE in (select output_split from :lt_split_company)
+	-- AND (GLACCOUNT<>' ' AND COSTCENTER<>' ')
+GROUP BY "QUANTITY",
+"COMPANYCODE",
+	"COSTCENTER",
+
+	"GLACCOUNT",
+	"POOWNER_EMAIL",
+	-- KEY DATE,
+	"BBP_ACC_NO",
+	"PONUMBER",
+	"ITEMNO",
+	"INTERNALORDER",
+	"DOCUMENTDATE",
+	"POLINEDESC",
+	"SUPPLIERID",
+	"SUPPLIERNAME",
+	-- "SUPPLIERID" AS VENDOR,
+	"PURCHASINGORGANIZATION",
+	"ASSETID",
+	"PROFITCENTER",
+	"WRKSTRTDATE",
+	"WRKENDDATE",
+	-- "WRKSTRTDATE_FTP","WRKENDDATE_FTP",
+	"COCDECURR",
+	"POCURRENCY",
+	 "AMOUNTACCRUED",
+	 DISTPERCENTAGE,
+	"AMOUNTACCRUED_COCDECURR",
+	INVVALUE
+	union 
+	SELECT 
+
+	to_date((current_utctimestamp)) as JOB_DATE,
+	"COMPANYCODE",
+	"COSTCENTER",
+	"GLACCOUNT",
+	"POOWNER_EMAIL",
+	to_dats(to_date(last_day(current_utctimestamp))) AS "KEYDAY",
+	"BBP_ACC_NO",
+	"PONUMBER",
+	"ITEMNO",
+	"INTERNALORDER",
+	to_dats(to_date("DOCUMENTDATE")) as DOCUMENTDATE,
+	"POLINEDESC",
+	"SUPPLIERID",
+	"SUPPLIERNAME",
+	"SUPPLIERID" AS VENDOR,
+	"PURCHASINGORGANIZATION",
+	"ASSETID",
+	"PROFITCENTER",
+	-- to_date("WRKSTRTDATE") as WRKSTRTDATE ,
+	-- to_date("WRKENDDATE") as WRKENDDATE,
+	-- yyyymmdd format in FTP server
+	to_dats(to_date("WRKSTRTDATE")) as WRKSTRTDATE ,
+	to_dats(to_date("WRKENDDATE")) as WRKENDDATE,
+	"COCDECURR",
+	"POCURRENCY",
+	SUM("ORDERQUANTITY") AS "ORDERQUANTITY",
+	SUM("POVALUE") AS "POVALUE",
+	-- SUM("INVVALUE") AS InvoiceAmountClearedOrig,
+	(case when "INVVALUE" > 0 and DISTPERCENTAGE >0 then to_decimal((INVVALUE * DISTPERCENTAGE)/100,18,2)
+		 when "INVVALUE" > 0 and DISTPERCENTAGE =0 then  to_decimal(INVVALUE,18,2)
+	 else 0.00 end )AS InvoiceAmountClearedOrig ,
+	SUM("EXCHANGERATE") AS "EXCHANGERATE",
+	-- mvp2
+	 --(case when "AMOUNTACCRUED" > 0 and DISTPERCENTAGE >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+		-- 	when "AMOUNTACCRUED" > 0 and DISTPERCENTAGE =0 then to_decimal(AMOUNTACCRUED,18,2)
+	 --else 0.00 end )AS AmountToBeAccruedOrig ,
+	(case when "AMOUNTACCRUED" > 0 then 
+					-- case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					--  WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * QUANTITY)/100,18,2)
+					--   WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--  when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+					-- case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					--  WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * 1)/1,18,2)
+					--   WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--   WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--  when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+						case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					 WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * 1)/1,18,2)
+					  WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * 1),18,2)
+					  WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 AND "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_recordCount"("PONUMBER", "ITEMNO", '') = 1
+					  then to_decimal((AMOUNTACCRUED * 1),18,2)
+					  
+					  WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 AND "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_recordCount"("PONUMBER", "ITEMNO", '') > 1
+					  then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					 when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+					end 
+			else 0.00
+			end )as AmountToBeAccruedOrig,
+	  (case when "AMOUNTACCRUED_COCDECURR" >0 then AMOUNTACCRUED_COCDECURR
+	 else 0 end )AS AmountToBeAccruedComp
+
+FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenThresholdPOReportPO"
+	(placeholder."$$IP_PSTYPE$$"=>'9', 
+	placeholder."$$IP_EMAIL$$"=>'*', 
+	placeholder."$$IP_POOWNER$$"=>'')
+	where COMPANYCODE in (select output_split from :lt_split_company) 
+	-- AND (GLACCOUNT<>' ' AND COSTCENTER<>' ')
+GROUP BY "QUANTITY",
+"COMPANYCODE",
+	"COSTCENTER",
+	"GLACCOUNT",
+	"POOWNER_EMAIL",
+	-- KEY DATE,
+	"BBP_ACC_NO",
+	"PONUMBER",
+	"ITEMNO",
+	"INTERNALORDER",
+	"DOCUMENTDATE",
+	"POLINEDESC",
+	"SUPPLIERID",
+	"SUPPLIERNAME",
+	-- "SUPPLIERID" AS VENDOR,
+	"PURCHASINGORGANIZATION",
+	"ASSETID",
+	"PROFITCENTER",
+	"WRKSTRTDATE",
+	"WRKENDDATE",
+		-- "WRKSTRTDATE_FTP","WRKENDDATE_FTP",
+	"COCDECURR",
+	"POCURRENCY",
+	 "AMOUNTACCRUED",
+	 DISTPERCENTAGE,
+	"AMOUNTACCRUED_COCDECURR",
+	INVVALUE
+	union 
+	SELECT
+		to_date((current_utctimestamp)) as JOB_DATE,
+	"COMPANYCODE",
+	"COSTCENTER",
+	"GLACCOUNT",
+	"POOWNER_EMAIL",
+	to_dats(to_date(last_day(current_utctimestamp))) AS "KEYDAY",
+	"BBP_ACC_NO",
+	"PONUMBER",
+	"ITEMNO",
+	"INTERNALORDER",
+	to_dats(to_date("DOCUMENTDATE")) as DOCUMENTDATE,
+	"POLINEDESC",
+	"SUPPLIERID",
+	"SUPPLIERNAME",
+	"SUPPLIERID" AS VENDOR,
+	"PURCHASINGORGANIZATION",
+	"ASSETID",
+	"PROFITCENTER",
+	-- to_date("WRKSTRTDATE") as WRKSTRTDATE ,
+	-- to_date("WRKENDDATE") as WRKENDDATE,
+	-- yyyymmdd format in FTP server
+	to_dats(to_date("WRKSTRTDATE")) as WRKSTRTDATE ,
+	to_dats(to_date("WRKENDDATE")) as WRKENDDATE,
+	"COCDECURR",
+	"POCURRENCY",
+	SUM("ORDERQUANTITY") AS "ORDERQUANTITY",
+	SUM("POVALUE") AS "POVALUE",
+	-- SUM("INVVALUE") AS InvoiceAmountClearedOrig,
+	(case when "INVVALUE" > 0 and DISTPERCENTAGE >0 then to_decimal((INVVALUE * DISTPERCENTAGE)/100,18,2)
+		 when "INVVALUE" > 0 and DISTPERCENTAGE =0 then  to_decimal(INVVALUE,18,2)
+	 else 0.00 end )AS InvoiceAmountClearedOrig ,
+	SUM("EXCHANGERATE") AS "EXCHANGERATE",
+	-- mvp2
+	 --(case when "AMOUNTACCRUED" > 0 and DISTPERCENTAGE >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+		-- 	when "AMOUNTACCRUED" > 0 and DISTPERCENTAGE =0 then to_decimal(AMOUNTACCRUED,18,2)
+	 --else 0.00 end )AS AmountToBeAccruedOrig ,
+	(case when "AMOUNTACCRUED" > 0 then 
+					-- case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					--  WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * QUANTITY)/100,18,2)
+					--   WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--  when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+					-- case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					--  WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * 1)/1,18,2)
+					--   WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--   WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					--  when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+						case when DISTPERCENTAGE >0 and QUANTITY >0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE)/100,18,2)
+					 WHEN DISTPERCENTAGE=0 and QUANTITY >1 then to_decimal((AMOUNTACCRUED * 1)/1,18,2)
+					  WHEN DISTPERCENTAGE=0 and QUANTITY =1 then to_decimal((AMOUNTACCRUED * 1),18,2)
+					  WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 AND "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_recordCount"("PONUMBER", "ITEMNO", '') = 1
+					  then to_decimal((AMOUNTACCRUED * 1),18,2)
+					  
+					  WHEN DISTPERCENTAGE= 0 and QUANTITY BETWEEN 0 and 1 AND "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_recordCount"("PONUMBER", "ITEMNO", '') > 1
+					  then to_decimal((AMOUNTACCRUED * QUANTITY),18,2)
+					 when DISTPERCENTAGE >0 and QUANTITY =0 then to_decimal((AMOUNTACCRUED * DISTPERCENTAGE )/100,18,2)
+					end 
+			else 0.00
+			end )as AmountToBeAccruedOrig,
+	  (case when "AMOUNTACCRUED_COCDECURR" >0 then AMOUNTACCRUED_COCDECURR
+	 else 0 end )AS AmountToBeAccruedComp
+
+FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenThresholdPOReportPO"
+	(placeholder."$$IP_PSTYPE$$"=>'0', 
+	placeholder."$$IP_EMAIL$$"=>'*', 
+	placeholder."$$IP_POOWNER$$"=>'')
+	where COMPANYCODE in (select output_split from :lt_split_company) 
+	-- AND (GLACCOUNT<>' ' AND COSTCENTER<>' ')
+GROUP BY "QUANTITY",
+"COMPANYCODE",
+	"COSTCENTER",
+	"GLACCOUNT",
+	"POOWNER_EMAIL",
+	-- KEY DATE,
+	"BBP_ACC_NO",
+	"PONUMBER",
+	"ITEMNO",
+	"INTERNALORDER",
+	"DOCUMENTDATE",
+	"POLINEDESC",
+	"SUPPLIERID",
+	"SUPPLIERNAME",
+	-- "SUPPLIERID" AS VENDOR,
+	"PURCHASINGORGANIZATION",
+	"ASSETID",
+	"PROFITCENTER",
+	"WRKSTRTDATE",
+	"WRKENDDATE",
+		-- "WRKSTRTDATE_FTP","WRKENDDATE_FTP",
+	"COCDECURR",
+	"POCURRENCY",
+	 "AMOUNTACCRUED",
+	 DISTPERCENTAGE,
+	"AMOUNTACCRUED_COCDECURR",
+	INVVALUE
+	union
+	SELECT 
+
+	to_date((current_utctimestamp)) as JOB_DATE,
+	"COMPANYCODE",
+	"COSTCENTER",
+	"GLACCOUNT",
+	"POOWNER_EMAIL",
+	to_dats(to_date(last_day(current_utctimestamp))) AS "KEYDAY",
+	 "BBP_ACC_NO",
+	"PONUMBER",
+	"ITEMNO",
+	"INTERNALORDER",
+	to_dats(to_date("DOCUMENTDATE")) as DOCUMENTDATE,
+	"POLINEDESC",
+	"SUPPLIERID",
+	"SUPPLIERNAME",
+	"SUPPLIERID" AS VENDOR,
+	null as	"PURCHASINGORGANIZATION",
+	"ASSETID",
+	"PROFITCENTER",
+	-- to_date("WRKSTRTDATE") as WRKSTRTDATE ,
+	-- to_date("WRKENDDATE") as WRKENDDATE,
+	-- yyyymmdd format in FTP server
+	to_dats(to_date("WRKSTRTDATE")) as WRKSTRTDATE ,
+	to_dats(to_date("WRKENDDATE")) as WRKENDDATE,
+	"COCDECURR",
+	"POCURRENCY",
+	0 AS "ORDERQUANTITY",
+	SUM("POVALUE") AS "POVALUE",
+		(case when "INVVALUE" > 0 and DISTPERCENTAGE >0 then to_decimal((INVVALUE * DISTPERCENTAGE)/100,18,2)
+		 when "INVVALUE" > 0 and DISTPERCENTAGE =0 then  to_decimal(INVVALUE,18,2)
+	 else 0.00 end )AS InvoiceAmountClearedOrig ,
+	0 AS "EXCHANGERATE",
+	 0 AS AmountToBeAccruedOrig ,
+	  0 AS AmountToBeAccruedComp
+
+FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getExclusionPOReport"
+	(
+	placeholder."$$IP_EMAIL$$"=>'*', 
+	placeholder."$$IP_POOWNER$$"=>'')
+	where COMPANYCODE in (select output_split from :lt_split_company)  
+	-- AND (GLACCOUNT<>' ' AND COSTCENTER <>' ')
+GROUP BY 	"COMPANYCODE",
+	"COSTCENTER",
+	"GLACCOUNT",
+	"POOWNER_EMAIL",
+	"BBP_ACC_NO",
+	"PONUMBER",
+	"ITEMNO",
+	"INTERNALORDER",
+	"POLINEDESC",
+	"SUPPLIERID",
+	"SUPPLIERNAME",
+	"ASSETID",
+	"PROFITCENTER",
+	"WRKSTRTDATE",
+	"WRKENDDATE",
+	"COCDECURR",
+	"POCURRENCY",
+	INVVALUE,
+	DOCUMENTDATE,
+	DISTPERCENTAGE;
+	 
+	
+	
+END

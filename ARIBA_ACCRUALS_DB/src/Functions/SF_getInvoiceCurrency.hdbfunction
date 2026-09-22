@@ -1,0 +1,22 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_getInvoiceCurrency"( ip_poNumber nvarchar(10),iv_ebelp varchar(5)
+)
+
+RETURNS 
+-- table (
+	INVOICE_CURRENCY VARCHAR (3)
+	
+-- )
+       LANGUAGE SQLSCRIPT 
+      -- SQL SECURITY INVOKER 
+       AS 
+BEGIN 
+declare LV_CURR_EKKO  varchar(3);
+declare lv_waers varchar(3);
+declare i integer;
+declare lv_inv_curr VARCHAR(3);
+declare lv_waers_wrbtr varchar(20);
+
+SELECT INVOICE_CURR into lv_inv_curr FROM  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getDistinctInvoiceCurr"( :ip_poNumber,:iv_ebelp);
+		INVOICE_CURRENCY = lv_inv_curr;
+
+END

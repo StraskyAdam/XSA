@@ -1,0 +1,19 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::deleteVideoLinks"( IN IP_ROLE VARCHAR(100),
+																		 IN IP_VIDEOID VARCHAR(20),
+																		 IN IP_LANG VARCHAR(5),
+																		 OUT EX_STATUS varchar(100),
+																		 OUT EX_CODE integer
+																		   )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA 
+   AS
+BEGIN
+	DELETE FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VIDEOLINKS" 
+	WHERE ROLE=:IP_ROLE AND VIDEO_ID=:IP_VIDEOID AND LANGUAGE=:IP_LANG;
+	
+		EX_CODE:=0;
+		EX_STATUS:='record deleted successfully';
+	
+END

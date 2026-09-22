@@ -1,0 +1,32 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::cutOffCheck"( )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   READS SQL DATA AS
+BEGIN
+  declare lv_cutoffTime  varchar(10);
+DECLARE LT_OUTPUT TABLE(FLAG VARCHAR(5));
+
+lt_cutOffTime= select config_value from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+				where config_name='CUTOFF_TIME';
+				
+	lv_cutoffTime =:lt_cutOffTime.config_value[1];
+	LT_OUTPUT.FLAG[1]='true';
+	
+    if current_date = last_day(current_date) then--current date is equal to last date of current month 
+    	if hour(current_time) = hour(:lv_cutoffTime) then
+    		if minute(current_time) > minute(:lv_cutoffTime) then
+    			LT_OUTPUT.FLAG[1]='false';
+ 
+    	end if;
+    	end if;
+    else if dayofmonth(current_date) between '1' and '6' then 
+    		LT_OUTPUT.FLAG[1]='false';
+   
+    end if;
+    end if;
+    
+    
+    select * from :LT_OUTPUT;
+    	
+END

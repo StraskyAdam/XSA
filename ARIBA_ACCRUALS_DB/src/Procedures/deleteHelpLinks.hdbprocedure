@@ -1,0 +1,19 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::deleteHelpLinks"(  IN IP_ROLE VARCHAR(100),
+																		 IN IP_HELPID VARCHAR(20),
+																		 IN IP_LANG VARCHAR(5),
+																		 OUT EX_STATUS varchar(100),
+																		 OUT EX_CODE integer
+																		   )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA 
+   AS
+BEGIN
+   DELETE FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_HELPLINKS"
+   WHERE ROLE=:IP_ROLE AND HELP_ID=:IP_HELPID AND LANGUAGE=:IP_LANG;
+   
+   
+		EX_CODE:=0;
+		EX_STATUS:='record deleted successfully';
+END

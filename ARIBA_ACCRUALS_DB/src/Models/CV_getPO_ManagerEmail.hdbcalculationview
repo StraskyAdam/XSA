@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getPO_ManagerEmail" applyPrivilegeType="NONE" dataCategory="CUBE" schemaVersion="3.0" outputViewType="Aggregation" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="CV_getPO_ManagerEmail"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_CONTACT_INFO">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_CONTACT_INFO</resourceUri>
+  </DataSource>
+  <DataSource id="ZMD_CONTACT_INFO_W$$$$ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_CONTACT_INFO$$">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_CONTACT_INFO</resourceUri>
+  </DataSource>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_POSITN_INFO">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_POSITN_INFO</resourceUri>
+  </DataSource>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_WORKER_NAME">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_WORKER_NAME</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews>
+  <calculationView xsi:type="Calculation:ProjectionView" id="ZMD_CONTACT_INFO_N" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="WORKDAY_ID"/>
+      <viewAttribute id="CONTACT_TYPE"/>
+      <viewAttribute id="CONTACT_VALUE"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_CONTACT_INFO"/>
+    <filter>&quot;CONTACT_TYPE&quot; = 'NETWORK_ID'</filter>
+  </calculationView>
+  <calculationView xsi:type="Calculation:ProjectionView" id="ZMD_CONTACT_INFO_W" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="WORKDAY_ID"/>
+      <viewAttribute id="CONTACT_TYPE"/>
+      <viewAttribute id="CONTACT_VALUE"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input emptyUnionBehavior="undefined" node="ZMD_CONTACT_INFO_W$$$$ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_CONTACT_INFO$$"/>
+    <filter>&quot;CONTACT_TYPE&quot; = 'WORK_EMAIL'</filter>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_1" cardinality="C1_1" joinType="inner">
+    <viewAttributes>
+      <viewAttribute id="WORKDAY_ID"/>
+      <viewAttribute id="CONTACT_TYPE_N"/>
+      <viewAttribute id="CONTACT_VALUE_N"/>
+      <viewAttribute id="CONTACT_TYPE_W"/>
+      <viewAttribute id="CONTACT_VALUE_W"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="ZMD_CONTACT_INFO_N">
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKDAY_ID" source="WORKDAY_ID"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="CONTACT_TYPE_N" source="CONTACT_TYPE"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="CONTACT_VALUE_N" source="CONTACT_VALUE"/>
+    </input>
+    <input node="ZMD_CONTACT_INFO_W">
+      <mapping xsi:type="Calculation:AttributeMapping" target="CONTACT_TYPE_W" source="CONTACT_TYPE"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="CONTACT_VALUE_W" source="CONTACT_VALUE"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKDAY_ID" source="WORKDAY_ID"/>
+    </input>
+    <joinAttribute name="WORKDAY_ID"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:ProjectionView" id="ZMD_POSITN_INFO" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="WORKDAY_ID"/>
+      <viewAttribute id="SUPERVISOR_ID"/>
+      <viewAttribute id="WORKER_STATUS"/>
+    
+      <viewAttribute id="TET_LEVEL"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_POSITN_INFO"/>
+    <filter>&quot;TET_LEVEL&quot; != 0 and &quot;TET_LEVEL&quot; != 1</filter>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_2" cardinality="C1_1" joinType="leftOuter">
+    <viewAttributes>
+      <viewAttribute id="WORKDAY_ID"/>
+      <viewAttribute id="WORKER_STATUS"/>
+      <viewAttribute id="POO_CONTACT_TYPE_N"/>
+      <viewAttribute id="POO_CONTACT_VALUE_N"/>
+      <viewAttribute id="POO_CONTACT_TYPE_W"/>
+      <viewAttribute id="POO_CONTACT_VALUE_W"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="ZMD_POSITN_INFO">
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKDAY_ID" source="WORKDAY_ID"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKER_STATUS" source="WORKER_STATUS"/>
+    </input>
+    <input node="Join_1">
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_TYPE_N" source="CONTACT_TYPE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_VALUE_N" source="CONTACT_VALUE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_TYPE_W" source="CONTACT_TYPE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_VALUE_W" source="CONTACT_VALUE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKDAY_ID" source="WORKDAY_ID"/>
+    </input>
+    <joinAttribute name="WORKDAY_ID"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_3" cardinality="C1_1" joinType="leftOuter" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="SUPERVISOR_ID"/>
+      <viewAttribute id="WORKER_STATUS"/>
+      <viewAttribute id="MA_CONTACT_TYPE_N"/>
+      <viewAttribute id="MA_CONTACT_VALUE_N"/>
+      <viewAttribute id="MA_CONTACT_TYPE_W"/>
+      <viewAttribute id="MA_CONTACT_VALUE_W"/>
+      <viewAttribute id="WORKDAY_ID"/>
+    
+      <viewAttribute id="TET_LEVEL" aggregationType="sum"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="ZMD_POSITN_INFO">
+      <mapping xsi:type="Calculation:AttributeMapping" target="SUPERVISOR_ID" source="SUPERVISOR_ID"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKER_STATUS" source="WORKER_STATUS"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKDAY_ID" source="WORKDAY_ID"/>
+    
+      <mapping xsi:type="Calculation:AttributeMapping" target="TET_LEVEL" source="TET_LEVEL"/>
+    </input>
+    <input node="Join_1">
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_TYPE_N" source="CONTACT_TYPE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_VALUE_N" source="CONTACT_VALUE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_TYPE_W" source="CONTACT_TYPE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_VALUE_W" source="CONTACT_VALUE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="SUPERVISOR_ID" source="WORKDAY_ID"/>
+    </input>
+    <filter>&quot;TET_LEVEL&quot; not IN (0,1,2,99)</filter>
+    <joinAttribute name="SUPERVISOR_ID"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_4" cardinality="C1_1" joinType="inner">
+    <viewAttributes>
+      <viewAttribute id="WORKDAY_ID"/>
+      <viewAttribute id="WORKER_STATUS"/>
+      <viewAttribute id="POO_CONTACT_TYPE_N"/>
+      <viewAttribute id="POO_CONTACT_VALUE_N"/>
+      <viewAttribute id="POO_CONTACT_TYPE_W"/>
+      <viewAttribute id="POO_CONTACT_VALUE_W"/>
+      <viewAttribute id="SUPERVISOR_ID"/>
+      <viewAttribute id="MA_CONTACT_TYPE_N"/>
+      <viewAttribute id="MA_CONTACT_VALUE_N"/>
+      <viewAttribute id="MA_CONTACT_TYPE_W"/>
+      <viewAttribute id="MA_CONTACT_VALUE_W"/>
+      <viewAttribute id="WORKER_STATUS_MA"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="Join_2">
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKDAY_ID" source="WORKDAY_ID"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKER_STATUS" source="WORKER_STATUS"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_TYPE_N" source="POO_CONTACT_TYPE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_VALUE_N" source="POO_CONTACT_VALUE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_TYPE_W" source="POO_CONTACT_TYPE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_VALUE_W" source="POO_CONTACT_VALUE_W"/>
+    </input>
+    <input node="Join_3">
+      <mapping xsi:type="Calculation:AttributeMapping" target="SUPERVISOR_ID" source="SUPERVISOR_ID"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_TYPE_N" source="MA_CONTACT_TYPE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_VALUE_N" source="MA_CONTACT_VALUE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_TYPE_W" source="MA_CONTACT_TYPE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_VALUE_W" source="MA_CONTACT_VALUE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKER_STATUS_MA" source="WORKER_STATUS"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKDAY_ID" source="WORKDAY_ID"/>
+    </input>
+    <joinAttribute name="WORKDAY_ID"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_5" cardinality="CN_N" joinType="inner">
+    <viewAttributes>
+      <viewAttribute id="WORKDAY_ID"/>
+      <viewAttribute id="WORKER_STATUS"/>
+      <viewAttribute id="POO_CONTACT_TYPE_N"/>
+      <viewAttribute id="POO_CONTACT_VALUE_N"/>
+      <viewAttribute id="POO_CONTACT_TYPE_W"/>
+      <viewAttribute id="POO_CONTACT_VALUE_W"/>
+      <viewAttribute id="SUPERVISOR_ID"/>
+      <viewAttribute id="MA_CONTACT_TYPE_N"/>
+      <viewAttribute id="MA_CONTACT_VALUE_N"/>
+      <viewAttribute id="MA_CONTACT_TYPE_W"/>
+      <viewAttribute id="MA_CONTACT_VALUE_W"/>
+      <viewAttribute id="WORKER_STATUS_MA"/>
+      <viewAttribute id="CC_MANAGER_FULLNAME"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="Join_4">
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKDAY_ID" source="WORKDAY_ID"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKER_STATUS" source="WORKER_STATUS"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_TYPE_N" source="POO_CONTACT_TYPE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_VALUE_N" source="POO_CONTACT_VALUE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_TYPE_W" source="POO_CONTACT_TYPE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="POO_CONTACT_VALUE_W" source="POO_CONTACT_VALUE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="SUPERVISOR_ID" source="SUPERVISOR_ID"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_TYPE_N" source="MA_CONTACT_TYPE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_VALUE_N" source="MA_CONTACT_VALUE_N"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_TYPE_W" source="MA_CONTACT_TYPE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MA_CONTACT_VALUE_W" source="MA_CONTACT_VALUE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="WORKER_STATUS_MA" source="WORKER_STATUS_MA"/>
+    </input>
+    <input node="Projection_1">
+      <mapping xsi:type="Calculation:AttributeMapping" target="CC_MANAGER_FULLNAME" source="CC_FULLNAME"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="SUPERVISOR_ID" source="WORKDAY_ID"/>
+    </input>
+    <joinAttribute name="SUPERVISOR_ID"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="WORKDAY_ID"/>
+      <viewAttribute id="NAME_TYPE"/>
+      <viewAttribute id="FIRST_NAME"/>
+      <viewAttribute id="LAST_NAME"/>
+    </viewAttributes>
+    <calculatedViewAttributes>
+      <calculatedViewAttribute id="CC_FULLNAME" datatype="NVARCHAR" length="255" expressionLanguage="SQL">
+        <formula>&quot;LAST_NAME&quot; || ',' || ' ' || &quot;FIRST_NAME&quot;</formula>
+      </calculatedViewAttribute>
+    </calculatedViewAttributes>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_WORKER_NAME"/>
+    <filter>&quot;NAME_TYPE&quot; = 'LEGAL'</filter>
+  </calculationView>
+</calculationViews>
+<logicalModel id="Join_5">
+  <attributes>
+    <attribute id="WORKDAY_ID" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WORKDAY_ID"/>
+      <keyMapping columnObjectName="Join_5" columnName="WORKDAY_ID"/>
+    </attribute>
+    <attribute id="WORKER_STATUS" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WORKER_STATUS"/>
+      <keyMapping columnObjectName="Join_5" columnName="WORKER_STATUS"/>
+    </attribute>
+    <attribute id="POO_CONTACT_TYPE_N" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CONTACT_TYPE"/>
+      <keyMapping columnObjectName="Join_5" columnName="POO_CONTACT_TYPE_N"/>
+    </attribute>
+    <attribute id="POO_CONTACT_VALUE_N" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CONTACT_VALUE"/>
+      <keyMapping columnObjectName="Join_5" columnName="POO_CONTACT_VALUE_N"/>
+    </attribute>
+    <attribute id="POO_CONTACT_TYPE_W" order="6" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CONTACT_TYPE"/>
+      <keyMapping columnObjectName="Join_5" columnName="POO_CONTACT_TYPE_W"/>
+    </attribute>
+    <attribute id="POO_CONTACT_VALUE_W" order="7" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CONTACT_VALUE"/>
+      <keyMapping columnObjectName="Join_5" columnName="POO_CONTACT_VALUE_W"/>
+    </attribute>
+    <attribute id="SUPERVISOR_ID" order="8" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SUPERVISOR_ID"/>
+      <keyMapping columnObjectName="Join_5" columnName="SUPERVISOR_ID"/>
+    </attribute>
+    <attribute id="WORKER_STATUS_MA" order="9" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WORKER_STATUS"/>
+      <keyMapping columnObjectName="Join_5" columnName="WORKER_STATUS_MA"/>
+    </attribute>
+    <attribute id="MA_CONTACT_TYPE_N" order="10" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CONTACT_TYPE"/>
+      <keyMapping columnObjectName="Join_5" columnName="MA_CONTACT_TYPE_N"/>
+    </attribute>
+    <attribute id="MA_CONTACT_VALUE_N" order="11" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CONTACT_VALUE"/>
+      <keyMapping columnObjectName="Join_5" columnName="MA_CONTACT_VALUE_N"/>
+    </attribute>
+    <attribute id="MA_CONTACT_TYPE_W" order="12" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CONTACT_TYPE"/>
+      <keyMapping columnObjectName="Join_5" columnName="MA_CONTACT_TYPE_W"/>
+    </attribute>
+    <attribute id="MA_CONTACT_VALUE_W" order="13" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CONTACT_VALUE"/>
+      <keyMapping columnObjectName="Join_5" columnName="MA_CONTACT_VALUE_W"/>
+    </attribute>
+  
+    <attribute id="CC_MANAGER_FULLNAME" order="14" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CC_FULLNAME"/>
+  
+      <keyMapping columnObjectName="Join_5" columnName="CC_MANAGER_FULLNAME"/>
+  
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures>
+    <measure id="COUNT_1" order="1" aggregationType="sum" measureType="simple" calculatedMeasureType="counter" aggregatable="true" datatype="BIGINT" length="">
+      <exceptionAggregation>
+        <attribute attributeName="WORKDAY_ID"/>
+      </exceptionAggregation>
+      <formula>1</formula>
+      
+      
+      </measure>
+  </calculatedMeasures>
+  <restrictedMeasures/>
+  <localDimensions/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="334" y="112"/>
+    
+      <rectangleSize width="160"/>
+    </shape>
+  
+    <shape expanded="true" modelObjectName="ZMD_CONTACT_INFO_N" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="105" y="856"/>
+      <rectangleSize height="30" width="242"/>
+    </shape>
+    <shape expanded="true" modelObjectName="ZMD_CONTACT_INFO_W" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="397" y="856"/>
+      <rectangleSize width="242"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Join_1" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="310" y="696"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape modelObjectName="ZMD_CONTACT_INFO_N" modelObjectNameSpace="Join_1" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="20" y="30"/>
+      <rectangleSize width="205"/>
+    </shape>
+    <shape modelObjectName="ZMD_CONTACT_INFO_W" modelObjectNameSpace="Join_1" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="320" y="30"/>
+      <rectangleSize width="207"/>
+    </shape>
+    <shape expanded="true" modelObjectName="ZMD_POSITN_INFO" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="92" y="696"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Join_2" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="310" y="516"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape modelObjectName="ZMD_POSITN_INFO" modelObjectNameSpace="Join_2" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="20" y="30"/>
+      <rectangleSize width="176"/>
+    </shape>
+    <shape modelObjectName="Join_1" modelObjectNameSpace="Join_2" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="320" y="30"/>
+      <rectangleSize width="196"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Join_3" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="92" y="516"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape modelObjectName="ZMD_POSITN_INFO" modelObjectNameSpace="Join_3" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="20" y="30"/>
+      <rectangleSize width="250"/>
+    </shape>
+    <shape modelObjectName="Join_1" modelObjectNameSpace="Join_3" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="320" y="30"/>
+      <rectangleSize width="183"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Join_4" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="118" y="356"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape modelObjectName="Join_2" modelObjectNameSpace="Join_4" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="20" y="30"/>
+      <rectangleSize width="226"/>
+    </shape>
+    <shape modelObjectName="Join_3" modelObjectNameSpace="Join_4" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="320" y="30"/>
+      <rectangleSize width="218"/>
+    </shape>
+  
+    <shape expanded="true" modelObjectName="Join_5" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="334" y="217"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape modelObjectName="Join_4" modelObjectNameSpace="Join_5" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="20" y="30"/>
+      <rectangleSize width="250"/>
+    </shape>
+    <shape modelObjectName="Projection_1" modelObjectNameSpace="Join_5" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="320" y="30"/>
+      <rectangleSize width="166"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="396" y="356"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

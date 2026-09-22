@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_readConfigValues" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="Read Config Values"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES">
+  <attributes>
+    <attribute id="CONFIG_NAME" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Config Name"/>
+      <keyMapping columnObjectName="ZT_CONFIG_VALUES" columnName="CONFIG_NAME"/>
+    </attribute>
+    <attribute id="CONFIG_VALUE" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Config value"/>
+      <keyMapping columnObjectName="ZT_CONFIG_VALUES" columnName="CONFIG_VALUE"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

@@ -1,0 +1,17 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::deletePoThreshold"( IN IP_CURRENCY VARCHAR(5),
+																			IN IP_CODE VARCHAR(5),
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER	
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA
+   AS
+BEGIN
+  delete from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_PO_THRESHOLD"
+  where currency=:IP_CURRENCY and company_code =:IP_CODE;
+  
+  EX_STATUS :='Record deleted successfully !';
+  EX_CODE := 1;
+END

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_read_PO_Rounding_Threshold" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="CV_read_PO_Rounding_Threshold"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TB_PO_THRESHOLD">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TB_PO_THRESHOLD</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TB_PO_THRESHOLD">
+  <attributes>
+    <attribute id="TR_ID" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TR ID"/>
+      <keyMapping columnObjectName="TB_PO_THRESHOLD" columnName="TR_ID"/>
+    </attribute>
+    <attribute id="THRESHOLDVALUE" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="THRESHOLD VALUE"/>
+      <keyMapping columnObjectName="TB_PO_THRESHOLD" columnName="THRESHOLDVALUE"/>
+    </attribute>
+    <attribute id="DELETE_FLAG" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DELETE FLAG"/>
+      <keyMapping columnObjectName="TB_PO_THRESHOLD" columnName="DELETE_FLAG"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

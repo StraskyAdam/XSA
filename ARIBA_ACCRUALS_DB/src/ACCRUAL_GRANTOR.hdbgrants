@@ -1,0 +1,1 @@
+{	"ACCRUAL_GRANTOR": {		"object_owner": {			"roles": [				"Z_ACCRUAL_SCHEMA"			]		},		"application_user": {			"roles": [				"Z_ACCRUAL_SCHEMA"			]		}	}}

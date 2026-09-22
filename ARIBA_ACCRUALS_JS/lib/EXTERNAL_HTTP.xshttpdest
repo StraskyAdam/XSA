@@ -1,0 +1,6 @@
+description = "Post in Ariba System";
+proxyType = none;
+proxyHost = "proxy";
+proxyPort = 8080;
+authType = basic;
+timeout = 0;

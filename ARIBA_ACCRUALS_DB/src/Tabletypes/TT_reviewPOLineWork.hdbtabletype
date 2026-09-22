@@ -1,0 +1,6 @@
+TYPE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Tabletypes::TT_reviewPOLinework" AS TABLE
+(
+	PONUMBER  varchar(20),
+	ITEMNO  varchar(5)
+	
+)

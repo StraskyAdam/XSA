@@ -1,0 +1,137 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPendingPO"()
+       RETURNS table (
+						managersId varchar(255),
+						poowner varchar(255),
+						ponumber varchar(10),
+				        poline varchar(10),
+				        PO_LINE_DESCRIPTION varchar(5000),
+				        POVALUE_USD decimal(13,2),
+				        LAST_UPDATE_ON timestamp,
+				        PO_DASHBOARD_SECTION varchar(255),
+				        SUPPLIER_NAME varchar(500),
+				        PO_CREATION_DATE date,
+				        ACCRUALMETHOD varchar(50),
+				        SERVICE_START_DATE date,
+				        SERVICE_END_DATE date
+       )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+    /*****************************
+        Write your function logic
+    ****************************/
+	declare lt_data_all table ( 
+								managersId varchar(255),
+								poowner varchar(255),
+								ponumber varchar(10),
+				        		poline varchar(10),
+								PO_LINE_DESCRIPTION varchar(5000),
+				        		POVALUE_USD decimal(13,2),
+					        	LAST_UPDATE_ON timestamp,
+							    PO_DASHBOARD_SECTION varchar(255),
+						        SUPPLIER_NAME varchar(500),
+				        		PO_CREATION_DATE date,
+				        		ACCRUALMETHOD varchar(50),
+				        		SERVICE_START_DATE date,
+				        		SERVICE_END_DATE date
+	);
+	
+	DECLARE i INTEGER;
+	DECLARE lv_bukrs VARCHAR(5000);
+	
+	select config_value into lv_bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+	where config_name = 'Japan_Brazil';
+
+	lt_values = select OUTPUT_SPLIT as company_code from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs);
+	
+  	lt_data= SELECT distinct B.MA_CONTACT_VALUE_W as managersId,  
+   				A.poowner_email as poowner,
+				A.ponumber as ponumber,
+				A.itemno as poline,
+				A.polinedesc as PO_LINE_DESCRIPTION,
+					(case when SUM(A."POVALUE_USD") is null then 0.00
+					else SUM(A."POVALUE_USD")
+					end ) as "POVALUE_USD",
+				A.changed_on as LAST_UPDATE_ON,
+					(case when (A.PSTYPE='0' and A.WRKSTRTDATE <> '00000000' and A.COMPANYCODE in (select company_code from :lt_values)) then 'Indirect Services'
+  					when A.PSTYPE='0' then 'Indirect Material'
+					when A.PSTYPE='9' then 'Indirect Services'
+					end
+					) as "PO_DASHBOARD_SECTION",
+				A.suppliername as SUPPLIER_NAME,
+				A.pocreatedat as PO_CREATION_DATE,
+					(case when A.ACCRUALMETHOD='STL' then 'Straight Line'
+					when A.ACCRUALMETHOD='WTD' then 'Work To Date'
+					else A.ACCRUALMETHOD
+					end
+					)as "ACCRUALMETHOD",
+					A.wrkstrtdate as SERVICE_START_DATE,
+					A.wrkenddate as SERVICE_END_DATE
+				FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO" 
+				(placeholder."$$IP_PSTYPE$$"=>'*', 
+				placeholder."$$IP_EMAIL$$"=>'*', 
+				placeholder."$$IP_POOWNER$$"=>'X') A
+				LEFT OUTER JOIN "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getPO_ManagerEmail" B
+				ON lcase(A.poowner_email) = lcase(B.POO_CONTACT_VALUE_W) 
+				where A.status = 'Pending' and A.poowner_email <>' ' and B.MA_CONTACT_VALUE_W <> ' '
+				group by A.poowner_email,B.MA_CONTACT_VALUE_W,A.ponumber,A.itemno,A.PSTYPE,A.WRKSTRTDATE,A.COMPANYCODE,A.POVALUE_USD,A.polinedesc,
+				A.changed_on,A.suppliername,A.pocreatedat,A.ACCRUALMETHOD,A.wrkstrtdate,A.wrkenddate
+			
+				UNION 
+				
+				SELECT distinct E.MA_CONTACT_VALUE_W as managersId,
+						C.poowner_email as poowner,
+						C.ponumber as ponumber,
+						C.itemno as poline,
+						C.polinedesc as PO_LINE_DESCRIPTION,
+							(case when SUM(C."POVALUE_USD") is null then 0.00
+							else SUM(C."POVALUE_USD")
+							end ) as "POVALUE_USD",
+						C.changed_on as LAST_UPDATE_ON,
+							(case when (PSTYPE='0' and WRKSTRTDATE <> '00000000' and COMPANYCODE in (select company_code from :lt_values)) then 'Below $50k Indirect Service'
+							when PSTYPE='0' then 'Below $50k Indirect Material'
+							when PSTYPE='9' then 'Below $50k Indirect Service'
+							end
+							)as "PO_DASHBOARD_SECTION",
+						C.suppliername as SUPPLIER_NAME,
+						C.pocreatedat as PO_CREATION_DATE,
+							(case when C.ACCRUALMETHOD='STL' then 'Straight Line'
+							when C.ACCRUALMETHOD='WTD' then 'Work To Date'
+							else C.ACCRUALMETHOD
+							end
+							)as "ACCRUALMETHOD",
+						C.wrkstrtdate as SERVICE_START_DATE,
+						C.wrkenddate as SERVICE_END_DATE
+				FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO" 
+				(placeholder."$$IP_PSTYPE$$"=>'*', 
+				placeholder."$$IP_EMAIL$$"=>'*', 
+				placeholder."$$IP_POOWNER$$"=>'X') C
+				LEFT OUTER JOIN "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getPO_ManagerEmail" E
+				ON lcase(C.poowner_email) = lcase(E.POO_CONTACT_VALUE_W) 
+				where C.status = 'Pending' and C.poowner_email <>' ' and E.MA_CONTACT_VALUE_W <> ' '
+				group by C.poowner_email,E.MA_CONTACT_VALUE_W,C.ponumber,C.itemno,C.PSTYPE,C.WRKSTRTDATE,C.COMPANYCODE,C.POVALUE_USD,C.polinedesc,
+				C.changed_on,C.suppliername,C.pocreatedat,C.ACCRUALMETHOD,C.wrkstrtdate,C.wrkenddate;
+				
+		lt_data_all=SELECT managersId,
+				poowner,
+				ponumber,
+				poline,
+				PO_LINE_DESCRIPTION,
+				POVALUE_USD,
+				LAST_UPDATE_ON,
+				PO_DASHBOARD_SECTION,
+				SUPPLIER_NAME,
+				PO_CREATION_DATE,
+				ACCRUALMETHOD,
+				SERVICE_START_DATE,
+				SERVICE_END_DATE
+				
+		FROM :lt_data
+		where lcase(poowner) like '%@takeda.com%'
+		group by managersId,poowner,ponumber,poline,PO_LINE_DESCRIPTION,POVALUE_USD,LAST_UPDATE_ON,PO_DASHBOARD_SECTION,SUPPLIER_NAME,PO_CREATION_DATE,ACCRUALMETHOD,
+				SERVICE_START_DATE,SERVICE_END_DATE
+		order by managersId asc;
+		
+return :lt_data_all;
+END;		
+				

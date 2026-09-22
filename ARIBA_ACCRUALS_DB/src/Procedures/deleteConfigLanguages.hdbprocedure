@@ -1,0 +1,16 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::deleteConfigLanguages"( IV_LANG_CODE VARCHAR(5)  ,                                          
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+  -- READS SQL DATA
+   AS
+BEGIN
+ delete from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_LANGUAGES"  
+ where LANG_CODE = :IV_LANG_CODE;
+		
+	EX_STATUS :='Record deleted successfully !';
+	EX_CODE := 1;
+	
+END

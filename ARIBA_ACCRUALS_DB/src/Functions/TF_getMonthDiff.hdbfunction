@@ -1,0 +1,155 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getMonthDiff"( ip_wrkstrtdat date,
+																ip_wrkenddat date  )
+       RETURNS table ( 
+        			   wrkstrtdat date,
+        			   wrkenddat date,
+        			   wrkcurrdat date,
+       				   month_bet integer,
+    			       month_bet_crr integer )
+    			       
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+declare lt_output table ( wrkstrtdat date,
+        			   wrkenddat date,
+        			   wrkcurrdat date,
+        			   month_bet integer,
+    			       month_bet_crr integer );
+declare lv_month_bet integer;
+declare lv_month_bet_crr integer;
+declare lv_wrkstrtdat date;
+declare lv_wrkenddat date;
+declare lv_wrkcurrdat date;
+declare lv_currentdate date;
+declare lv_incr integer default 0;
+declare lv_incr_curr integer default 0;
+declare lv_cutoff integer default 6;
+declare lv_past varchar(1) default 'N';
+
+lv_wrkstrtdat = ip_wrkstrtdat;
+lv_wrkenddat = ip_wrkenddat;
+lv_currentdate =  current_date;
+-- If the current date is between 1st and 5th consider the previous month
+if dayofmonth(:lv_currentdate) > 1 and lv_cutoff < 6 then
+	lv_currentdate =  add_days(current_date, -dayofmonth(current_date));
+end if;
+
+lv_wrkcurrdat = lv_currentdate;
+
+if dayofmonth(:lv_wrkstrtdat) > 15  then 
+	lv_wrkstrtdat = add_months(add_days(last_day(:lv_wrkstrtdat), 1), 0);
+end if;
+
+if dayofmonth(:lv_wrkstrtdat) <= 15 then 
+	lv_wrkstrtdat = add_months(add_days(last_day(:lv_wrkstrtdat), 1), -1);
+end if;
+
+-- Work End Date greater than 15 
+if dayofmonth(:lv_wrkenddat) > 15 then 
+	lv_wrkenddat = add_months(add_days(last_day(:lv_wrkenddat), 1), 0);
+end if;
+-- Work End Date less than 15 
+if dayofmonth(:lv_wrkenddat) <= 15 then 
+	lv_wrkenddat = add_months(add_days(last_day(:lv_wrkenddat), 1), -1);
+end if;
+
+-- Current Date greater than 15 
+if dayofmonth(:lv_wrkcurrdat) >= lv_cutoff then 
+	--lv_wrkcurrdat = last_day(:lv_wrkcurrdat);
+	lv_wrkcurrdat = add_months(add_days(last_day(:lv_wrkcurrdat), 1), 0);
+end if;
+-- Current Date less than 15 
+if dayofmonth(:lv_wrkcurrdat) < lv_cutoff then 
+	lv_wrkcurrdat = add_months(add_days(last_day(:lv_wrkcurrdat), 1), -1);
+end if;
+
+
+
+if  dayofmonth(:lv_wrkstrtdat) <= 15  and dayofmonth(:lv_wrkenddat) > 15 then
+	lv_incr = 1;
+end if;
+
+if  dayofmonth(:lv_wrkstrtdat) <= 15  and dayofmonth(:lv_wrkcurrdat) > lv_cutoff then
+	lv_incr_curr = 1;
+end if;
+
+ -- If the Work End Date is elapsed then set 100%
+if  (  year(:ip_wrkenddat) < year(lv_currentdate)) then 
+	lv_wrkcurrdat = :lv_wrkenddat;
+	lv_past = 'Y';
+else   
+  if (  year(:ip_wrkenddat) = year(lv_currentdate) ) and  ( month(:ip_wrkenddat) < month(lv_currentdate) )  then 
+     	lv_wrkcurrdat = :lv_wrkenddat;
+     	lv_past = 'Y';
+   end if;
+ end if;
+
+   -- If the Work End Date is same as the current month and year
+ if ( ( month(:ip_wrkenddat) = month(lv_currentdate)) and
+      ( year(:ip_wrkenddat) = year(lv_currentdate) ))  then 
+     
+     if dayofmonth(:ip_wrkenddat) > 15 then 
+		 lv_wrkcurrdat = add_months(add_days(last_day(lv_currentdate), 1), 0);
+		lv_wrkenddat = add_months(add_days(last_day(:ip_wrkenddat), 1), 0);
+	 else 
+	   lv_wrkcurrdat = add_months(add_days(last_day(lv_currentdate), 1), -1);
+	   lv_wrkenddat = add_months(add_days(last_day(:ip_wrkenddat), 1), -1);
+	 end if;
+
+ 	 lv_incr_curr = 0; lv_incr = 0;
+ end if;
+
+
+-- If the work start date is in the Current month, consider the full month  
+ if ( ( month(:ip_wrkstrtdat) = month(lv_currentdate)) and
+      ( year(:ip_wrkstrtdat) = year(lv_currentdate) ))  then  
+     if dayofmonth(:ip_wrkstrtdat) > 15 then 
+		lv_wrkstrtdat = add_months(add_days(last_day(lv_currentdate), 1), 0);	
+	 else 
+	   lv_wrkstrtdat = add_months(add_days(last_day(lv_currentdate), 1), -1);	   
+	 end if;
+ 	  lv_incr = 0;
+ end if;
+
+if :lv_past = 'Y' then 
+	lv_month_bet = 1;
+	lv_month_bet_crr = 1;
+else
+
+-- Get the Difference between the start and end dates
+	lv_month_bet = months_between( :lv_wrkstrtdat, :lv_wrkenddat );
+-- Add one to it 
+	lv_month_bet = :lv_month_bet + :lv_incr;
+	 
+-- Get the Difference between the start and current date
+	lv_month_bet_crr = months_between( :lv_wrkstrtdat, :lv_wrkcurrdat );
+-- Add one to it 
+	lv_month_bet_crr = :lv_month_bet_crr + :lv_incr_curr;
+	
+	if :lv_month_bet_crr <= 0 then 
+	 if ( ( month(:ip_wrkenddat) = month(lv_currentdate)) and
+	      ( year(:ip_wrkenddat) = year(lv_currentdate) ))  then 
+	 	lv_month_bet_crr = 1;
+	 else
+	   lv_month_bet_crr = 0;
+	 end if;
+	end if;
+	
+	if :lv_month_bet <= 0 then 
+	 lv_month_bet = 1;
+	end if;
+end if;
+
+
+lt_output.wrkstrtdat[1] = :lv_wrkstrtdat;
+lt_output.wrkenddat[1] = :lv_wrkenddat;
+-- lt_output.wrkcurrdat[1] = lv_currentdate;
+lt_output.wrkcurrdat[1] = lv_wrkcurrdat;
+lt_output.month_bet[1] = :lv_month_bet;
+lt_output.month_bet_crr[1] = :lv_month_bet_crr;
+
+
+return :lt_output;
+
+END;

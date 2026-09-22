@@ -1,0 +1,33 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getSingleUserDetails"( )
+       RETURNS table (
+       	"USERNAME" varchar(12),
+						"DECIMAL_FORMAT" nvarchar(1),
+						"DATFM" nvarchar(1),
+						"EMAILADDR_SAP" nvarchar(241),
+						"FULL_NAME" varchar(80),
+						"EMAILADDR" varchar(241))
+       	
+       	
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+return
+    select
+   						"USERNAME" ,
+						"DECIMAL_FORMAT" ,
+						"DATFM" ,
+						"EMAILADDR_SAP" ,
+						"FULL_NAME" ,
+						"EMAILADDR" 
+
+from
+(
+select 
+    *, 
+    row_number() over (partition by EMAILADDR order by EMAILADDR) as RowNbr 
+
+from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getAllUserDetails"
+) source
+
+where RowNbr = 1;
+END;

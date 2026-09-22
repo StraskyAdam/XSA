@@ -1,0 +1,27 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::getEmailManagersperPO"( )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   READS SQL DATA AS
+BEGIN
+   /*************************************
+       Write your procedure logic 
+   *************************************/
+   	declare lt_data_all table ( managersId varchar(255),
+   								managerName varchar(255),
+								emailId varchar(255)
+	);
+	
+	lt_data_all=SELECT distinct MANAGER_EMAIL as managersId,
+				CC_MANAGER_FULLNAME as managerName,
+				STRING_AGG(POOWNER_EMAIL,'; ') as emailId
+		FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getEmailManagerPO"
+		(placeholder."$$IP_PSTYPE$$"=>'*', 
+		placeholder."$$IP_EMAIL$$"=>'*', 
+		placeholder."$$IP_POOWNER$$"=>'X')
+		where lcase(MANAGER_EMAIL) like '%@takeda.com%'
+		group by MANAGER_EMAIL,CC_MANAGER_FULLNAME;
+		
+	select * from :lt_data_all order by managersId asc;
+   
+END

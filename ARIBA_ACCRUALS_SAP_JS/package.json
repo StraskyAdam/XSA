@@ -1,0 +1,45 @@
+{
+	"name": "ARIBA_ACCRUALS_SAP_JS",
+	"description": "my description",
+	"version": "1.1.0",
+	"files": [],
+	"main": "server.js",
+	"scripts": {
+		"test": "node node_modules/jest/bin/jest --config jest.json",
+		"test-coverage": "node node_modules/jest/bin/jest --coverage --config jest.json",
+		"start": "node server.js"
+	},
+	"dependencies": {
+		"express": "latest",
+		"@sap/xssec": "3.6.0",
+		"@sap/xsenv": "latest",
+		"@sap/hdbext": "latest",
+		"@sap/hana-client": "2.26.25",
+		"@sap/textbundle": "latest",
+		"@sap/logging": "latest",
+		"passport": "latest",
+		"async": "latest",
+		"ws": "latest",
+		"accept-language-parser": "latest",
+		"node-xlsx": "latest",
+		"xmldoc": "latest",
+		"winston": "latest",
+		"body-parser": "latest",
+		"elementtree": "latest",
+		"then-request": "latest",
+		"nodemailer": "latest",
+		"sftp-upload": "latest"
+	},
+	"devDependencies": {
+		"jest": "latest",
+		"jest-junit": "latest"
+	},
+	"overrides": {
+    	"lodash": "^4.17.21",
+		"minimatch": "^9.0.5",
+		"ssh2" : "^1.4.0"
+    },
+	"engines": {
+		"node": "^20.12"
+	}
+}

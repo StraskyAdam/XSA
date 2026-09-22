@@ -1,0 +1,390 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"(IP_THRESHOLD varchar(1),
+														IP_PSTYPE varchar(1), 
+														IP_EMAIL varchar(255) default '*' ,
+														IP_POOWNER varchar(1))
+       RETURNS table ( ebeln nvarchar(10), 
+					   ebelp nvarchar(5),
+					   poowner_email varchar(255) ) 
+																	
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+declare lv_email varchar(255);
+declare lv_count integer;
+declare lv_coun_jb integer;
+declare lv_bukrs varchar(5000);
+declare lv_companycode varchar(5000);
+declare lv_threshold decimal(13,2);
+declare lv_threshold_curr varchar(3);
+declare lv_name1 varchar(10);
+declare  lv_management_null integer;
+declare lt_companycode table (
+	company_code nvarchar(4)
+);
+
+if (:IP_EMAIL = '*') then 
+	lv_email = '%';
+else 
+	lv_email = :IP_EMAIL;
+end if;
+
+
+-- Get the Threshold value from the common currency 
+lt_threshold = select po_threshold, currency   from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_PO_THRESHOLD" where currency = 'USD';
+lv_threshold = :lt_threshold.po_threshold[1];
+lv_threshold_curr =  :lt_threshold.currency[1];
+
+-- Japan_Brazil
+ select config_value into lv_bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+			where config_name = 'Japan_Brazil';
+
+lt_values = select OUTPUT_SPLIT as company_code from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs);
+
+
+ --select count(*) into lv_coun_jb from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+	-- 											 where bukrs in (SELECT * FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs))
+	-- 											 and pstyp = '0'
+	-- 											 and zstart_date <> '00000000'
+	-- 											 and ( LOWER(PO_REQUESTOR)  like :lv_email
+	-- 		                        			 or LOWER(PO_PREPARER)  like :lv_email);
+
+		
+
+
+
+if (:IP_PSTYPE = '9') then -- Indirect Service PO
+
+		if  :IP_POOWNER = 'X' then  -- POOwner
+						lt_open_po = 
+							select  ekpo.ebeln as ebeln,
+								    ekpo.ebelp as ebelp,
+								    LOWER(ekpo.PO_REQUESTOR )as poowner_email
+									from (select ebeln,
+												 ebelp,
+												 PO_REQUESTOR 
+												 from
+												 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+												 where pstyp = :IP_PSTYPE
+												 and erekz IN (' ', '') --Final Invoice Indicator
+												 and zstart_date <> '00000000' and zend_date <> '00000000' 
+												 and ( LOWER(PO_REQUESTOR)  like :lv_email
+			                        			 or LOWER(PO_PREPARER)  like :lv_email ) 
+			                        			 union
+			                        			 select ebeln,
+												 ebelp,
+												 PO_REQUESTOR 
+												 from
+												 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+												 where pstyp = '0'
+												 and erekz IN (' ', '') --Final Invoice Indicator
+												 and zstart_date <> '00000000'
+												 and bukrs in (select company_code from :lt_values)
+												 and ( LOWER(PO_REQUESTOR)  like :lv_email
+			                        			 or LOWER(PO_PREPARER)  like :lv_email ) 
+												 )as ekpo
+									
+									left outer join (select ebeln,bukrs 
+														from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO"
+														where bsart = 'ZARP' )as ekko 
+									on ekko.ebeln = ekpo.ebeln
+									
+									inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+									on ekko.bukrs = T001.bukrs
+									
+									order by 
+									ekpo.ebeln,
+									ekpo.ebelp;
+			
+			
+		else if :IP_POOWNER <> 'X' then  --not poowner
+		
+						lt_open_po = 
+							select  distinct ekpo.ebeln as ebeln,
+						    ekpo.ebelp as ebelp,
+						     LOWER(ekpo.PO_REQUESTOR) as poowner_email
+							from  (select ebeln,
+												 ebelp,
+												 PO_REQUESTOR 
+												 from
+												 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+												 where pstyp = :IP_PSTYPE
+												 and erekz IN (' ', '') --Final Invoice Indicator
+												 and zstart_date <> '00000000' and zend_date <> '00000000' 
+												union
+												select ebeln,
+												 ebelp,
+												 PO_REQUESTOR 
+												 from
+												 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+												 where pstyp = '0'
+												 and erekz IN (' ', '') --Final Invoice Indicator
+												 and zstart_date <> '00000000' 
+												 and bukrs in (select company_code from :lt_values)
+												 )as ekpo
+							
+							left outer join (select ebeln,bukrs 
+														from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO"
+														where bsart = 'ZARP' 
+														-- and bukrs in (select company_code from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCompanyCodes"(:ip_email ))
+							)as ekko  
+							on ekko.ebeln = ekpo.ebeln
+							
+							left outer join (select ebeln,ebelp,kostl,kokrs
+												from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" 
+												-- where LTRIM (kostl,'0') in (select case when cost_center = 'NULL' or cost_center is null then ' ' else LTRIM (cost_center,'0')  end as cost_center
+												-- 								from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCostCenter"(:ip_email )
+												)
+												as ekkn
+							on ekkn.ebeln = ekpo.ebeln 
+							and ekkn.ebelp = ekpo.ebelp
+							
+							left outer join(select kostl,kokrs,datbi,zzrptun 
+												from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS"
+												where datbi >= CURRENT_DATE
+											 -- and (ifnull(zzrptun,'NULL') in (select case when management_unit = 'NULL' or management_unit is null then 'NULL' 
+												-- 								else LTRIM (management_unit,'0') end as management_unit
+												-- 							from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigManagementUnit"(:ip_email )
+												-- 							) 
+												-- or zzrptun = ' ')
+												)as csks
+						
+							on csks.kostl = ekkn.kostl
+							and csks.kokrs = ekkn.kokrs
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+							on ekko.bukrs = T001.bukrs
+							
+							where  ekko.bukrs in ( select * from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCompanyCodes"(:lv_email ))
+					     	and LTRIM (ekkn.kostl,'0') in (
+					     		select case when cost_center = 'NULL' or cost_center is null then ' ' else LTRIM (cost_center,'0')  end as cost_center from 
+					     		 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCostCenter"(:lv_email )
+					     		
+					     		
+					     		
+					     	)
+					    	and ( ifnull(csks.zzrptun,'NULL') in (select case when management_unit = 'NULL' or management_unit is null then 'NULL' 
+					    											else LTRIM (management_unit,'0') end as management_unit
+																	from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigManagementUnit"(:lv_email ))
+								or csks.zzrptun IN (' ', ''))
+					    	
+							 
+						
+							order by 
+							ekpo.ebeln,
+							ekpo.ebelp;
+
+		end if;
+	end if;
+	
+				
+else if (:IP_PSTYPE = '0') then -- Indirect Material PO
+
+			if  :IP_POOWNER='X' then  -- POOwner
+				lt_open_po = 
+					select  ekpo.ebeln as ebeln,
+						    ekpo.ebelp as ebelp,
+						    LOWER(ekpo.PO_REQUESTOR) as poowner_email
+						   
+							from (select ebeln,
+												 ebelp,
+												 PO_REQUESTOR 
+												 from
+												 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+												 where pstyp = :IP_PSTYPE
+												 and bukrs not in (select company_code from :lt_values)
+												 and erekz IN (' ', '') --Final Invoice Indicator
+												 and ( LOWER(PO_REQUESTOR)  like :lv_email
+			                        			 or LOWER(PO_PREPARER)  like :lv_email ) 
+			                        			 union 
+			                        			 select ebeln,
+												 ebelp,
+												 PO_REQUESTOR 
+												 from
+												 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+												 where pstyp = :IP_PSTYPE
+												 and (zstart_date = '00000000')
+												 and bukrs in (select company_code from :lt_values)
+												 and erekz IN (' ', '') --Final Invoice Indicator
+												 and ( LOWER(PO_REQUESTOR)  like :lv_email
+			                        			 or LOWER(PO_PREPARER)  like :lv_email ) 
+												 )as ekpo
+							
+							left outer join (select ebeln,bukrs 
+														from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO"
+														where bsart = 'ZARP' )as ekko 
+							on ekko.ebeln = ekpo.ebeln
+							
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+							on ekko.bukrs = T001.bukrs
+							
+							order by 
+							ekpo.ebeln,
+							ekpo.ebelp;
+							
+				
+			else if :IP_POOWNER <> 'X' then   
+				
+					lt_open_po = 
+						select  distinct ekpo.ebeln as ebeln,
+					    ekpo.ebelp as ebelp,
+					     LOWER(ekpo.PO_REQUESTOR) as poowner_email
+							from  (select ebeln,
+												 ebelp,
+												 PO_REQUESTOR 
+												 from
+												 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+												 where pstyp = :IP_PSTYPE
+												 and bukrs not in (select company_code from :lt_values)
+												 and erekz IN (' ', '') --Final Invoice Indicator
+												 
+												 union
+												 
+												 select ebeln,
+												 ebelp,
+												 PO_REQUESTOR 
+												 from
+												 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"
+												 where pstyp = :IP_PSTYPE
+												 and (zstart_date = '00000000')
+												 and bukrs in (select company_code from :lt_values)
+												 and erekz IN (' ', '') --Final Invoice Indicator
+												 
+												 )as ekpo
+							
+							left outer join (select ebeln,bukrs 
+														from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO"
+														where bsart = 'ZARP' 
+														-- and bukrs in (select company_code from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCompanyCodes"(:ip_email ))
+							)as ekko  
+							on ekko.ebeln = ekpo.ebeln
+							
+							left outer join (select ebeln,ebelp,kostl,kokrs
+												from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" 
+												-- where LTRIM (kostl,'0') in (select case when cost_center = 'NULL' or cost_center is null then ' ' else LTRIM (cost_center,'0')  end as cost_center
+												-- 								from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCostCenter"(:ip_email )
+												)
+												as ekkn
+							on ekkn.ebeln = ekpo.ebeln 
+							and ekkn.ebelp = ekpo.ebelp
+							
+							left outer join(select kostl,kokrs,datbi,zzrptun 
+												from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS"
+												where datbi >= CURRENT_DATE
+											 -- and (ifnull(zzrptun,'NULL') in (select case when management_unit = 'NULL' or management_unit is null then 'NULL' 
+												-- 								else LTRIM (management_unit,'0') end as management_unit
+												-- 							from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigManagementUnit"(:ip_email )
+												-- 							) 
+												-- or zzrptun = ' ')
+												)as csks
+						
+							on csks.kostl = ekkn.kostl
+							and csks.kokrs = ekkn.kokrs
+							
+							inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+							on ekko.bukrs = T001.bukrs
+							where  ekko.bukrs in ( select * from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCompanyCodes"(:lv_email ))
+					     	and LTRIM (ekkn.kostl,'0') in (
+					     		select case when cost_center = 'NULL' or cost_center is null then ' ' else LTRIM (cost_center,'0')  end as cost_center from 
+					     		 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCostCenter"(:lv_email )
+					     		
+					     		
+					     		
+					     	)
+					    	and ( ifnull(csks.zzrptun,'NULL') in (select case when management_unit = 'NULL' or management_unit is null then 'NULL' 
+					    											else LTRIM (management_unit,'0') end as management_unit
+																	from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigManagementUnit"(:lv_email ))
+								or csks.zzrptun IN (' ', ''))
+						
+							order by 
+							ekpo.ebeln,
+							ekpo.ebelp;
+
+			end if;
+		end if;
+
+	end if;
+end if;
+
+-- Handle the threshold ----
+
+-- Check the input threshold 
+if :IP_THRESHOLD = '1' then -- above threhsold 
+	lt_open_po_totalVal = select ekpo.ebeln as ebeln,
+							 sum(ekpo.netwr) as totalPOValue
+							
+								from (select ebeln, netwr from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" 
+									 where ( ebeln, ebelp ) in ( select ebeln, ebelp from :lt_open_po )
+								)as ekpo 
+								left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+								on ekko.ebeln = ekpo.ebeln
+								inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+									on exRate.source_curr = ekko.waers
+								group by ekpo.ebeln,
+								ekko.waers,
+                        		exRate.exchange_rate
+								having case
+								 when ekko.waers = 'JPY' OR ekko.waers = 'VND'
+								then sum(ekpo.netwr * 100) 
+								else sum(ekpo.netwr) end > "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																												          :lv_threshold_curr,
+																												          ekko.waers,
+																												         ( 1 /  exRate.exchange_rate)).ev_targetamount;
+																												          
+																												          
+																												          
+																												          
+																												          
+																												    
+																												         
+																												          
+																												          
+else 
+	lt_open_po_totalVal = select ekpo.ebeln as ebeln,
+							 sum(ekpo.netwr) as totalPOValue
+						
+								from (select ebeln, netwr from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" 
+									 where ( ebeln, ebelp ) in ( select ebeln, ebelp from :lt_open_po )
+								)as ekpo 
+								left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+								on ekko.ebeln = ekpo.ebeln
+								inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exRate
+									on exRate.source_curr = ekko.waers
+								group by ekpo.ebeln,
+								ekko.waers,
+                        		exRate.exchange_rate
+								having case
+								 when ekko.waers = 'JPY' OR ekko.waers = 'VND'
+								then sum(ekpo.netwr * 100) 
+								else sum(ekpo.netwr) end <= "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_threshold,
+																												          :lv_threshold_curr,
+																												          ekko.waers,
+																												         ( 1 /  exRate.exchange_rate)).ev_targetamount;
+																												         
+end if;
+
+-- Filter out the records based on the threshold  ONLY for Service PO 
+if (:IP_PSTYPE = '9') then 
+	if :IP_THRESHOLD = '3' then 
+		lt_open_po = select * from :lt_open_po ;
+	else 
+		lt_open_po = select * from :lt_open_po 
+						where ebeln in (select distinct ebeln from :lt_open_po_totalVal);
+	end if;
+	
+	-- Filter out the records based on the threshold  ONLY for Material PO 
+else if :IP_PSTYPE = '0' then 
+	if :IP_THRESHOLD = '3' then 
+		lt_open_po = select * from :lt_open_po ;
+	else 
+		lt_open_po = select * from :lt_open_po 
+						where ebeln in (select distinct ebeln from :lt_open_po_totalVal);
+	end if;
+end if;
+end if;
+
+		
+return :lt_open_po;
+
+END;

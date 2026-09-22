@@ -1,0 +1,160 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::notifyOpenPOUsersList_CA"(IN CODE integer )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   READS SQL DATA AS
+BEGIN
+declare i integer;
+declare lv_userid varchar(225);
+declare lv_companycode varchar(4);
+declare lv_matPendingPOCount integer;
+declare lv_servPendingPOCount integer;
+declare lv_numberOfPurchaseOrders integer;
+DECLARE lv_bukrs VARCHAR(5000);
+declare  lt_output table( emailid varchar(225),
+						companycode varchar(4),
+						matPendingPOCount integer,
+						servPendingPOCount integer,
+						numberOfPurchaseOrders integer
+);
+
+--- Japan and Brazil ----
+ select config_value into lv_bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+			where config_name = 'Japan_Brazil';
+
+lt_values = select OUTPUT_SPLIT as company_code from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs);
+--- End
+
+-- to get tbs user dashboard details
+if :CODE =1 then
+
+	lt_dash=SELECT
+						count( case when pstype = '0' and (companycode not in (select company_code from :lt_values) and wrkstrtdate = '00000000')
+							then 1 else null end) matPendingPOCount,
+						count( case when pstype = '9' or (pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values)) 
+							then 1 else null end) servPendingPOCount,
+						(count( case when pstype = '0' and (companycode not in (select company_code from :lt_values) and wrkstrtdate = '00000000')
+							then 1 else null end)+count( case when pstype = '9' or (pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values))
+							then 1 else null end) ) as numberOfPurchaseOrders
+						FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"
+						(placeholder."$$IP_PSTYPE$$"=>'*', 
+						placeholder."$$IP_EMAIL$$"=> '*', 
+						placeholder."$$IP_POOWNER$$"=>'') where status = 'Pending' ;
+						
+		lv_matPendingPOCount =:lt_dash.matPendingPOCount[1];
+		lv_servPendingPOCount=:lt_dash.servPendingPOCount[1];
+		lv_numberOfPurchaseOrders=:lt_dash.numberOfPurchaseOrders[1];
+
+			select distinct user_emailid as emailid,
+				company_code as companycode,
+				:lv_matPendingPOCount as matPendingPOCount,
+				:lv_servPendingPOCount as servPendingPOCount,
+				:lv_numberOfPurchaseOrders as numberOfPurchaseOrders from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"
+				where company_code in (
+				select distinct bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY"
+					where COUNTRY_CODE='CA'
+				) and user_role='TBS';
+
+	
+-- to get finance user  dashboard details
+else if :CODE =2 then 
+
+				lt_dash=SELECT
+						count( case when pstype = '0' and (companycode not in (select company_code from :lt_values) and wrkstrtdate = '00000000')
+							then 1 else null end) matPendingPOCount,
+						count( case when pstype = '9' or (pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values))
+							then 1 else null end) servPendingPOCount,
+						(count( case when pstype = '0' and (companycode not in (select company_code from :lt_values) and wrkstrtdate = '00000000')
+							then 1 else null end)+count( case when pstype = '9' or (pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values))
+								then 1 else null end)) as numberOfPurchaseOrders
+						FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"
+						(placeholder."$$IP_PSTYPE$$"=>'*', 
+						placeholder."$$IP_EMAIL$$"=> '*', 
+						placeholder."$$IP_POOWNER$$"=>'') where status = 'Pending' ;
+						
+						lv_matPendingPOCount =:lt_dash.matPendingPOCount[1];
+						lv_servPendingPOCount=:lt_dash.servPendingPOCount[1];
+						lv_numberOfPurchaseOrders=:lt_dash.numberOfPurchaseOrders[1];
+	
+				 select distinct user_emailid as emailid,
+				company_code as companycode,
+				:lv_matPendingPOCount as matPendingPOCount,
+				:lv_servPendingPOCount as servPendingPOCount,
+				:lv_numberOfPurchaseOrders as numberOfPurchaseOrders from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"
+				where company_code in (
+				select distinct bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY"
+					where COUNTRY_CODE='CA'
+				) and  user_role='Finance';
+					
+
+ -- to get admin dashboard details
+else if :CODE =3 then 
+
+				lt_dash=SELECT
+						count( case when pstype = '0' and (companycode not in (select company_code from :lt_values) and wrkstrtdate = '00000000')
+							then 1 else null end) matPendingPOCount,
+						count( case when pstype = '9' or (pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values))
+							then 1 else null end) servPendingPOCount,
+						(count( case when pstype = '0' and (companycode not in (select company_code from :lt_values) and wrkstrtdate = '00000000')
+							then 1 else null end)+count( case when pstype = '9' or (pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values))
+								then 1 else null end)) as numberOfPurchaseOrders
+						FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"
+						(placeholder."$$IP_PSTYPE$$"=>'*', 
+						placeholder."$$IP_EMAIL$$"=> '*', 
+						placeholder."$$IP_POOWNER$$"=>'') where status = 'Pending' ;
+						
+						lv_matPendingPOCount =:lt_dash.matPendingPOCount[1];
+						lv_servPendingPOCount=:lt_dash.servPendingPOCount[1];
+						lv_numberOfPurchaseOrders=:lt_dash.numberOfPurchaseOrders[1];
+
+				select  distinct user_emailid as emailid,
+				company_code as companycode,
+				:lv_matPendingPOCount as matPendingPOCount,
+				:lv_servPendingPOCount as servPendingPOCount,
+				:lv_numberOfPurchaseOrders as numberOfPurchaseOrders from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"
+				where company_code in (
+				select distinct bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" 
+					where COUNTRY_CODE='CA'
+				) and user_role='Admin';
+				
+-- to get po owner ids
+else if :CODE=4 then 
+
+	 SELECT distinct poowner_email, 
+		count( case when pstype = '0' and (companycode not in (select company_code from :lt_values) and wrkstrtdate = '00000000')
+			then 1 else null end) matPendingPOCount,
+		count( case when pstype = '9' or (pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values))
+			then 1 else null end) servPendingPOCount,
+		(count( case when pstype = '0' and (companycode not in (select company_code from :lt_values) and wrkstrtdate = '00000000')
+			then 1 else null end) +	count( case when pstype = '9' or (pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values))
+				then 1 else null end)) as numberOfPurchaseOrders
+		FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"
+		(placeholder."$$IP_PSTYPE$$"=>'*', 
+		placeholder."$$IP_EMAIL$$"=>'*', 
+		placeholder."$$IP_POOWNER$$"=>'X') where status = 'Pending' and poowner_email <>' '
+		group by poowner_email;
+
+	-- to get po preparer
+else if :CODE=5 then 
+
+	SELECT distinct po_preparer, 
+	count( case when pstype = '0' and (companycode not in (select company_code from :lt_values) and wrkstrtdate = '00000000')
+		then 1 else null end) matPendingPOCount,
+	count( case when pstype = '9' or (pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values))
+		then 1 else null end) servPendingPOCount,
+	(count( case when pstype = '0'and (companycode not in (select company_code from :lt_values) and wrkstrtdate = '00000000')
+		then 1 else null end) +	count( case when pstype = '9' or (pstype = '0' and wrkstrtdate <> '00000000' and companycode in (select company_code from :lt_values))
+			then 1 else null end)) as numberOfPurchaseOrders
+	FROM  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"
+	(placeholder."$$IP_PSTYPE$$"=>'*', 
+	placeholder."$$IP_EMAIL$$"=>'*', 
+	placeholder."$$IP_POOWNER$$"=>'X') where status = 'Pending' and po_preparer <>' '
+	group by po_preparer;
+		
+	
+end if;
+end if;
+end if;
+end if;
+end if;
+END

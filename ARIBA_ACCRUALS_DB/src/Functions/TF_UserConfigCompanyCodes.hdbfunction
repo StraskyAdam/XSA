@@ -1,0 +1,83 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCompanyCodes"(ip_email varchar(255) default '*'  )
+       RETURNS   table (
+						company_code nvarchar(4)
+					)
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+--Local variable declarations
+declare lv_email varchar(255);
+declare lv_count integer;
+declare lv_companycode varchar(5000);
+declare lv_arr INT := 0;
+declare lv_i integer;
+declare lv_occurence integer;
+declare lv_input_string varchar(5000);
+--Local table declarations
+declare lt_company_code table(company_code nvarchar(5000));
+
+
+-- Read the config table ZT_CONFIG_ROLES and parses the commma separated into a table 
+-- If * is maintained, get all the unique company codes from the EKKO table 
+if (:ip_email = '*') then 
+	lv_email = '%';
+	lt_companycode = select distinct bukrs as company_code from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"; 
+else 
+	lv_email = :ip_email;
+-- Check if the email ID is TBS / Admin 
+	 lt_companycode = select company_code from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES" where user_emailid like :lv_email; 
+	-- If maintained, check if user has access to all the Company codes or to few
+	 lv_count = record_count(:lt_companycode);
+	 if lv_count > 0 then 
+		lv_companycode = :lt_companycode.company_code[1];
+		if lv_companycode = '*' or lv_email = '%' then 
+			lt_companycode = select distinct bukrs as company_code from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO"; 
+		else 
+		-- Check the number of occurances
+			select OCCURRENCES_REGEXPR(',' IN :lv_companycode ) + 1 into lv_occurence  FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";
+	
+	
+				if :lv_occurence = 1 then
+					lv_companycode = concat(:lv_companycode, ',');
+				else
+				    lv_companycode = :lv_companycode;
+				end if;
+		
+				lt_split_values = SELECT SUBSTR_BEFORE(:lv_companycode,',') SINGLE_VAL FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  	
+				SELECT SUBSTR_AFTER(:lv_companycode,',') || ',' INTO lv_input_string FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  
+				
+				WHILE( LENGTH(:lv_input_string) > 0 )	
+				DO
+				
+				   lt_split_values =	
+				   
+				   				SELECT SUBSTR_BEFORE(:lv_input_string,',') SINGLE_VAL FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY"				   
+								   UNION 	   
+								SELECT SINGLE_VAL FROM :lt_split_values;
+				
+				   SELECT SUBSTR_AFTER(:lv_input_string,',') INTO lv_input_string FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  
+				   	
+				END WHILE;
+				
+				
+				SELECT SINGLE_VAL AS "company_code" FROM :lt_split_values; 
+				
+				if record_count(:lt_split_values) > 0 then 
+				
+				FOR lv_i IN REVERSE 1 ..record_count(:lt_split_values)  DO
+					lv_arr = :lv_arr + 1;
+					if :lt_split_values.SINGLE_VAL[lv_i] <> '' then 
+		    		lt_company_code.company_code[lv_arr] = ltrim(:lt_split_values.SINGLE_VAL[lv_i]);
+		    		end if ;
+				END FOR; 
+				end if;
+			RETURN
+				:lt_company_code;					
+		end if;
+	 end if;
+end if;
+
+return :lt_companycode;
+
+END;

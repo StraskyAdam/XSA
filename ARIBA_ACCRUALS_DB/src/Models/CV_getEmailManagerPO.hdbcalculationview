@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" xmlns:Variable="http://www.sap.com/ndb/BiModelVariable.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getEmailManagerPO" applyPrivilegeType="NONE" dataCategory="CUBE" schemaVersion="3.0" outputViewType="Aggregation" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="CV_getEmailManagerPO"/>
+<localVariables>
+  <variable id="IP_PSTYPE" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="VARCHAR" length="1">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+  <variable id="IP_EMAIL" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="VARCHAR" length="255">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+  <variable id="IP_POOWNER" parameter="true">
+    <descriptions defaultDescription=" "/>
+    <variableProperties datatype="VARCHAR" length="1">
+      <valueDomain type="empty"/>
+      <selection/>
+    </variableProperties>
+  </variable>
+</localVariables>
+<variableMappings>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO" targetType="CALCULATION_VIEW">
+    <targetVariable name="IP_PSTYPE" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"/>
+    <localVariable>IP_PSTYPE</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO" targetType="CALCULATION_VIEW">
+    <targetVariable name="IP_EMAIL" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"/>
+    <localVariable>IP_EMAIL</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO" targetType="CALCULATION_VIEW">
+    <targetVariable name="IP_POOWNER" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"/>
+    <localVariable>IP_POOWNER</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO" targetType="CALCULATION_VIEW">
+    <targetVariable name="IP_PSTYPE" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO"/>
+    <localVariable>IP_PSTYPE</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO" targetType="CALCULATION_VIEW">
+    <targetVariable name="IP_EMAIL" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO"/>
+    <localVariable>IP_EMAIL</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO" targetType="CALCULATION_VIEW">
+    <targetVariable name="IP_POOWNER" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO"/>
+    <localVariable>IP_POOWNER</localVariable>
+  </mapping>
+</variableMappings>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO</resourceUri>
+  </DataSource>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO</resourceUri>
+  </DataSource>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getPO_ManagerEmail">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getPO_ManagerEmail</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews>
+  <calculationView xsi:type="Calculation:ProjectionView" id="CV_getOpenPO" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="POOWNER_EMAIL"/>
+      <viewAttribute id="STATUS"/></viewAttributes>
+    <calculatedViewAttributes>
+      <calculatedViewAttribute id="CC_LowerCaseEmail" datatype="NVARCHAR" length="100" expressionLanguage="SQL">
+        <formula>LOWER(&quot;POOWNER_EMAIL&quot;)</formula>
+      </calculatedViewAttribute>
+    </calculatedViewAttributes>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"/>
+    <filter>&quot;STATUS&quot; = 'Pending' AND &quot;POOWNER_EMAIL&quot; &lt;&gt; ' ' </filter>
+  </calculationView>
+  <calculationView xsi:type="Calculation:ProjectionView" id="CV_getThresholdPO" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="POOWNER_EMAIL"/>
+      <viewAttribute id="STATUS"/></viewAttributes>
+    <calculatedViewAttributes>
+      <calculatedViewAttribute id="CC_LowerCaseEmail" datatype="NVARCHAR" length="100" expressionLanguage="SQL">
+        <formula>LOWER(&quot;POOWNER_EMAIL&quot;)</formula>
+      </calculatedViewAttribute>
+    </calculatedViewAttributes>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO"/>
+    <filter>&quot;STATUS&quot; = 'Pending' AND &quot;POOWNER_EMAIL&quot; &lt;&gt; ' ' </filter>
+  </calculationView>
+  <calculationView xsi:type="Calculation:ProjectionView" id="Projection_1">
+    <viewAttributes>
+      <viewAttribute id="MA_CONTACT_VALUE_W"/>
+      <viewAttribute id="POO_CONTACT_VALUE_W"/>
+    
+      <viewAttribute id="CC_MANAGER_FULLNAME"/>
+    </viewAttributes>
+    <calculatedViewAttributes>
+      <calculatedViewAttribute id="CC_LowerCaseEmail" datatype="NVARCHAR" length="100" expressionLanguage="SQL">
+        <formula>LOWER(&quot;POO_CONTACT_VALUE_W&quot;)</formula>
+      </calculatedViewAttribute>
+    </calculatedViewAttributes>
+    <input node="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getPO_ManagerEmail"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_1" cardinality="C1_1" joinType="leftOuter">
+    <viewAttributes>
+      <viewAttribute id="POOWNER_EMAIL"/>
+      <viewAttribute id="MANAGER_EMAIL"/>
+      <viewAttribute id="CC_MANAGER_FULLNAME"/>
+      <viewAttribute hidden="true" id="JOIN$CC_LowerCaseEmail$CC_LowerCaseEmail"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="CV_getOpenPO">
+      <mapping xsi:type="Calculation:AttributeMapping" target="POOWNER_EMAIL" source="POOWNER_EMAIL"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$CC_LowerCaseEmail$CC_LowerCaseEmail" source="CC_LowerCaseEmail"/>
+    </input>
+    <input node="Projection_1">
+      <mapping xsi:type="Calculation:AttributeMapping" target="MANAGER_EMAIL" source="MA_CONTACT_VALUE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="CC_MANAGER_FULLNAME" source="CC_MANAGER_FULLNAME"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$CC_LowerCaseEmail$CC_LowerCaseEmail" source="CC_LowerCaseEmail"/>
+    </input>
+    <joinAttribute name="JOIN$CC_LowerCaseEmail$CC_LowerCaseEmail"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:JoinView" id="Join_2" cardinality="C1_1" joinType="leftOuter">
+    <viewAttributes>
+      <viewAttribute id="POOWNER_EMAIL"/>
+      <viewAttribute id="MANAGER_EMAIL"/>
+      <viewAttribute id="CC_MANAGER_FULLNAME"/>
+      <viewAttribute hidden="true" id="JOIN$CC_LowerCaseEmail$CC_LowerCaseEmail"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="CV_getThresholdPO">
+      <mapping xsi:type="Calculation:AttributeMapping" target="POOWNER_EMAIL" source="POOWNER_EMAIL"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$CC_LowerCaseEmail$CC_LowerCaseEmail" source="CC_LowerCaseEmail"/>
+    </input>
+    <input node="Projection_1">
+      <mapping xsi:type="Calculation:AttributeMapping" target="MANAGER_EMAIL" source="MA_CONTACT_VALUE_W"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="CC_MANAGER_FULLNAME" source="CC_MANAGER_FULLNAME"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="JOIN$CC_LowerCaseEmail$CC_LowerCaseEmail" source="CC_LowerCaseEmail"/>
+    </input>
+    <joinAttribute name="JOIN$CC_LowerCaseEmail$CC_LowerCaseEmail"/>
+  </calculationView>
+  <calculationView xsi:type="Calculation:UnionView" id="Union_1">
+    <viewAttributes>
+      <viewAttribute id="POOWNER_EMAIL"/>
+      <viewAttribute id="MANAGER_EMAIL"/>
+      <viewAttribute id="CC_MANAGER_FULLNAME"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="Join_1" emptyUnionBehavior="NO_ROW">
+      <mapping xsi:type="Calculation:AttributeMapping" target="POOWNER_EMAIL" source="POOWNER_EMAIL"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MANAGER_EMAIL" source="MANAGER_EMAIL"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="CC_MANAGER_FULLNAME" source="CC_MANAGER_FULLNAME"/>
+    </input>
+    <input node="Join_2" emptyUnionBehavior="NO_ROW">
+      <mapping xsi:type="Calculation:AttributeMapping" target="POOWNER_EMAIL" source="POOWNER_EMAIL"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="MANAGER_EMAIL" source="MANAGER_EMAIL"/>
+      <mapping xsi:type="Calculation:AttributeMapping" target="CC_MANAGER_FULLNAME" source="CC_MANAGER_FULLNAME"/>
+    </input>
+  </calculationView>
+  <calculationView xsi:type="Calculation:RankView" id="Rank_1" filterExpressionLanguage="SQL">
+    <viewAttributes>
+      <viewAttribute id="POOWNER_EMAIL"/>
+      <viewAttribute id="MANAGER_EMAIL"/>
+      <viewAttribute id="CC_MANAGER_FULLNAME"/>
+    </viewAttributes>
+    <calculatedViewAttributes/>
+    <input node="Union_1"/>
+    <rankingFilter type="RANK" offset="0" offsetReference="FRONT" dynamicPartitionAttributes="false">
+      <partitionViewAttributeName id="MANAGER_EMAIL"/>
+      <rankThreshold/>
+    </rankingFilter>
+    <filter>&quot;MANAGER_EMAIL&quot; &lt;&gt; ' '</filter>
+  </calculationView>
+</calculationViews>
+<logicalModel id="Rank_1">
+  <attributes>
+    <attribute id="POOWNER_EMAIL" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POOWNER_EMAIL"/>
+      <keyMapping columnObjectName="Rank_1" columnName="POOWNER_EMAIL"/>
+    </attribute>
+    <attribute id="MANAGER_EMAIL" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="MANAGER_EMAIL"/>
+      <keyMapping columnObjectName="Rank_1" columnName="MANAGER_EMAIL"/>
+    </attribute>
+    <attribute id="CC_MANAGER_FULLNAME" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CC_FULLNAME"/>
+      <keyMapping columnObjectName="Rank_1" columnName="CC_MANAGER_FULLNAME"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures>
+    <measure id="COUNT_1" order="4" aggregationType="sum" measureType="simple" calculatedMeasureType="counter" aggregatable="true" datatype="BIGINT" length="">
+      <exceptionAggregation>
+        <attribute attributeName="MANAGER_EMAIL"/>
+      </exceptionAggregation>
+      <formula>1</formula>
+      
+      
+      </measure>
+  </calculatedMeasures>
+  <restrictedMeasures/>
+  <localDimensions/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="414" y="112"/>
+    
+      <rectangleSize width="160"/>
+    </shape>
+  
+    <shape expanded="true" modelObjectName="CV_getOpenPO" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="92" y="641"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape expanded="true" modelObjectName="CV_getThresholdPO" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="511" y="641"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Projection_1" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="301" y="641"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Join_1" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="118" y="481"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape modelObjectName="CV_getOpenPO" modelObjectNameSpace="Join_1" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="1220" y="30"/>
+      <rectangleSize width="191"/>
+    </shape>
+    <shape modelObjectName="Projection_1" modelObjectNameSpace="Join_1" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="1520" y="30"/>
+      <rectangleSize width="226"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Join_2" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="414" y="481"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape modelObjectName="CV_getThresholdPO" modelObjectNameSpace="Join_2" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="20" y="30"/>
+      <rectangleSize width="191"/>
+    </shape>
+    <shape modelObjectName="Projection_1" modelObjectNameSpace="Join_2" modelObjectType="JoinNodeInput">
+      <upperLeftCorner x="320" y="30"/>
+      <rectangleSize width="226"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Union_1" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="380" y="341"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+    <shape expanded="true" modelObjectName="Rank_1" modelObjectNameSpace="CalculationView">
+      <upperLeftCorner x="380" y="236"/>
+      <rectangleSize height="30" width="160"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

@@ -1,0 +1,154 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getExclusionPOFinal"(IP_EMAIL varchar(255),IP_POOWNER varchar(1))
+       RETURNS table (
+       				poowner_email varchar(255), 
+       				ZACTIVITYNBR nvarchar(200),
+    				companyCode nvarchar(4),
+       			   purchasingUnit nvarchar(25),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(5000),
+       			   costcenter varchar(5000),
+       			   costcenterDesc varchar(40),
+       			   manageUnit varchar(5000),
+       			   PONUMBER nvarchar(10),
+       			  -- docNumber varchar(10),
+	              itemno nvarchar(5),
+	              poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,2),
+       			   pocurrency varchar(3),
+       			   invoice_currency varchar(3),
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   totWrkCompAmt decimal(13,2),
+       			  internalOrder varchar(5000),
+              	   assetId varchar(5000),
+              	   profitCenter varchar(5000),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(1),
+              	    povalue_coco decimal(13,2),
+              	   accrualMethod varchar(50),
+              	  ruletype varchar(5000),
+				 RULETYPETEXT varchar(5000),
+				 po_preparer varchar(241),
+				 changed_on timestamp,
+				 pstype_text varchar(10),
+				 --mvp2
+				 povalue_usd decimal(13,2),
+				 exchangerate_dec decimal(9,6),
+			       exchangerate varchar(5000),
+				  totWrkCompAmt_usd decimal(13,2),
+				   po_closure varchar(5),
+				    documentdate varchar(8),
+				    poclosure_flag integer,
+				     checkFlag varchar(10),
+				     INVVALUE decimal(13,2),
+				     INVVALUE_USD decimal(13,2),
+				     GRVALUE decimal(13,2),
+				     GRVALUE_USD decimal(13,2),
+				     TOTWRKCOMPPER decimal(13,2),
+				     DISTPERCENTAGE NVARCHAR(5000)
+				     
+       )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+    /*****************************
+        Write your function logic
+    ****************************/
+     declare lv_delimiter varchar(1);
+    
+    lt_decimalFormat=SELECT 
+			"DECIMAL_FORMAT",
+			"EMAILADDR"
+			FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getUserDetails"
+			where EMAILADDR=:IP_EMAIL;
+
+	 lv_delimiter=:lt_decimalFormat.DECIMAL_FORMAT[1];
+ 
+	--set delimiter to 'X' when it is null
+	 if :lv_delimiter is null then 
+		lv_delimiter='X';
+	end if;
+	
+	lt_final = select
+					poowner_email ,
+					ZACTIVITYNBR,
+    				companyCode ,
+       			   purchasingUnit ,
+       			   region ,
+       			   cocdecurr ,
+       			   glaccount ,
+       			   costcenter ,
+       			   costcenterDesc ,
+       			   manageUnit ,
+       			   PONUMBER ,
+       			  -- docNumber ,
+	              itemno ,
+	              poCreatedAt ,
+				   supplierID ,
+				   suppliername ,
+       			   polinedesc ,
+       			   pstype ,
+       			   povalue ,
+       			   pocurrency ,
+       			   invoice_currency ,
+       			   wrkStrtdate ,
+       			   wrkEnddate ,
+       			   totWrkCompAmt ,
+       			   internalOrder ,
+              	   assetId ,
+              	   profitCenter ,
+              	   epnumber ,
+              	   status ,
+              	   lastMonthwrkcomp ,
+              	   straightlinemthd ,
+              	   povalue_coco ,
+              	   accrualMethod ,
+              	  ruletype ,
+				 RULETYPETEXT ,
+				 po_preparer ,
+				 changed_on ,
+				 pstype_text ,
+				 --mvp2
+				 povalue_usd ,
+				 exchangerate_dec ,
+			       exchangerate ,
+				  totWrkCompAmt_usd ,
+				   po_closure ,
+				    documentdate ,
+				    poclosure_flag ,
+				     checkFlag ,
+				     INVVALUE ,
+				  --   (case when :lv_delimiter =' ' then 
+			   -- 								case when INVVALUE_USD is null then replace(replace(replace('0.00',',','x'),'.',','),'x','.')
+			   -- 								when INVVALUE_USD=00.00 then  replace(replace(replace(TO_NVARCHAR(INVVALUE_USD, '0.00'),',','x'),'.',','),'x','.')
+			   -- 								else replace(replace(replace(TO_NVARCHAR(INVVALUE_USD, '0,0.00'),',','x'),'.',','),'x','.') 
+			   -- 								end 
+			   --           	  when :lv_delimiter ='X' then 
+			   --           							case when  INVVALUE_USD is null then '0.00'
+			   --           							when  INVVALUE_USD=00.00 then TO_NVARCHAR(INVVALUE_USD, '0.00')
+			   --           							else TO_NVARCHAR(INVVALUE_USD, '0,0.00')
+			   --           							end 
+			   --           	  when :lv_delimiter ='Y' then 
+			   --           								case when INVVALUE_USD is null then  replace(replace(replace('0.00', ',' ,'x'), '.', ','), 'x', ' ')
+			   --           								when INVVALUE_USD=00.00 then  replace(replace(replace(TO_NVARCHAR(INVVALUE_USD, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  else replace(replace(replace(TO_NVARCHAR(INVVALUE_USD, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  end
+						-- end) as
+			       INVVALUE_USD ,
+				     GRVALUE ,
+				     GRVALUE_USD,
+				     TOTWRKCOMPPER,
+				     DISTPERCENTAGE
+				     FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getExclusionPO"
+						(placeholder."$$IP_EMAIL$$"=>:IP_EMAIL, 
+						placeholder."$$IP_POOWNER$$"=>:IP_POOWNER);
+						
+	return	:lt_final;
+END;

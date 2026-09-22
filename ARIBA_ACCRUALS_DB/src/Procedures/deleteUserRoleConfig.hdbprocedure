@@ -1,0 +1,19 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::deleteUserRoleConfig"( in ip_email varchar(225),
+																			in ip_companyCode varchar(5000),
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA
+   AS
+BEGIN
+ delete from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES"  
+ where USER_EMAILID = :ip_email and 
+		COMPANY_CODE = :ip_companyCode;
+		
+	EX_STATUS :='Record deleted successfully !';
+	EX_CODE := 1;
+		
+end ;

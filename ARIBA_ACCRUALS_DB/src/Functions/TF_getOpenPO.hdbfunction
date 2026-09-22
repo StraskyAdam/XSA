@@ -1,0 +1,348 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPO"( IP_PSTYPE varchar(1), 
+																		IP_EMAIL varchar(255),
+																		IP_POOWNER VARCHAR(1)
+																		)
+       RETURNS table ( poowner_email varchar(255),
+    			   companyCode nvarchar(4),
+       			   purchasingUnit varchar(255),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(5000),
+       			   costcenter varchar(5000),
+       			   costcenterDesc varchar(5000),
+       			   manageUnit varchar(5000),
+       			   PONUMBER nvarchar(10),
+       			  -- docNumber varchar(10),
+	               itemno nvarchar(5),
+	               poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,2),
+       			   pocurrency varchar(3),
+       			   invoice_currency varchar(3),
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   totWrkCompAmt decimal(13,2),
+       			   totWrkCompAmt_cocdecurr decimal(13,2),
+       			   totWrkCompPer decimal(13,1),
+              	   internalOrder varchar(5000),
+              	   assetId varchar(5000),
+              	   profitCenter varchar(5000),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(5),
+              	    markasreviewed varchar(5),
+              	   povalue_coco decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	   changeddate date,
+				   changedtime time,
+				   reviwed_by varchar(225),
+				   bbp_acc_no varchar(5000),
+			       documentdate varchar(8),
+			       purchasingorganization varchar(4),
+			       orderquantity decimal(13,2),
+			       exchangerate decimal(9,6),
+			       po_preparer varchar(241),
+			       changed_on timestamp,
+			       totwrkcompamt_char varchar(50),
+			       last_notif_on  timestamp,
+			       notif_24_hr varchar(1),
+			       pstype_text varchar(10),
+			       --mvp2
+			       povalue_usd decimal(13,2),
+			       totWrkCompAmt_usd decimal(13,2),
+			       po_closure varchar(5),
+			       poclosure_flag integer,
+			       checkFlag varchar(10),
+			       ZACTIVITYNBR nvarchar(200),
+			       distPercentage nvarchar(5000)
+              	 
+              	  
+              	  
+       )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+declare lv_delimiter varchar(1);
+declare lv_totalworkcompltodate decimal(13,2);
+
+	--  to get decimal format  
+lt_decimalFormat=SELECT 
+			"DECIMAL_FORMAT",
+			"EMAILADDR"
+			FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getUserDetails"
+			where EMAILADDR=:IP_EMAIL;
+
+ lv_delimiter=:lt_decimalFormat.DECIMAL_FORMAT[1];
+ 
+ --set delimiter to 'X' when it is null
+ if :lv_delimiter is null then 
+	lv_delimiter='X';
+end if;
+		 
+		 
+	-- to get  last mont work completed
+lt_totalworkcompltodate=select  ponumber,lineitem, fname,NEWVALUE  from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_AUDITLOG"
+						where fname='Services Completed Amount' and changedon in ( select max(changedon) from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_AUDITLOG"
+						 where month(to_date(changedon)) =MONTH((add_months(current_date, - 1)))
+						group by ponumber,lineitem);
+
+
+-- Get all the POs
+-- lt_openPO_Detail = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenAllPO"(:IP_PSTYPE, :IP_EMAIL,:IP_POOWNER,'1');
+
+
+-- Get the exclusion  POs
+if :IP_PSTYPE = '*' then 
+   lt_po_excluded = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype in ('0','9');
+else 
+	lt_po_excluded = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO" where pstype = :IP_PSTYPE;
+end if;
+
+-- --Get all the PO's excluding exclusion PO's	 
+lt_PODetails= select * from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenAllPO"(:IP_PSTYPE, :IP_EMAIL,:IP_POOWNER,'1')
+					where (PONUMBER,ITEMNO)not in (SELECT PONUMBER,ITEMNO FROM :lt_po_excluded);
+
+
+-- Get the max of the notification 
+ --lt_po_notification = select POLINE.ponumber  as ponumber,
+	-- 						 poline.lineitem as lineitem,
+	-- 						 MAX(POLINE.CHANGEDON) AS last_notif_on,
+	-- 						(CASE WHEN DAYS_BETWEEN(CURRENT_UTCTIMESTAMP,MAX(POLINE.CHANGEDON)) = 0 then 'X'
+	-- 							else ''
+	-- 						end )as notif_24_hr
+	-- 						 from :lt_PODetails  AS PO
+	-- 						 left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_POLINE_AUDIT" as POLINE on 
+	-- 						POLINE.PONUMBER = PO.PONUMBER AND 
+	-- 						POLINE.LINEITEM = PO.ITEMNO
+	-- 						group by POLINE.ponumber,poline.lineitem ;
+
+-- Remove duplicate PO Number and Item number 
+lt_finalPODetails =  select 
+					   po.poowner_email ,
+	    			   companyCode ,
+	       			   purchasingUnit ,
+	       			   region ,
+	       			   cocdecurr ,
+	       			   STRING_AGG(glaccount,';') AS glaccount,
+	       			   STRING_AGG(costcenter,';') as costcenter,
+	       			   null as costcenterDesc ,
+	       			   --manageUnit ,
+	       			   STRING_AGG(manageUnit,';') as manageUnit,
+	       			   PO.PONUMBER ,
+		               PO.itemno ,
+		               poCreatedAt ,
+					   supplierID ,
+					   suppliername ,
+	       			   polinedesc ,
+	       			   pstype ,
+	       			   povalue ,
+	       			   pocurrency ,
+	       			   invoice_currency,
+	       			   wrkStrtdate ,
+	       			   wrkEnddate ,
+	       			   (case when totWrkCompAmt =00.00 then 0.00 
+	       			   else totWrkCompAmt
+	       			   end) as totWrkCompAmt ,
+	       			   totWrkCompAmt_cocdecurr ,
+	       			   totWrkCompPer ,
+	       			    STRING_AGG(PO.internalOrder ,';') as internalOrder,
+	              	   STRING_AGG(case when (PO.assetId = '' or  PO.assetId = ' ') then null else PO.assetId end,';') as assetId ,
+	              	   --profitCenter ,
+	              	   STRING_AGG(profitCenter,';') as profitCenter,
+	              	   epnumber ,
+	              	   status ,
+	              	   lastmonth.NEWVALUE as lastMonthwrkcomp,
+	              	   (case when straightlinemthd ='X' then 'true'
+	              	   else 'false'
+	              	   end )as straightlinemthd,
+	              	   'false' as markasreviewed,
+	              	   povalue_coco ,
+	              	   (case when accrualMethod ='WTD' then 'Work To Date'
+	              	   when accrualMethod='STL' then 'Straight Line'
+	              	   else accrualMethod end) as accrualMethod,
+	              	   edgewtdamt ,
+	              	   changeddate ,
+					   changedtime ,
+					   reviwed_by ,
+					   STRING_AGG(bbp_acc_no,';') as bbp_acc_no,
+					   documentdate ,
+					   purchasingorganization ,
+					   orderquantity ,
+					   exchangerate,
+					   po.po_preparer ,
+					   changed_on,
+			    	   (case when :lv_delimiter IN (' ', '') then 
+			    								case when totWrkCompAmt=00.00 then  replace(replace(replace(TO_NVARCHAR(totWrkCompAmt, '0.00'),',','x'),'.',','),'x','.')
+			    								else replace(replace(replace(TO_NVARCHAR(totWrkCompAmt, '0,0.00'),',','x'),'.',','),'x','.') 
+			    								end 
+			              	  when :lv_delimiter ='X' then 
+			              							case when  totWrkCompAmt=00.00 then TO_NVARCHAR(totWrkCompAmt, '0.00')
+			              							else TO_NVARCHAR(totWrkCompAmt, '0,0.00')
+			              							end 
+			              	  when :lv_delimiter ='Y' then 
+			              								case when totWrkCompAmt=00.00 then  replace(replace(replace(TO_NVARCHAR(totWrkCompAmt, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  else replace(replace(replace(TO_NVARCHAR(totWrkCompAmt, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  end
+						end) as totwrkcompamt_char,
+			    		--POLINE.last_notif_on,
+					    last_notif_on,
+						notif_24_hr,
+						--mvp2
+						povalue_usd,
+						po_closure,
+						PO.ZACTIVITYNBR,
+						STRING_AGG(distPercentage,';') AS distPercentage
+						
+						
+				from :lt_PODetails  AS PO
+				left outer join :lt_totalworkcompltodate as lastmonth  on 
+				PO.ponumber=lastmonth.ponumber  and  PO.itemno =lastmonth.lineitem
+				-- left outer join :lt_po_notification as POLINE on 
+				-- POLINE.PONUMBER = PO.PONUMBER AND 
+				-- POLINE.LINEITEM = PO.ITEMNO
+				group by 
+				   po.poowner_email ,
+    			   companyCode ,
+       			   purchasingUnit ,
+       			   region ,
+       			   cocdecurr ,
+       			   PO.PONUMBER ,
+	               PO.itemno ,
+	               poCreatedAt ,
+				   supplierID ,
+				   suppliername ,
+       			   polinedesc ,
+       			   pstype ,
+       			   povalue ,
+       			   pocurrency ,
+       			   invoice_currency,
+       			   wrkStrtdate ,
+       			   wrkEnddate ,
+       			   totWrkCompAmt ,
+       			   totWrkCompAmt_cocdecurr ,
+       			   totWrkCompPer ,
+              	  --internalOrder,
+              	   --assetId ,
+              	   epnumber ,
+              	   status ,
+              	   lastmonth.NEWVALUE ,
+              	   straightlinemthd ,
+              	    markasreviewed ,
+              	   povalue_coco ,
+              	   accrualMethod ,
+              	   edgewtdamt ,
+              	   changeddate ,
+				   changedtime ,
+				   reviwed_by ,	
+			       documentdate ,
+			       purchasingorganization ,
+			       orderquantity ,
+			       exchangerate,
+			       po.po_preparer,
+			       changed_on,
+				   last_notif_on,
+				   notif_24_hr,
+				  --mvp2
+				   povalue_usd,
+				   po_closure,
+				   PO.ZACTIVITYNBR;
+              	  
+lt_finalTable= select 
+				   poowner_email ,
+    			   companyCode ,
+       			   purchasingUnit ,
+       			   region ,
+       			   cocdecurr ,
+       			   (case when glaccount like ' ; %' then ' '
+       			   else glaccount
+       			   end) as glaccount,
+       			   (case when costcenter like ' ; %' then ' '
+       			   else costcenter
+       			   end) as costcenter,
+       			   costcenterDesc ,
+       			   (case when manageUnit like ' ; %' then ' '
+       			   else manageUnit
+       			   end) as  manageUnit,
+       			   PONUMBER ,
+	               itemno ,
+	               poCreatedAt ,
+				   supplierID ,
+				   suppliername ,
+       			   polinedesc ,
+       			   pstype ,
+       			   povalue ,
+       			   pocurrency ,
+       			   invoice_currency,
+       			   wrkStrtdate ,
+       			   wrkEnddate ,
+       			   totWrkCompAmt ,
+       			   totWrkCompAmt_cocdecurr ,
+       			   totWrkCompPer ,
+       			   (case when internalOrder like ' ; %' then ' '
+       			   else internalOrder
+       			   end ) as internalOrder,
+              	   case when assetId is null then '' else assetId end as assetId ,
+              	   (case when profitCenter like ' ; %' then ' '
+       			   else profitCenter
+       			   end )  as profitCenter,
+              	   epnumber ,
+              	   status ,
+                  lastMonthwrkcomp,
+              	    straightlinemthd,
+              	  markasreviewed,
+              	   povalue_coco ,
+              	    accrualMethod,
+              	   edgewtdamt ,
+              	   changeddate ,
+					 changedtime ,
+					 reviwed_by ,
+					 (case when bbp_acc_no like ' ; %' then ' '
+       			   else bbp_acc_no
+       			   end )as bbp_acc_no,
+			     documentdate ,
+			     purchasingorganization ,
+			     orderquantity ,
+			     exchangerate,
+			     po_preparer ,
+			     changed_on,
+			     totwrkcompamt_char,
+			    last_notif_on,
+				notif_24_hr,
+				(case when PSTYPE='0' then 'Material'
+					when PSTYPE='9' then 'Service'
+					end
+				)as pstype_text,
+				--mvp2
+				povalue_usd,
+				case pocurrency
+					when 'JPY' then 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt/100,pocurrency, 'USD', exchangerate).ev_targetAmount
+					when 'VND' then 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt/100,pocurrency, 'USD', exchangerate).ev_targetAmount
+					else 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt,pocurrency, 'USD', exchangerate).ev_targetAmount
+				end   as totWrkCompAmt_usd,
+				-- "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt,pocurrency, 'USD', exchangerate).ev_targetAmount as totWrkCompAmt_usd,
+				(case when po_closure is null then 'false'
+				else po_closure
+				end ) as po_closure,
+				case when po_closure is null or po_closure='false' then 0
+				else 1
+				
+				end as poclosure_flag,
+				'' as checkFlag,
+				ZACTIVITYNBR,
+				(case when distPercentage like ' ; %' then ' '
+       			else distPercentage end ) as distPercentage
+                from :lt_finalPODetails	;				
+					
+			
+return :lt_finalTable;
+
+END;
+-- getOPenPo

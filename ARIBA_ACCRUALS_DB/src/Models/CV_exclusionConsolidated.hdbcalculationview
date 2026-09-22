@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_exclusionConsolidated" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="Consolidated view of Exclusions"/>
+<localVariables>
+  <variable id="IP_BUKRSFROM" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="VARCHAR" length="4" mandatory="false">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+  <variable id="IP_BUKRSTO" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="VARCHAR" length="4" mandatory="false">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+</localVariables>
+<variableMappings/>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_exclusionConsidated" type="TABLE_FUNCTION">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_exclusionConsidated</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_exclusionConsidated">
+  <attributes>
+    <attribute id="BUKRSTO" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="BUKRSTO"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="BUKRSTO"/>
+    </attribute>
+    <attribute id="PONUM" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PONUM"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="PONUM"/>
+    </attribute>
+    <attribute id="PRCTRTO" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PRCTRTO"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="PRCTRTO"/>
+    </attribute>
+    <attribute id="MANDT" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="MANDT"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="MANDT"/>
+    </attribute>
+    <attribute id="THRESHOLD" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="THRESHOLD"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="THRESHOLD"/>
+    </attribute>
+    <attribute id="LIFNR" order="6" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="LIFNR"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="LIFNR"/>
+    </attribute>
+    <attribute id="KOSTLTO" order="7" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="KOSTLTO"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="KOSTLTO"/>
+    </attribute>
+    <attribute id="SAKTOFR" order="8" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SAKTOFR"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="SAKTOFR"/>
+    </attribute>
+    <attribute id="SAKTOTO" order="9" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SAKTOTO"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="SAKTOTO"/>
+    </attribute>
+    <attribute id="KOSTLFR" order="10" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="KOSTLFR"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="KOSTLFR"/>
+    </attribute>
+    <attribute id="AUFNRFR" order="11" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="AUFNRFR"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="AUFNRFR"/>
+    </attribute>
+    <attribute id="RULEID" order="12" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="RULEID"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="RULEID"/>
+    </attribute>
+    <attribute id="AUFNRTO" order="13" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="AUFNRTO"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="AUFNRTO"/>
+    </attribute>
+    <attribute id="PRCTRFR" order="14" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PRCTRFR"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="PRCTRFR"/>
+    </attribute>
+    <attribute id="RULETYPE" order="15" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="RULETYPE"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="RULETYPE"/>
+    </attribute>
+    <attribute id="BUKRSFR" order="16" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="BUKRSFR"/>
+      <keyMapping columnObjectName="TF_exclusionConsidated" columnName="BUKRSFR"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

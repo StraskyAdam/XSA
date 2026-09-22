@@ -1,0 +1,86 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_exclusionConsidated"( iv_bukrsfr nvarchar(40), iv_bukrsto nvarchar(4))
+       
+RETURNS table (
+
+MANDT nvarchar(3),
+RULEID varchar(4),
+RULETYPE nvarchar(2),
+BUKRSFR nvarchar(4),
+BUKRSTO nvarchar(4),
+PONUM nvarchar(10),
+LIFNR nvarchar(10),
+SAKTOFR nvarchar(10),
+SAKTOTO nvarchar(10),
+KOSTLFR nvarchar(10),
+KOSTLTO nvarchar(10),
+AUFNRFR nvarchar(12),
+AUFNRTO nvarchar(12),
+PRCTRFR nvarchar(10),
+PRCTRTO nvarchar(10),
+THRESHOLD decimal(13,2)
+) LANGUAGE SQLSCRIPT --SQL SECURITY INVOKER
+ AS 
+BEGIN
+
+
+lt_exclsion = SELECT 
+    "MANDT",
+    "RULEID",
+    "RULETYPE",
+   (
+     case when BUKRSFR = ' ' and  BUKRSTO=' ' then '0000'
+     else BUKRSFR
+   end )as BUKRSFR,
+   (
+     case when BUKRSFR = ' ' and  BUKRSTO=' ' then '9999'
+     else BUKRSTO
+    end )as BUKRSTO,
+    
+    "PONUM",
+    "LIFNR",
+    (
+    case 
+     when RULETYPE = 'GL' then 
+	     case 
+	     	when SAKTOFR = ' ' and  SAKTOTO=' ' then '0000000000'
+	     	else SAKTOFR
+     	end
+     end )as SAKTOFR,
+   (
+   case 
+     when RULETYPE = 'GL' then 
+     case when SAKTOFR = ' ' and  SAKTOTO=' ' then '999999999'
+     else SAKTOTO
+     end
+    end )as SAKTOTO,
+(
+     case when KOSTLFR = ' ' and  KOSTLTO=' ' then '0000000000'
+     else KOSTLFR
+   end )as KOSTLFR,
+   (
+     case when KOSTLFR = ' ' and  KOSTLTO=' ' then '999999999'
+     else KOSTLTO
+    end )as KOSTLTO,
+
+ (    case when AUFNRFR = ' ' and  AUFNRTO=' ' then '0000000000'
+     else AUFNRFR
+   end )as AUFNRFR,
+   (
+     case when AUFNRFR = ' ' and  AUFNRTO=' ' then '999999999'
+     else AUFNRTO
+    end )as AUFNRTO,
+(
+     case when PRCTRFR = ' ' and  PRCTRTO=' ' then '0000000000'
+     else PRCTRFR
+   end )as PRCTRFR,
+   (
+     case when PRCTRFR = ' ' and  PRCTRTO=' ' then '999999999'
+     else PRCTRTO
+    end )as PRCTRTO,
+    "THRESHOLD"
+FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZFI_ACCRUAL_EXCL.ZFI_ACCRUAL_EXCL";
+
+
+return :lt_exclsion;
+
+end;

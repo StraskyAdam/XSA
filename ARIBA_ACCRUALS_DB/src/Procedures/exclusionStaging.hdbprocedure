@@ -1,0 +1,38 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::exclusionStaging"(  	OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER  )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA 
+   AS
+BEGIN
+
+-- Get  get the list of all the Open POs
+
+
+   -- Get the open POs
+	lt_openPO_mat = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1','0', '*','')
+				    union all select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2','0', '*','') ;
+	lt_openPO_serv = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1','9', '*','')
+					union all select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2','9', '*','');
+	
+	lt_po_excluded_mat = select ponumber,itemno,ruletype,'0' as pstype from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_checkPOExcl_Mod"(:lt_openPO_mat);
+	lt_po_excluded_serv=select ponumber,itemno,ruletype,'9' as pstype from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_checkPOExcl_Mod"(:lt_openPO_serv);
+	
+	lt_excludedPO= select * from :lt_po_excluded_mat union all select * from :lt_po_excluded_serv;	
+	-- delete records from table to maintan latest entries
+	DELETE FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO";
+	
+	--  insert records into table 
+	INSERT INTO "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO"("PONUMBER",
+																				"ITEMNO",
+																				"RULETYPE",
+																				"LAST_REPLICATED_AT",
+																				"PSTYPE"
+		
+	)	SELECT PONUMBER,ITEMNO,RULETYPE,CURRENT_UTCTIMESTAMP,PSTYPE FROM :lt_excludedPO;
+	
+	EX_STATUS:='Records inserted successfully';
+	EX_CODE:=0;
+
+END;

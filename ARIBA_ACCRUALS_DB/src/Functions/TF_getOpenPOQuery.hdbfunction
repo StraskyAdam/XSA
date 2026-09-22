@@ -1,0 +1,130 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQuery"( IP_PSTYPE varchar(1)  )
+       RETURNS table ( ebeln nvarchar(10), 
+								  ebelp nvarchar(5) ) 
+																	
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+declare lv_bukrs varchar(5000);
+
+-- Japan_Brazil
+ select config_value into lv_bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+			where config_name = 'Japan_Brazil';
+
+lt_values = select OUTPUT_SPLIT as company_code from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs);
+
+
+if (:IP_PSTYPE = '9') then 
+
+		lt_open_po = 
+		select ebeln, ebelp from(
+			select  ekpo.ebeln,
+				   ekpo.ebelp 
+					from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+					left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+					on ekko.ebeln = ekpo.ebeln
+					
+					inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+					on ekko.bukrs = T001.bukrs
+					
+					-- inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+					-- on configCtry.country_code = t001.land1
+					where ekpo.pstyp = :IP_PSTYPE
+					and ekpo.erekz = ' ' --Final Invoice Indicator
+					and ekpo.zstart_date <> '00000000'
+			     	and ekko.bsart = 'ZARP'
+			     	--and ekko.ebeln = '8000038818'
+			     	union
+			     	
+			     	select  ekpo.ebeln,
+				   ekpo.ebelp 
+					from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+					left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+					on ekko.ebeln = ekpo.ebeln
+					
+					inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+					on ekko.bukrs = T001.bukrs
+					
+					-- inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+					-- on configCtry.country_code = t001.land1
+					where ekpo.pstyp = '0'
+					and ekpo.erekz = ' ' --Final Invoice Indicator
+					and ekpo.zstart_date <> '00000000'
+			     	and ekko.bsart = 'ZARP'
+			     	and ekpo.bukrs in (select company_code from :lt_values)
+			     	
+		)
+					order by 
+					ebeln,
+					ebelp;
+					
+elseif (:IP_PSTYPE = '0') then
+			lt_open_po = 
+			select ebeln, ebelp from (
+				select  ekpo.ebeln,
+					   ekpo.ebelp 
+						from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+						on ekko.ebeln = ekpo.ebeln
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+						on ekko.bukrs = T001.bukrs
+						
+						-- inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+						-- on configCtry.country_code = t001.land1
+						where ekpo.pstyp = :IP_PSTYPE
+						and ekpo.bukrs not in (select company_code from :lt_values)
+						and ekpo.erekz = ' ' --Final Invoice Indicator
+				     	and ekko.bsart = 'ZARP'
+				     	--and ekko.ebeln = '8000038818'
+				     	
+				     	union
+				     	
+				     	select  ekpo.ebeln,
+					   ekpo.ebelp 
+						from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+						on ekko.ebeln = ekpo.ebeln
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+						on ekko.bukrs = T001.bukrs
+						
+						-- inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+						-- on configCtry.country_code = t001.land1
+						where ekpo.pstyp = :IP_PSTYPE
+						and (ekpo.zstart_date = '00000000')
+						and ekpo.bukrs in (select company_code from :lt_values)
+						and ekpo.erekz = ' ' --Final Invoice Indicator
+				     	and ekko.bsart = 'ZARP'
+				     	)
+						order by 
+						ebeln,
+						ebelp;
+				
+elseif (:IP_PSTYPE = '*') then
+			lt_open_po = 
+				select  ekpo.ebeln,
+					   ekpo.ebelp 
+						from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+						on ekko.ebeln = ekpo.ebeln
+						
+						inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+						on ekko.bukrs = T001.bukrs
+						
+						-- inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" as configCtry
+						-- on configCtry.country_code = t001.land1
+						where ekpo.pstyp = '0' or ekpo.pstyp = '9'
+						and ekpo.erekz = ' ' --Final Invoice Indicator
+				     	and ekko.bsart = 'ZARP'
+				     	--and ekko.ebeln = '8000038818'
+						order by 
+						ekpo.ebeln,
+						ekpo.ebelp;
+						
+end if;
+			
+return :lt_open_po;
+
+END;

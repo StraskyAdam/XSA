@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_AllHelpLinks" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="CV_AllHelpLinks"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_HELPLINKS">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_HELPLINKS</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_HELPLINKS">
+  <attributes>
+    <attribute id="ROLE" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Role"/>
+      <keyMapping columnObjectName="ZT_CONFIG_HELPLINKS" columnName="ROLE"/>
+    </attribute>
+    <attribute id="HELP_ID" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Help ID"/>
+      <keyMapping columnObjectName="ZT_CONFIG_HELPLINKS" columnName="HELP_ID"/>
+    </attribute>
+    <attribute id="HELP_DESC" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Help Description"/>
+      <keyMapping columnObjectName="ZT_CONFIG_HELPLINKS" columnName="HELP_DESC"/>
+    </attribute>
+    <attribute id="HELP_LINK" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Help Link"/>
+      <keyMapping columnObjectName="ZT_CONFIG_HELPLINKS" columnName="HELP_LINK"/>
+    </attribute>
+    <attribute id="LANGUAGE" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Language Code"/>
+      <keyMapping columnObjectName="ZT_CONFIG_HELPLINKS" columnName="LANGUAGE"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

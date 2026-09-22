@@ -1,0 +1,22 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getUserDetails"(  IP_EMAIL varchar(255) )
+       RETURNS table ( username varchar(12),
+    			   EMAILADDR varchar(255),
+    			   FULL_NAME varchar(80),
+       			   DECIMAL_FORMAT nvarchar(1),
+       			   DATE_FORMAT nvarchar(1) )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+lt_output = select top 1   USERNAME,
+EMAILADDR,
+FULL_NAME,
+DECIMAL_FORMAT,
+DATFM as DATE_FORMAT
+from
+"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getUserDetails" where emailaddr = :IP_EMAIL;
+
+
+return :lt_output;
+
+END;
