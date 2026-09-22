@@ -1,0 +1,15 @@
+source:
+  branch: main
+build_rules:
+- id: build-break-rule
+  finding_types:
+    - vuln
+  type:
+    - SQL Injection
+    - XSS
+    - Remote Code Execution
+  owasp_category:
+    - a1-injection
+    - a7-cross-site-scripting
+    - a7-xss
+  threshold: 0

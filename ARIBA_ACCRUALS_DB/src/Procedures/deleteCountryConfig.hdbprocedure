@@ -1,0 +1,22 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::deleteCountryConfig"( ip_countrycode varchar(3),
+	                                                                        ip_countryName varchar(50),
+																			ip_companyCode  varchar(4) ,                                               
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+  -- READS SQL DATA 
+ AS
+BEGIN
+
+delete from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY"
+where  country_code = ip_countrycode
+and country_name = ip_countryName
+and bukrs = ip_companyCode;
+
+
+EX_STATUS :='Record deleted successfully !';
+EX_CODE := 1;
+
+END

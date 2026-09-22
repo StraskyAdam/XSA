@@ -1,0 +1,32 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::insertHelpLinks"( IN IP_ROLE VARCHAR(100),
+																		 IN IP_HELPID VARCHAR(20),
+																		 IN IP_HELPDESC VARCHAR(225),
+																		 IN IP_HELPLINKS VARCHAR(5000),
+																		 IN IP_LANG VARCHAR(5),
+																		 OUT EX_STATUS varchar(100),
+																		 OUT EX_CODE integer
+																		  
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA 
+   AS
+BEGIN
+
+
+upsert "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_HELPLINKS"("ROLE" ,
+																				"HELP_ID",
+																				"HELP_DESC",
+																				"HELP_LINK",
+																				"LANGUAGE"
+		
+																				)
+	values(:IP_ROLE,:IP_HELPID,:IP_HELPDESC,:IP_HELPLINKS,:IP_LANG)
+	WHERE ROLE=:IP_ROLE AND HELP_ID=:IP_HELPID AND LANGUAGE=:IP_LANG;	
+	
+		EX_CODE:=0;
+		EX_STATUS:='record inserted successfully';
+
+  
+END

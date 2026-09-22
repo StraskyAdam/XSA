@@ -1,0 +1,55 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_calcSTL_wtdAmountPer"( iv_povalue decimal(13,2),
+																iv_po_currency varchar(3),
+																iv_wrkstrtdat date,
+																iv_wrkenddat date,
+																iv_exchangerate decimal(13,6))
+       RETURNS  stl_amt decimal(13,2),
+    			stl_amt_usd decimal(13,2),
+       			stl_per decimal(13,1) 
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+-- Declare local variables here 
+declare lv_po_currency varchar(3) ;
+declare lv_month_bet integer default 0;
+declare lv_month_bet_crr integer default 0;
+declare lv_amount decimal(20,2);
+declare lv_wrkstrtdat date;
+declare lv_wrkenddat date;
+declare lv_wrkcurrdat date;
+
+-- Assign them to local variables
+lv_po_currency=	:iv_po_currency;
+lv_wrkstrtdat = iv_wrkstrtdat;
+lv_wrkenddat = iv_wrkenddat;
+lv_wrkcurrdat = current_date;
+
+-- Get the Total Months elapsed and Total Months duration
+lv_month_bet = "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_getMonthDiff"(:lv_wrkstrtdat, :lv_wrkenddat).MONTH_BET;
+lv_month_bet_crr = "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_getMonthDiff"(:lv_wrkstrtdat, :lv_wrkenddat).MONTH_BET_CRR;
+
+if :lv_month_bet = :lv_month_bet_crr then 
+	lv_month_bet = 1;
+	lv_month_bet_crr = 1;
+end if;
+
+if lv_month_bet > 0 then 
+	lv_amount = round(( :iv_povalue / :lv_month_bet ) * :lv_month_bet_crr,2);
+	if ( :lv_amount > :iv_povalue ) then 
+		lv_amount = :iv_povalue; 
+	end if;
+else 
+	lv_amount = 0.00; 
+end if;
+
+stl_amt = :lv_amount;
+-- Convert it to USD (Common) currency
+stl_amt_usd = "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_amount,:lv_po_currency,'USD', :iv_exchangerate).ev_targetAmount;
+if :iv_povalue > 0 then 
+	stl_per =round(((:lv_amount / :iv_povalue) * 100),1);
+else 
+	stl_per = 0.0;
+end if;
+
+END;

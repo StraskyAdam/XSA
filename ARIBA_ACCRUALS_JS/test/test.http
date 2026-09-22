@@ -1,0 +1,40 @@
+###test
+
+GET http://localhost:4004/xsjs/updateServPOStatus.xsjs
+Content-Type: application/json
+
+{
+    "statuspo": "123"
+}
+
+###insertCountry
+GET http://localhost:4004/xsjs/insertCountry.xsjs
+Content-Type: application/json
+
+{
+    "country_code": "TST",
+	"country_name":"test",
+	"bukrs": "test"
+}
+
+
+###insertHelpLinks
+GET http://localhost:4004/xsjs/insertHelpLinks.xsjs
+Content-Type: application/json
+
+{
+    "ROLE": "test",
+	"HELP_ID":"test",
+	"HELP_DESC": "test",
+    "LANGUAGE": "EN"
+}
+
+
+###insertLanguage
+GET http://localhost:4004/xsjs/insertLanguage.xsjs
+Content-Type: application/json
+
+{
+    "LANG_CODE": "TG",
+	"LANGUAGE":"Tagalog"
+}

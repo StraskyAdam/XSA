@@ -1,0 +1,35 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::insertConfigValues"(ip_name varchar(50),
+	                                                                       ip_value varchar(5000),
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER )
+
+LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+--   READS SQL DATA 
+AS
+BEGIN
+
+declare lv_count integer;
+
+select count(*) into lv_count from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+   where config_name = :ip_name;
+
+if lv_count = 0 then 
+	insert into "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+	values ( :ip_name, :ip_value);
+	
+	EX_STATUS :='Record inserted successfully !';
+	EX_CODE := 1;
+else
+	 UPDATE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+        set config_value = :ip_value
+        where config_name = :ip_name;
+        
+    EX_STATUS :='Record updated successfully !';
+	EX_CODE := 1;
+end if;
+
+
+
+END

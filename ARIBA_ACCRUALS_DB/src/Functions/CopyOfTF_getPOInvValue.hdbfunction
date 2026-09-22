@@ -1,0 +1,460 @@
+-- FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPOInvValue"(IP_PSTYPE varchar(1), 
+-- 																		IP_EMAIL varchar(255) default '*' ,
+-- 																		IP_POOWNER varchar(1))
+--       RETURNS  table( ebeln nvarchar(10),
+--     				  ebelp varchar(5),
+--     				  invoice_currency varchar(5),
+--     				  invvalue DECIMAL(13,2),
+--     				  invvalue_cocdeCurr DECIMAL(13,2),
+--     				  invvalue_usd decimal(13,2)
+--     		)
+-- 	LANGUAGE SQLSCRIPT
+-- 	--SQL SECURITY INVOKER
+-- 	AS
+-- BEGIN
+
+-- -- Get the open POs - Material and service
+-- -- lt_open_po = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQuery"('*') order by ebeln asc;
+						
+-- -- lt_output =  select ekbe.ebeln as ebeln, 
+-- -- 	   ekbe.ebelp as ebelp,
+	   
+-- -- 	   --"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_CalcConvertedInvValue"(ekbe.ebeln,ekbe.ebelp) as invvalue,
+		
+-- -- 		sum( case ekko.waers
+-- -- 				when 'JPY' then 
+-- -- 					case shkzg
+-- -- 					 when 'S' then ( wrbtr*100 )
+-- -- 					 when 'H' then ( wrbtr*100 * -1 )
+-- -- 					 end   
+-- -- 				else
+-- -- 					case shkzg
+-- -- 					 when 'S' then ( wrbtr * 1 )
+-- -- 					 when 'H' then ( wrbtr * -1 )
+-- -- 					 end 
+-- -- 			end ) as invvalue,
+		
+-- -- 		sum( case ekko.waers
+-- -- 				when 'JPY' then 
+-- -- 					case shkzg
+-- -- 					 when 'S' then ( dmbtr*100 )
+-- -- 					 when 'H' then ( dmbtr*100 * -1 )
+-- -- 					 end   
+-- -- 				else
+-- -- 					case shkzg
+-- -- 					 when 'S' then ( dmbtr * 1 )
+-- -- 					 when 'H' then ( dmbtr * -1 )
+-- -- 					 end 
+-- -- 			end ) as invvalue_cocdeCurr,
+
+-- -- 		sum( case ekko.waers
+-- -- 				when 'JPY' then 
+-- -- 					case shkzg
+-- -- 					 when 'S' then  round(( wrbtr * 100 * exchangeTab.exchange_rate),2)
+-- -- 					 when 'H' then round(( wrbtr * -100 * exchangeTab.exchange_rate),2)
+-- -- 					 end   
+-- -- 				else
+-- -- 					case shkzg
+-- -- 					 when 'S' then round(( wrbtr * 1 * exchangeTab.exchange_rate),2)
+-- -- 					 when 'H' then round(( wrbtr * -1 * exchangeTab.exchange_rate),2)
+-- -- 					 end 
+-- -- 			end ) as invvalue_usd
+-- --      from   (select ebeln,ebelp,poowner_email from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('3',:IP_PSTYPE,:IP_EMAIL,:IP_POOWNER)) as ekpo 
+    
+-- --      inner  join (select ebeln, ebelp, shkzg, wrbtr,dmbtr from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE" 
+-- --      			  where bewtp in ('Q','N') and vgabe in ('2','3') and budat <= (case when extract(day from current_date) <= 6 then last_day(add_months(current_date,-1))--current date is between 1 & 5 pick lastday of last month
+-- --     		else last_day(current_date)--last day of current month is greater than posting date 
+-- --     		end) 
+-- --      )as ekbe
+-- --      on ekbe.ebeln =  ekpo.ebeln  and ekbe.ebelp = ekpo.ebelp
+-- --      left outer join ( select ebeln, waers from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" 
+-- --      				where bsart = 'ZARP'
+-- --      )as ekko
+     
+-- -- 	 on ekbe.ebeln = ekko.ebeln
+-- -- 	 --left outer join (select * from"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_CalculateInvValue"(ekbe.ebeln,exchangeTab.source_curr,shkzg) )as invvalue
+-- --      left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exchangeTab
+-- -- 	   on ekko.waers = exchangeTab.source_curr
+-- --      group by ekbe.ebeln, ekbe.ebelp;
+
+-- lt_getOpenPOQueryWithEmail = select a.ebeln,a.ebelp,a.wrbtr,a.shkzg,a.dmbtr,a.waers as invoice_currency,b.waers as po_currency 
+-- 							from
+-- 								(select ebeln,ebelp,wrbtr,waers,shkzg,dmbtr from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE" 
+-- 								where (ebeln,ebelp) IN(
+-- 									select ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('3',:IP_PSTYPE,:IP_EMAIL,:IP_POOWNER))
+-- 								and bewtp in ('Q','N') and vgabe in ('2','3') and budat <= (case when extract(day from current_date) <= 6 then last_day(add_months(current_date,-1))--current date is between 1 & 5 pick lastday of last month
+--     									else last_day(current_date)end)) as a--last day of current month is greater than posting date 
+--     						left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as b
+-- 							on a.ebeln =b.ebeln
+-- 							where b.bsart = 'ZARP';
+
+
+-- lt_count = select ebeln,ebelp,count(invoice_currency) as invoice_currency_count
+-- 		   from 
+-- 				(select ebeln,ebelp,invoice_currency from :lt_getOpenPOQueryWithEmail
+-- 					group by  ebeln,ebelp,invoice_currency)
+-- 		   group by  ebeln,ebelp;
+
+-- lt_final = select c.ebeln,
+-- 				c.ebelp,
+-- 				c.wrbtr,
+-- 				c.shkzg,
+-- 				c.dmbtr,
+-- 				c.invoice_currency,
+-- 				c.po_currency,
+-- 				c.invoice_currency_count, 
+-- 				c.invoice_currency_count_actual,
+-- 				c.invoice_currency_conv,
+-- 				c.EXCHANGE_RATE_EKBE,
+-- 				c.convert_amount_to_USD,
+-- 				exchangeTab.REV_EXCHANGE_RATE as EXCHANGE_RATE_EKBE_REV, 
+-- 				case when invoice_currency_count_actual >1 then
+-- 					case when c.invoice_currency = c.po_currency  then c.wrbtr 
+-- 						else  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(c.convert_amount_to_USD,invoice_currency_conv,'USD',exchangeTab.REV_EXCHANGE_RATE ).ev_targetAmount END
+-- 				else c.wrbtr end as convert_amount_final 
+-- 		from (select a.ebeln,
+-- 				a.ebelp,
+-- 				a.wrbtr,
+-- 				a.shkzg,
+-- 				a.dmbtr,
+-- 				a.invoice_currency,
+-- 				a.po_currency,
+-- 				a.invoice_currency_count, 
+-- 				a.invoice_currency_count_actual,
+-- 				exchangeTab.EXCHANGE_RATE as EXCHANGE_RATE_EKBE,
+-- 				case when a.invoice_currency_count_actual >1 then a.po_currency else a.invoice_currency end invoice_currency_conv,
+-- 				case when a.invoice_currency_count_actual >1 then
+-- 					case when a.invoice_currency = a.po_currency then a.wrbtr
+-- 						else "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(a.wrbtr,a.invoice_currency,'USD',exchangeTab.EXCHANGE_RATE ).ev_targetAmount END --as convert_amount_to_USD
+-- 				else a.wrbtr end as convert_amount_to_USD
+-- 		from (select a.ebeln,
+-- 				a.ebelp,
+-- 				a.wrbtr,
+-- 				a.shkzg,
+-- 				a.dmbtr,
+-- 				a.invoice_currency,
+-- 				a.po_currency,
+-- 				b.invoice_currency_count, 
+-- 				case when  a.invoice_currency <> a.po_currency then b.invoice_currency_count else 1 end as invoice_currency_count_actual
+-- 				from :lt_getOpenPOQueryWithEmail as a, :lt_count as b
+-- 					where a.ebeln = b.ebeln
+-- 					and a.ebelp = b.ebelp) as a
+-- 			inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exchangeTab
+-- 				on a.invoice_currency = exchangeTab.source_curr) as c
+-- 			inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exchangeTab
+-- 				on  exchangeTab.source_curr	=  c.po_currency; 	
+				
+
+-- lt_output = select a.ebeln,a.ebelp,a.invoice_currency,
+-- sum( case ekko.waers
+-- 				when 'JPY' then 
+-- 					case a.shkzg
+-- 					 when 'S' then ( a.wrbtr*100 )
+-- 					 when 'H' then ( a.wrbtr*100 * -1 )
+-- 					 end   
+-- 				else
+-- 					case shkzg
+-- 					 when 'S' then ( a.convert_amount_final * 1 )
+-- 					 when 'H' then ( a.convert_amount_final * -1 )
+-- 					 end 
+-- 			end ) as invvalue,
+			
+-- 			0 as invvalue_cocdeCurr,
+			
+-- 		sum( case ekko.waers
+-- 				when 'JPY' then 
+-- 					case a.shkzg
+-- 					 when 'S' then  round(( a.wrbtr * 100 * EXCHANGE_RATE_EKBE),2)
+-- 					 when 'H' then round(( wrbtr * -100 * EXCHANGE_RATE_EKBE),2)
+-- 					 end   
+-- 				else
+-- 					case a.shkzg
+-- 					 when 'S' then round(( a.wrbtr * 1 * EXCHANGE_RATE_EKBE),2)
+-- 					 when 'H' then round(( a.wrbtr * -1 * EXCHANGE_RATE_EKBE),2)
+-- 					 end 
+-- 			end ) as invvalue_usd
+			
+-- 			--0 as invvalue_usd
+-- from :lt_final as a
+-- left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko
+-- on a.ebeln =ekko.ebeln
+-- group by a.ebeln, a.ebelp,a.invoice_currency;
+ 
+--  lt_output_inv = select
+-- 						ebeln,
+-- 						ebelp,
+-- 						invoice_currency,
+-- 						case 
+-- 							when invvalue is null then 0.00
+-- 							else invvalue
+-- 						end as invvalue,
+-- 						case 
+-- 							when invvalue_cocdeCurr is null then 0.00
+-- 							else invvalue_cocdeCurr
+-- 						end as invvalue_cocdeCurr,
+-- 						case 
+-- 							when invvalue_usd is null then 0.00
+-- 							else invvalue_usd
+-- 						end as invvalue_usd
+--                         from :lt_output;
+ 
+-- return :lt_output_inv;
+-- END;
+
+
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::CopyOfTF_getPOInvValue"(IP_PSTYPE varchar(1), 
+																		IP_EMAIL varchar(255) default '*' ,
+																		IP_POOWNER varchar(1))
+      RETURNS  table( ebeln nvarchar(10),
+    				  ebelp varchar(5),
+    				  invoice_currency varchar(5), 
+    				  invoice_currency_in_po_currency_amount_final  DECIMAL(13,2),
+    				  invvalue DECIMAL(13,2),
+    				  invvalue_cocdeCurr DECIMAL(13,2),
+    				  invvalue_usd decimal(13,2)
+    		)
+	LANGUAGE SQLSCRIPT
+	--SQL SECURITY INVOKER
+	AS
+BEGIN
+
+-- Get the open POs - Material and service
+-- lt_open_po = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQuery"('*') order by ebeln asc;
+						
+-- lt_output =  select ekbe.ebeln as ebeln, 
+-- 	   ekbe.ebelp as ebelp,
+	   
+-- 	   --"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_CalcConvertedInvValue"(ekbe.ebeln,ekbe.ebelp) as invvalue,
+		
+-- 		sum( case ekko.waers
+-- 				when 'JPY' then 
+-- 					case shkzg
+-- 					 when 'S' then ( wrbtr*100 )
+-- 					 when 'H' then ( wrbtr*100 * -1 )
+-- 					 end   
+-- 				else
+-- 					case shkzg
+-- 					 when 'S' then ( wrbtr * 1 )
+-- 					 when 'H' then ( wrbtr * -1 )
+-- 					 end 
+-- 			end ) as invvalue,
+		
+-- 		sum( case ekko.waers
+-- 				when 'JPY' then 
+-- 					case shkzg
+-- 					 when 'S' then ( dmbtr*100 )
+-- 					 when 'H' then ( dmbtr*100 * -1 )
+-- 					 end   
+-- 				else
+-- 					case shkzg
+-- 					 when 'S' then ( dmbtr * 1 )
+-- 					 when 'H' then ( dmbtr * -1 )
+-- 					 end 
+-- 			end ) as invvalue_cocdeCurr,
+
+-- 		sum( case ekko.waers
+-- 				when 'JPY' then 
+-- 					case shkzg
+-- 					 when 'S' then  round(( wrbtr * 100 * exchangeTab.exchange_rate),2)
+-- 					 when 'H' then round(( wrbtr * -100 * exchangeTab.exchange_rate),2)
+-- 					 end   
+-- 				else
+-- 					case shkzg
+-- 					 when 'S' then round(( wrbtr * 1 * exchangeTab.exchange_rate),2)
+-- 					 when 'H' then round(( wrbtr * -1 * exchangeTab.exchange_rate),2)
+-- 					 end 
+-- 			end ) as invvalue_usd
+--      from   (select ebeln,ebelp,poowner_email from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('3',:IP_PSTYPE,:IP_EMAIL,:IP_POOWNER)) as ekpo 
+    
+--      inner  join (select ebeln, ebelp, shkzg, wrbtr,dmbtr from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE" 
+--      			  where bewtp in ('Q','N') and vgabe in ('2','3') and budat <= (case when extract(day from current_date) <= 6 then last_day(add_months(current_date,-1))--current date is between 1 & 5 pick lastday of last month
+--     		else last_day(current_date)--last day of current month is greater than posting date 
+--     		end) 
+--      )as ekbe
+--      on ekbe.ebeln =  ekpo.ebeln  and ekbe.ebelp = ekpo.ebelp
+--      left outer join ( select ebeln, waers from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" 
+--      				where bsart = 'ZARP'
+--      )as ekko
+     
+-- 	 on ekbe.ebeln = ekko.ebeln
+-- 	 --left outer join (select * from"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_CalculateInvValue"(ekbe.ebeln,exchangeTab.source_curr,shkzg) )as invvalue
+--      left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exchangeTab
+-- 	   on ekko.waers = exchangeTab.source_curr
+--      group by ekbe.ebeln, ekbe.ebelp;
+
+lt_getOpenPOQueryWithEmail = select a.ebeln,a.ebelp,a.wrbtr,a.shkzg,a.dmbtr,a.waers as invoice_currency,b.waers as po_currency 
+							from
+								(select ebeln,ebelp,wrbtr,waers,shkzg,dmbtr from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE" 
+								where (ebeln,ebelp) IN(
+									select ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('3',:IP_PSTYPE,:IP_EMAIL,:IP_POOWNER))
+								and bewtp in ('Q','N') and vgabe in ('2','3') and budat <= (case when extract(day from current_date) <= 6 then last_day(add_months(current_date,-1))--current date is between 1 & 5 pick lastday of last month
+    									else last_day(current_date)end)) as a--last day of current month is greater than posting date 
+    						left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as b
+							on a.ebeln =b.ebeln
+							where b.bsart = 'ZARP';
+
+
+lt_count = select ebeln,ebelp,count(invoice_currency) as invoice_currency_count
+		   from 
+				(select ebeln,ebelp,invoice_currency from :lt_getOpenPOQueryWithEmail
+					group by  ebeln,ebelp,invoice_currency)
+		   group by  ebeln,ebelp;
+
+lt_final = select c.ebeln,
+				c.ebelp,
+				c.wrbtr,
+				c.shkzg,
+				c.dmbtr,
+				c.invoice_currency,
+				c.po_currency,
+				c.invoice_currency_count, 
+				c.invoice_currency_count_actual,
+				c.invoice_currency_conv,
+				c.invoice_currency_in_po_currecny,
+				c.invoice_currency_in_po_currecny_amount_usd,
+				case when invoice_currency_count_actual >1 then
+					case when c.invoice_currency = c.po_currency  then c.wrbtr 
+						else  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(c.invoice_currency_in_po_currecny_amount_usd,invoice_currency_in_po_currecny,'USD',exchangeTab.REV_EXCHANGE_RATE ).ev_targetAmount END
+				else c.wrbtr end as invoice_currency_in_po_currecny_amount_final,
+				c.EXCHANGE_RATE_EKBE,
+				c.convert_amount_to_USD,
+				exchangeTab.REV_EXCHANGE_RATE as EXCHANGE_RATE_EKBE_REV, 
+				case when invoice_currency_count_actual >1 then
+					case when c.invoice_currency = c.po_currency  then c.wrbtr 
+						else  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(c.convert_amount_to_USD,invoice_currency_conv,'USD',exchangeTab.REV_EXCHANGE_RATE ).ev_targetAmount END
+				else c.wrbtr end as convert_amount_final 
+		from (select a.ebeln,
+				a.ebelp,
+				a.wrbtr,
+				a.shkzg,
+				a.dmbtr,
+				a.invoice_currency,
+				a.po_currency,
+				a.invoice_currency_count, 
+				a.invoice_currency_count_actual,
+				exchangeTab.EXCHANGE_RATE as EXCHANGE_RATE_EKBE,
+				case when a.invoice_currency_count_actual >1 and a.invoice_currency <> a.po_currency then a.po_currency 
+					 when a.invoice_currency_count_actual >1 and a.invoice_currency = a.po_currency then a.po_currency 
+					 when a.invoice_currency_count_actual =1 and a.invoice_currency <> a.po_currency then a.po_currency
+					 when a.invoice_currency_count_actual =1 and a.invoice_currency = a.po_currency then a.po_currency end as invoice_currency_in_po_currecny,
+				case when a.invoice_currency_count_actual = 1 then
+					case when a.invoice_currency = a.po_currency then a.wrbtr
+						else "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(a.wrbtr,a.invoice_currency,'USD',exchangeTab.EXCHANGE_RATE ).ev_targetAmount END --as convert_amount_to_USD
+				else a.wrbtr end as invoice_currency_in_po_currecny_amount_usd,	
+				-- case when invoice_currency_count_actual >1 and a.invoice_currency <> a.po_currency then a.po_currency 
+				-- 	 when invoice_currency_count_actual >1 and a.invoice_currency = a.po_currency then a.po_currency 
+				-- 	 when invoice_currency_count_actual =1 and a.invoice_currency <> a.po_currency then a.invoice_currency
+				-- 	 when invoice_currency_count_actual =1 and a.invoice_currency = a.po_currency then a.invoice_currency end as invoice_currency_conv,	 
+				case when a.invoice_currency_count_actual >1 then a.po_currency else a.invoice_currency end invoice_currency_conv,
+				case when a.invoice_currency_count_actual >1 then
+					case when a.invoice_currency = a.po_currency then a.wrbtr
+						else "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(a.wrbtr,a.invoice_currency,'USD',exchangeTab.EXCHANGE_RATE ).ev_targetAmount END --as convert_amount_to_USD
+				else a.wrbtr end as convert_amount_to_USD
+		from (select a.ebeln,
+				a.ebelp,
+				a.wrbtr,
+				a.shkzg,
+				a.dmbtr,
+				a.invoice_currency,
+				a.po_currency,
+				b.invoice_currency_count, 
+				case when  a.invoice_currency <> a.po_currency then b.invoice_currency_count else 1 end as invoice_currency_count_actual
+				from :lt_getOpenPOQueryWithEmail as a, :lt_count as b
+					where a.ebeln = b.ebeln
+					and a.ebelp = b.ebelp) as a
+			inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exchangeTab
+				on a.invoice_currency = exchangeTab.source_curr) as c
+			inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exchangeTab
+				on  exchangeTab.source_curr	=  c.po_currency; 	
+--	a.wrbtr			
+
+lt_output = select distinct a.ebeln,a.ebelp,a.invoice_currency_conv as invoice_currency,
+--a.invoice_currency,
+sum( case ekko.waers
+				when 'JPY' then 
+					case a.shkzg
+					 when 'S' then ( a.wrbtr*100 )
+					 when 'H' then ( a.wrbtr*100 * -1 )
+					 end   
+				else
+					case shkzg
+					 when 'S' then ( a.wrbtr* 1 )
+					 when 'H' then ( a.wrbtr * -1 )
+					 end 
+			end ) as invoice_currency_in_po_currency_amount,
+sum( case ekko.waers
+				when 'JPY' then 
+					case a.shkzg
+					 when 'S' then ( a.wrbtr*100 )
+					 when 'H' then ( a.wrbtr*100 * -1 )
+					 end   
+				else
+					case shkzg
+					 when 'S' then ( a.convert_amount_final * 1 )
+					 when 'H' then ( a.convert_amount_final * -1 )
+					 end 
+			end ) as invvalue,
+			
+			0 as invvalue_cocdeCurr,
+			
+		sum( case ekko.waers
+				when 'JPY' then 
+					case a.shkzg
+					 when 'S' then  round(( a.wrbtr * 100 * EXCHANGE_RATE_EKBE),2)
+					 when 'H' then round(( wrbtr * -100 * EXCHANGE_RATE_EKBE),2)
+					 end   
+				else
+					case a.shkzg
+					 when 'S' then round(( a.wrbtr * 1 * EXCHANGE_RATE_EKBE),2)
+					 when 'H' then round(( a.wrbtr * -1 * EXCHANGE_RATE_EKBE),2)
+					 end 
+			end ) as invvalue_usd
+
+			--0 as invvalue_usd
+from :lt_final as a
+left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko
+on a.ebeln =ekko.ebeln
+group by a.ebeln,a.ebelp,a.invoice_currency_conv;
+--a.invoice_currency;
+lt_output_email = select a.ebeln,
+a.ebelp,
+a.invoice_currency_in_po_currency_amount as invvalue,
+a.invvalue as invoice_currency_in_po_currency_amount_final,
+a.invvalue_cocdeCurr,
+a.invvalue_usd,
+a.invoice_currency from :lt_output as a;
+-- right join :lt_getOpenPOQueryWithEmail as b
+-- on a.ebeln = b.ebeln
+-- and a.ebelp = b.ebelp;
+
+lt_output_inv = select
+						ebeln,
+						ebelp,
+						invoice_currency,
+						invoice_currency_in_po_currency_amount_final,
+						-- case 
+						-- 	when invoice_currency_in_po_currecny_amount is null then 0.00
+						-- 	else invoice_currency_in_po_currecny_amount
+						-- end as invoice_currency_in_po_currecny_amount,
+						case 
+							when invvalue is null then 0.00
+							else invvalue
+						end as invvalue,
+						case 
+							when invvalue_cocdeCurr is null then 0.00
+							else invvalue_cocdeCurr
+						end as invvalue_cocdeCurr,
+						case 
+							when invvalue_usd is null then 0.00
+							else invvalue_usd
+						end as invvalue_usd
+                        from :lt_output_email;
+ 
+return select EBELN,EBELP,INVOICE_CURRENCY,invoice_currency_in_po_currency_amount_final,INVVALUE,INVVALUE_COCDECURR,INVVALUE_USD from :lt_output_inv
+			group by EBELN,EBELP,INVOICE_CURRENCY,invoice_currency_in_po_currency_amount_final,INVVALUE,INVVALUE_COCDECURR,INVVALUE_USD;
+
+-- return select EBELN,EBELP,INVOICE_CURRENCY,INVVALUE,INVVALUE_COCDECURR,INVVALUE_USD from :lt_output_inv
+-- 			group by EBELN,EBELP,INVOICE_CURRENCY,INVVALUE,INVVALUE_COCDECURR,INVVALUE_USD;invoice_currency_in_po_currency_amount
+
+
+END;

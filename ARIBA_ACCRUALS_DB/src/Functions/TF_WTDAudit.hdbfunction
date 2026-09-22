@@ -1,0 +1,82 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_WTDAudit"(  IN IP_PONUM VARCHAR(10),
+																	IN IP_ITEMNO VARCHAR(5),
+																	IN IP_MONTH VARCHAR(2),
+																	IN IP_YEAR integer
+)
+       RETURNS table(
+       		FNAME varchar(50),
+       		NEWVALUE varchar(5000),
+       		CHANGEDON timestamp,
+       		CHANGEDBY varchar(225),
+       		REVIEWED_BY varchar(225)
+       )
+       
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+declare i integer;
+declare lv_i integer;
+declare lv_n integer default '1';
+declare lv_month integer;
+declare lt_eachMonthData table (
+								FNAME varchar(50),
+					       		NEWVALUE varchar(5000),
+					       		CHANGEDON timestamp,
+					       		CHANGEDBY varchar(225),
+					       		REVIEWED_BY varchar(225)
+								);
+
+if :IP_MONTH='*' then 
+
+	for i in 1..12 do 
+	
+	lv_month = i;
+ 
+	lt_records=   SELECT 
+			"FNAME",
+			"NEWVALUE",
+			"CHANGEDON",
+			"CHANGEDBY",
+			"REVIEWED_BY" 
+			FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_AUDITLOG"
+			WHERE PONUMBER =:IP_PONUM AND LINEITEM=:IP_ITEMNO AND MONTH(CHANGEDON) =:lv_month AND YEAR(CHANGEDON) =:IP_YEAR
+			AND FNAME='TOTALWORKCOMPLTODATE' AND  CHANGEDON in (SELECT MAX(CHANGEDON) FROM  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_AUDITLOG" 
+			WHERE MONTH(CHANGEDON)=:lv_month AND YEAR(CHANGEDON) =:IP_YEAR AND FNAME='TOTALWORKCOMPLTODATE' AND  PONUMBER =:IP_PONUM AND LINEITEM=:IP_ITEMNO);
+			
+			
+			
+		for lv_i in 1..record_count(:lt_records) do 	
+	
+		
+		lt_eachMonthData.FNAME[lv_n]=:lt_records.FNAME[lv_i];
+		lt_eachMonthData.NEWVALUE[lv_n]=:lt_records.NEWVALUE[lv_i];
+		lt_eachMonthData.CHANGEDON[lv_n]=:lt_records.CHANGEDON[lv_i];
+		lt_eachMonthData.CHANGEDBY[lv_n]=:lt_records.CHANGEDBY[lv_i];
+		lt_eachMonthData.REVIEWED_BY[lv_n]=:lt_records.REVIEWED_BY[lv_i];
+		
+		lv_n=record_count(:lt_eachMonthData) +1;
+	
+		end for;
+	
+	
+		
+	end for;
+	
+else 
+
+lt_eachMonthData=  SELECT 
+			"FNAME",
+			"NEWVALUE",
+			"CHANGEDON",
+			"CHANGEDBY",
+			"REVIEWED_BY" 
+			FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_AUDITLOG"
+			WHERE PONUMBER =:IP_PONUM AND LINEITEM=:IP_ITEMNO AND MONTH(CHANGEDON) =:IP_MONTH AND YEAR(CHANGEDON) =:IP_YEAR
+			AND FNAME='TOTALWORKCOMPLTODATE' AND  CHANGEDON in (SELECT MAX(CHANGEDON) FROM  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_AUDITLOG" 
+			WHERE MONTH(CHANGEDON)=:IP_MONTH AND YEAR(CHANGEDON) =:IP_YEAR AND FNAME='TOTALWORKCOMPLTODATE' AND  PONUMBER =:IP_PONUM AND LINEITEM=:IP_ITEMNO);
+			
+
+end if;
+
+return :lt_eachMonthData;
+END;

@@ -1,0 +1,31 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::updatePOClosure"(out EX_ERROR VARCHAR(100))
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA 
+   AS
+BEGIN
+   --to update closed PO's po closure flag
+   
+   lt_POClosure_flag= select po_closure ,ponumber,lineitem
+					  from 
+					  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS"  
+					  where (ponumber,lineitem) not  in (select ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO")
+					  and po_closure='true';
+					  
+					  
+	update 	  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS"  
+	set po_closure='false'
+	where (ponumber,lineitem) in (select ponumber,lineitem from :lt_POClosure_flag) and po_closure='true';
+					 
+		EX_ERROR:='Record updated sucessfully!';			 
+				
+					 
+					 
+					 
+					 
+   
+   
+  
+   
+END

@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" xmlns:Variable="http://www.sap.com/ndb/BiModelVariable.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPOFinal" applyPrivilegeType="NONE" dataCategory="CUBE" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="CV_getThresholdPOFinal"/>
+<localVariables>
+  <variable id="IP_PSTYPE" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="NVARCHAR" length="13" mandatory="true">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+  <variable id="IP_EMAIL" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="NVARCHAR" length="13" mandatory="false">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+  <variable id="IP_POOWNER" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="NVARCHAR" length="13" mandatory="false">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+</localVariables>
+<variableMappings>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenThresholdPOFinal">
+    <targetVariable name="IP_PSTYPE" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenThresholdPOFinal"/>
+    <localVariable>IP_PSTYPE</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenThresholdPOFinal">
+    <targetVariable name="IP_EMAIL" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenThresholdPOFinal"/>
+    <localVariable>IP_EMAIL</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenThresholdPOFinal">
+    <targetVariable name="IP_POOWNER" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenThresholdPOFinal"/>
+    <localVariable>IP_POOWNER</localVariable>
+  </mapping>
+</variableMappings>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenThresholdPOFinal" type="TABLE_FUNCTION">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenThresholdPOFinal</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenThresholdPOFinal">
+  <attributes>
+    <attribute id="STATUS" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="STATUS"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="STATUS"/>
+    </attribute>
+    <attribute id="COSTCENTER" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COSTCENTER"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="COSTCENTER"/>
+    </attribute>
+    <attribute id="INVOICE_CURRENCY" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="INVOICE_CURRENCY"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="INVOICE_CURRENCY"/>
+    </attribute>
+    <attribute id="MANAGEUNIT" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="MANAGEUNIT"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="MANAGEUNIT"/>
+    </attribute>
+    <attribute id="BBP_ACC_NO" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="BBP_ACC_NO"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="BBP_ACC_NO"/>
+    </attribute>
+    <attribute id="WRKSTRTDATE" order="6" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WRKSTRTDATE"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="WRKSTRTDATE"/>
+    </attribute>
+    <attribute id="CHECKFLAG" order="7" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CHECKFLAG"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="CHECKFLAG"/>
+    </attribute>
+    <attribute id="STRAIGHTLINEMTHD" order="8" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="STRAIGHTLINEMTHD"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="STRAIGHTLINEMTHD"/>
+    </attribute>
+    <attribute id="PONUMBER" order="9" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PONUMBER"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="PONUMBER"/>
+    </attribute>
+    <attribute id="DOCUMENTDATE" order="10" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DOCUMENTDATE"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="DOCUMENTDATE"/>
+    </attribute>
+    <attribute id="WRKENDDATE" order="11" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WRKENDDATE"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="WRKENDDATE"/>
+    </attribute>
+    <attribute id="MARKASREVIEWED" order="12" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="MARKASREVIEWED"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="MARKASREVIEWED"/>
+    </attribute>
+    <attribute id="ITEMNO" order="13" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ITEMNO"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="ITEMNO"/>
+    </attribute>
+    <attribute id="PURCHASINGORGANIZATION" order="14" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PURCHASINGORGANIZATION"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="PURCHASINGORGANIZATION"/>
+    </attribute>
+    <attribute id="POCREATEDAT" order="16" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POCREATEDAT"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="POCREATEDAT"/>
+    </attribute>
+    <attribute id="ACCRUALMETHOD" order="17" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ACCRUALMETHOD"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="ACCRUALMETHOD"/>
+    </attribute>
+    <attribute id="SUPPLIERID" order="18" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SUPPLIERID"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="SUPPLIERID"/>
+    </attribute>
+    <attribute id="SUPPLIERNAME" order="20" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SUPPLIERNAME"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="SUPPLIERNAME"/>
+    </attribute>
+    <attribute id="PSTYPE_TEXT" order="21" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PSTYPE_TEXT"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="PSTYPE_TEXT"/>
+    </attribute>
+    <attribute id="INTERNALORDER" order="22" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="INTERNALORDER"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="INTERNALORDER"/>
+    </attribute>
+    <attribute id="PURCHASINGUNIT" order="23" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PURCHASINGUNIT"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="PURCHASINGUNIT"/>
+    </attribute>
+    <attribute id="CHANGEDDATE" order="24" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CHANGEDDATE"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="CHANGEDDATE"/>
+    </attribute>
+    <attribute id="FULL_NAME" order="25" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="FULL_NAME"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="FULL_NAME"/>
+    </attribute>
+    <attribute id="POLINEDESC" order="26" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POLINEDESC"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="POLINEDESC"/>
+    </attribute>
+    <attribute id="ASSETID" order="27" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ASSETID"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="ASSETID"/>
+    </attribute>
+    <attribute id="REGION" order="28" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REGION"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="REGION"/>
+    </attribute>
+    <attribute id="DECIMAL_FORMAT" order="29" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DECIMAL_FORMAT"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="DECIMAL_FORMAT"/>
+    </attribute>
+    <attribute id="PSTYPE" order="30" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PSTYPE"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="PSTYPE"/>
+    </attribute>
+    <attribute id="POOWNER_EMAIL" order="32" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POOWNER_EMAIL"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="POOWNER_EMAIL"/>
+    </attribute>
+    <attribute id="PROFITCENTER" order="33" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PROFITCENTER"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="PROFITCENTER"/>
+    </attribute>
+    <attribute id="COCDECURR" order="34" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COCDECURR"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="COCDECURR"/>
+    </attribute>
+    <attribute id="REVIWED_BY" order="35" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REVIWED_BY"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="REVIWED_BY"/>
+    </attribute>
+    <attribute id="DATFM" order="36" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DATFM"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="DATFM"/>
+    </attribute>
+    <attribute id="PO_CLOSURE" order="37" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PO_CLOSURE"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="PO_CLOSURE"/>
+    </attribute>
+    <attribute id="COMPANYCODE" order="38" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COMPANYCODE"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="COMPANYCODE"/>
+    </attribute>
+    <attribute id="EPNUMBER" order="39" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="EPNUMBER"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="EPNUMBER"/>
+    </attribute>
+    <attribute id="USERNAME" order="40" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="USERNAME"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="USERNAME"/>
+    </attribute>
+    <attribute id="GLACCOUNT" order="41" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="GLACCOUNT"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="GLACCOUNT"/>
+    </attribute>
+    <attribute id="PO_PREPARER" order="42" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PO_PREPARER"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="PO_PREPARER"/>
+    </attribute>
+    <attribute id="POCURRENCY" order="43" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POCURRENCY"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="POCURRENCY"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPAMT_CHAR" order="44" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPAMT_CHAR"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="TOTWRKCOMPAMT_CHAR"/>
+    </attribute>
+    <attribute id="INVVALUE_USD" order="45" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="INVVALUE_USD"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="INVVALUE_USD"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPAMT_USD_CHAR" order="51" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPAMT_USD_CHAR"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="TOTWRKCOMPAMT_USD_CHAR"/>
+    </attribute>
+    <attribute id="AMOUNTACCRUED_CHAR" order="52" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="AMOUNTACCRUED_CHAR"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="AMOUNTACCRUED_CHAR"/>
+    </attribute>
+    <attribute id="AMOUNTACCRUED_USD_CHAR" order="53" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="AMOUNTACCRUED_USD_CHAR"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="AMOUNTACCRUED_USD_CHAR"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPPER_CHAR" order="54" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPPER_CHAR"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="TOTWRKCOMPPER_CHAR"/>
+    </attribute>
+    <attribute id="EXCHANGERATE" order="55" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="EXCHANGERATE"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="EXCHANGERATE"/>
+    </attribute>
+    <attribute id="ZACTIVITYNBR" order="71" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ZACTIVITYNBR"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="ZACTIVITYNBR"/>
+    </attribute>
+  
+    <attribute id="DISTPERCENTAGE" order="72" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DISTPERCENTAGE"/>
+      <keyMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="DISTPERCENTAGE"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures>
+    <measure id="AMOUNTACCRUED" order="15" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="AMOUNTACCRUED"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="AMOUNTACCRUED"/>
+    </measure>
+    <measure id="AMOUNTACCRUED_USD" order="19" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="AMOUNTACCRUED_USD"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="AMOUNTACCRUED_USD"/>
+    </measure>
+    <measure id="TOTWRKCOMPAMT_USD" order="31" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="TOTWRKCOMPAMT_USD"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="TOTWRKCOMPAMT_USD"/>
+    </measure>
+    <measure id="GRVALUE_USD" order="46" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="GRVALUE_USD"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="GRVALUE_USD"/>
+    </measure>
+    <measure id="GRVALUE" order="47" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="GRVALUE"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="GRVALUE"/>
+    </measure>
+    <measure id="POVALUE_USD" order="48" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="POVALUE_USD"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="POVALUE_USD"/>
+    </measure>
+    <measure id="INVVALUE" order="49" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="INVVALUE"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="INVVALUE"/>
+    </measure>
+    <measure id="POVALUE" order="50" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="POVALUE"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="POVALUE"/>
+    </measure>
+    <measure id="CHANGED_ON" order="56" aggregationType="min" measureType="simple">
+      <descriptions defaultDescription="CHANGED_ON"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="CHANGED_ON"/>
+    </measure>
+    <measure id="POCLOSURE_FLAG" order="57" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="POCLOSURE_FLAG"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="POCLOSURE_FLAG"/>
+    </measure>
+    <measure id="LASTMONTHWRKCOMP" order="58" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="LASTMONTHWRKCOMP"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="LASTMONTHWRKCOMP"/>
+    </measure>
+    <measure id="TOTWRKCOMPAMT" order="59" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="TOTWRKCOMPAMT"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="TOTWRKCOMPAMT"/>
+    </measure>
+    <measure id="POVALUE_COCO" order="60" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="POVALUE_COCO"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="POVALUE_COCO"/>
+    </measure>
+    <measure id="ORDERQUANTITY" order="61" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="ORDERQUANTITY"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="ORDERQUANTITY"/>
+    </measure>
+    <measure id="TOTWRKCOMPAMT_COCDECURR" order="62" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="TOTWRKCOMPAMT_COCDECURR"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="TOTWRKCOMPAMT_COCDECURR"/>
+    </measure>
+    <measure id="AMOUNTACCRUED_COCDECURR" order="63" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="AMOUNTACCRUED_COCDECURR"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="AMOUNTACCRUED_COCDECURR"/>
+    </measure>
+    <measure id="TOTWRKCOMPPER" order="64" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="TOTWRKCOMPPER"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="TOTWRKCOMPPER"/>
+    </measure>
+    <measure id="EDGEWTDAMT" order="65" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="EDGEWTDAMT"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="EDGEWTDAMT"/>
+    </measure>
+    <measure id="INVVALUE_COCDECURR" order="66" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="INVVALUE_COCDECURR"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="INVVALUE_COCDECURR"/>
+    </measure>
+    <measure id="GRVALUE_COCDECURR" order="67" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="GRVALUE_COCDECURR"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="GRVALUE_COCDECURR"/>
+    </measure>
+    <measure id="CHANGEDTIME" order="68" aggregationType="min" measureType="simple">
+      <descriptions defaultDescription="CHANGEDTIME"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="CHANGEDTIME"/>
+    </measure>
+    <measure id="INVVALUE_CAL" order="69" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="INVVALUE_CAL"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="INVVALUE_CAL"/>
+    </measure>
+    <measure id="EXCHANGERATE_DEC" order="70" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="EXCHANGERATE_DEC"/>
+      <measureMapping columnObjectName="TF_getOpenThresholdPOFinal" columnName="EXCHANGERATE_DEC"/>
+    </measure>
+  </baseMeasures>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+  <localDimensions/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

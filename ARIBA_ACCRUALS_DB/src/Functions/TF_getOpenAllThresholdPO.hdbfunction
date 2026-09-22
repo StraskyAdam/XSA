@@ -1,0 +1,87 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenAllThresholdPO"( IP_PSTYPE varchar(1), IP_EMAIL varchar(255) ,IP_POOWNER VARCHAR(1) )
+       RETURNS table (
+       	           poowner_email varchar(255),
+       			   companyCode nvarchar(4),
+       			   purchasingUnit varchar(255),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(10),
+       			   costcenter varchar(10),
+       			   costcenterDesc nvarchar(50),
+       			   manageUnit varchar(35),
+       			   PONUMBER nvarchar(10),
+       			  -- docNumber varchar(10),
+	               itemno nvarchar(5),
+	               poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,2),
+       			   pocurrency varchar(3),
+       			   invoice_currency varchar(3),
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   totWrkCompAmt decimal(13,2),
+       			   totWrkCompAmt_cocdecurr decimal(13,2),
+       			   totWrkCompPer decimal(13,2),--
+              	   internalOrder varchar(12),
+              	   assetId varchar(12),
+              	   profitCenter varchar(10),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(1),
+              	     markasreviewed varchar(1),
+              	   povalue_coco decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	    changeddate date,
+				 changedtime time,
+				 reviwed_by varchar(225),
+				 
+				 bbp_acc_no varchar(2),
+		     documentdate varchar(8),
+		     purchasingorganization varchar(4),
+		     orderquantity decimal(13,2),
+		     exchangerate decimal(9,6),
+		     po_preparer varchar(241),
+		      changed_on timestamp,
+		      --mvp2
+		      povalue_usd decimal(13,2),
+		      po_closure varchar(5),
+		      distPercentage decimal(3,1),
+		       quantity decimal(13,3),
+		       ZACTIVITYNBR nvarchar(200)
+		      
+              	 
+              	 
+              	  
+       )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+
+declare lv_email varchar(255);
+
+-- if (:IP_EMAIL = '*') then 
+-- 	lv_email = '%';
+-- else 
+-- 	lv_email = :IP_EMAIL;
+-- end if;
+
+   -- Get the open POs
+if :IP_PSTYPE = '*' then 
+lt_open_po = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2','9', :IP_EMAIL,:IP_POOWNER)
+			union all select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2','0', :IP_EMAIL,:IP_POOWNER);
+else
+lt_open_po = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2',:IP_PSTYPE, :IP_EMAIL,:IP_POOWNER);
+end if;
+
+
+-- Get the PO Details
+lt_openPO_Detail = select * from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPODetail"(:lt_open_po,'2') order by poCreatedAt asc;
+
+return :lt_openPO_Detail;
+END;

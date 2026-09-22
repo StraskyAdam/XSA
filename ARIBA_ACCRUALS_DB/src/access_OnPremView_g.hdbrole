@@ -1,0 +1,35 @@
+{
+  "role": {
+    "name": "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB::access_OnPremView_g#",
+    "object_privileges": [
+      {
+        "name": "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO",
+        "type": "VIEW",
+        "privileges_with_grant_option": [
+          "SELECT"
+        ]
+      },
+      {
+        "name": "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPOFinal",
+        "type": "VIEW",
+        "privileges_with_grant_option": [
+          "SELECT"
+        ]
+      },
+      {
+        "name": "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPOReport",
+        "type": "VIEW",
+        "privileges_with_grant_option": [
+          "SELECT"
+        ]
+      },
+      {
+        "name": "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO",
+        "type": "VIEW",
+        "privileges_with_grant_option": [
+          "SELECT"
+        ]
+      }
+    ]
+  }
+}

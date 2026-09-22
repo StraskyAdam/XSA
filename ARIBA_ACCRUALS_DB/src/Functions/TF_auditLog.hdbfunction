@@ -1,0 +1,32 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_auditLog"( IN IP_PONUM VARCHAR(10), IP_LINEITEM  varchar(5)  )
+       RETURNS TABLE(
+       				PONUMBER varchar(10),
+					LINEITEM varchar(5),
+					FNAME varchar(50),
+					OLDVALUE varchar(5000),
+					NEWVALUE varchar(5000),
+					CHANGEDON timestamp,
+					CHANGEDBY varchar(100),
+					ACTIVEFLAG varchar(1)
+    				)
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+    return 
+    SELECT 
+	"PONUMBER",
+	"LINEITEM",
+	"FNAME",
+	(case when FNAME='Amount to be Accrued' then (case when "OLDVALUE" < '0' then '0' else "OLDVALUE" end ) 
+	else OLDVALUE
+	END ) AS OLDVALUE,
+	(case when FNAME='Amount to be Accrued' then (case when 	"NEWVALUE" < '0' then '0' else "NEWVALUE" end ) 
+	else NEWVALUE
+	END ) AS NEWVALUE,
+--	"CHANGEDON",
+	 UTCTOLOCAL(CHANGEDON,'CET') as CHANGEDON,
+	"CHANGEDBY",
+	"ACTIVEFLAG"
+FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_AUDITLOG"
+WHERE PONUMBER=:IP_PONUM and LINEITEM = :IP_LINEITEM;
+END;

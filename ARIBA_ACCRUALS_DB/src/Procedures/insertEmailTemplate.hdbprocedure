@@ -1,0 +1,39 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::insertEmailTemplate"( IV_TEMPLATE_NAME VARCHAR(100),
+																			 IV_LANGUAGE VARCHAR(5), 
+																			 IV_SUBJECT VARCHAR(500) ,
+																			 IV_BODY VARCHAR(5000), 
+																			 IV_STATUS VARCHAR(10) ,                                               
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+ --  READS SQL DATA 
+ AS
+BEGIN
+
+declare lv_count integer;
+
+select count(*) into lv_count from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EMAIL_TEMPLATE_CONFIG" 
+   where template_name = :IV_TEMPLATE_NAME and 
+		language = :IV_LANGUAGE;
+
+if lv_count = 0 then 
+	insert into "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EMAIL_TEMPLATE_CONFIG"
+	values ( :IV_TEMPLATE_NAME,:IV_LANGUAGE, :IV_SUBJECT, :IV_STATUS, :IV_BODY  );
+	
+	EX_STATUS :='Record inserted successfully !';
+	EX_CODE := 1;
+else
+
+  UPDATE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EMAIL_TEMPLATE_CONFIG"
+  set  "SUBJECT" = :IV_SUBJECT, 
+	   "BODY" = :IV_BODY,
+	   "STATUS" = :IV_STATUS 
+	 WHERE template_name=:IV_TEMPLATE_NAME AND language=:IV_LANGUAGE;
+			 
+    EX_STATUS :='Record Updated successfully  !';
+	EX_CODE := 1;
+end if;
+
+END

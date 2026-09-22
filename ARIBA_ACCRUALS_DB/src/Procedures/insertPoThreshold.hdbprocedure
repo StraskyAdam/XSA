@@ -1,0 +1,22 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::insertPoThreshold"(  IN IP_CURRENCY VARCHAR(5),
+																			IN IP_POTHRESHOLD DECIMAL,
+																			IN IP_CODE VARCHAR(5),
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER
+																		)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA
+   AS
+BEGIN
+   UPSERT "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_PO_THRESHOLD"(	"CURRENCY",
+																		"PO_THRESHOLD",
+																		"COMPANY_CODE"
+																	  )
+   VALUES(:IP_CURRENCY,:IP_POTHRESHOLD,:IP_CODE)
+   WHERE CURRENCY=:IP_CURRENCY AND COMPANY_CODE=:IP_CODE;
+    EX_STATUS :='Record inserted successfully !';
+	   EX_CODE := 1;
+   
+END

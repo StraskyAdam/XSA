@@ -1,0 +1,99 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_UserConfigCostCenter"(ip_email varchar(255) default '*'  )
+       RETURNS   table (
+						cost_center varchar(10)
+					)
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+--Local variable declarations
+declare lv_email varchar(255);
+declare lv_count integer;
+declare lv_cost_center CLOB;
+declare lv_arr INT := 0;
+declare lv_i integer;
+declare lv_occurence integer;
+declare lv_input_string varchar(10000);
+--Local table declarations
+declare lt_cost_center table(cost_center CLOB);
+
+
+-- Read the config table ZT_CONFIG_ROLES and parses the commma separated into a table 
+-- If * is maintained, get all the unique company codes from the EKKO table 
+if (:ip_email = '*') then 
+	lv_email = '%';
+	lt_cost_center = select distinct ekkn.kostl as cost_center
+                        from   "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+					    inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						on ekkn.ebeln = ekpo.ebeln 
+						and ekkn.ebelp = ekpo.ebelp;
+					
+	lt_cost_center = select ' ' as cost_center from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY" 
+					 union all select * from :lt_cost_center;
+
+else 
+	lv_email = :ip_email;
+-- Check if the email ID is TBS / Admin 
+	 lt_cost_center = select cost_center from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES" where user_emailid like :lv_email; 
+	-- If maintained, check if user has access to all the Management Units or to few
+	 lv_count = record_count(:lt_cost_center);
+	 if lv_count > 0 then 
+		lv_cost_center = :lt_cost_center.cost_center[1];
+		-- if lv_cost_center = '*' then 
+			if lv_cost_center = '*' or 	lv_email = '%' then
+			lt_cost_center = select distinct ekkn.kostl as cost_center
+                        from   "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+					    inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+						on ekkn.ebeln = ekpo.ebeln 
+						and ekkn.ebelp = ekpo.ebelp;
+					
+			lt_cost_center = select ' ' as cost_center from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY" 
+					 union all select * from :lt_cost_center;
+		else 
+		-- Check the number of occurances
+			select OCCURRENCES_REGEXPR(',' IN :lv_cost_center ) + 1 into lv_occurence  FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";
+	
+	
+				if :lv_occurence = 1 then
+					lv_cost_center = concat(:lv_cost_center, ',');
+				else
+				    lv_cost_center = :lv_cost_center;
+				end if;
+		
+				lt_split_values = SELECT SUBSTR_BEFORE(:lv_cost_center,',') SINGLE_VAL FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  	
+				SELECT SUBSTR_AFTER(:lv_cost_center,',') || ',' INTO lv_input_string FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  
+				
+				WHILE( LENGTH(:lv_input_string) > 0 )	
+				DO
+				
+				   lt_split_values =	
+				   
+				   				SELECT SUBSTR_BEFORE(:lv_input_string,',') SINGLE_VAL FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY"				   
+								   UNION 	   
+								SELECT SINGLE_VAL FROM :lt_split_values;
+				
+				   SELECT SUBSTR_AFTER(:lv_input_string,',') INTO lv_input_string FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  
+				   	
+				END WHILE;
+				
+				
+				SELECT SINGLE_VAL AS "cost_center" FROM :lt_split_values; 
+				
+				if record_count(:lt_split_values) > 0 then 
+				
+				FOR lv_i IN REVERSE 1 ..record_count(:lt_split_values)  DO
+					lv_arr = :lv_arr + 1;
+					if :lt_split_values.SINGLE_VAL[lv_i] <> '' then 
+		    		lt_cost_center.cost_center[lv_arr] = ltrim(:lt_split_values.SINGLE_VAL[lv_i]);
+		    		end if ;
+				END FOR; 
+				end if;
+			RETURN
+				:lt_cost_center;					
+		end if;
+	 end if;
+end if;
+
+return :lt_cost_center;
+
+END;

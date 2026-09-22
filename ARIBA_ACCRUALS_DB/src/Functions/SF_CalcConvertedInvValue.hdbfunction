@@ -1,0 +1,62 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_CalcConvertedInvValue"( ip_poNumber nvarchar(10),iv_ebelp varchar(5)
+)
+
+RETURNS 
+-- table (
+	INVOICE_VALUE DECIMAL(13,2)
+	
+-- )
+       LANGUAGE SQLSCRIPT 
+      -- SQL SECURITY INVOKER 
+       AS 
+BEGIN 
+declare LV_CURR_EKKO  varchar(3);
+declare lv_waers varchar(3);
+declare i integer;
+declare lv_inv_amount DECIMAL(13,2);
+declare lv_waers_wrbtr varchar(20);
+
+-- declare lt_waers_ekbe table(waers varchar(3),
+-- 	wrbtr DECIMAL(13,2)
+-- );
+-- declare INV_VALUE DECIMAL(13,2);
+--declare lt_output table  ( INVOICE_VALUE DECIMAL(13,2));
+
+SELECT INVOICE_AMT into lv_inv_amount FROM  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_calcInvValue"( :ip_poNumber,:iv_ebelp);
+-- select waers into LV_CURR_EKKO FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO"
+-- where ebeln = :ip_poNumber;
+
+-- lt_waers_ekbe = 
+-- select waers,wrbtr from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE"
+-- where ebeln = :ip_poNumber;
+-- lv_inv_amount = '0';
+
+-- for i in 1..record_count(:lt_waers_ekbe) do
+
+-- lv_waers = :lt_waers_ekbe.waers[i];
+-- lv_waers_wrbtr = :lt_waers_ekbe.wrbtr[i];
+
+-- lv_inv_amount = "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_waers_wrbtr,:lv_waers, :LV_CURR_EKKO, :iv_exchange_rate).ev_targetAmount + lv_inv_amount;
+-- -- insert into "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_waers_wrbtr,:lv_waers, :LV_CURR_EKKO, :iv_exchange_rate).ev_targetAmount
+
+
+-- end for;
+-- INVOICE_VALUE = case :LV_CURR_EKKO
+-- 				when 'JPY' then 
+-- 					case :iv_SHKZG_value
+-- 					 when 'S' then ( lv_inv_amount*100 )
+-- 					 when 'H' then ( lv_inv_amount*100 * -1 )
+-- 					 end   
+-- 				else
+-- 					case :iv_SHKZG_value
+-- 					 when 'S' then ( lv_inv_amount * 1 )
+-- 					 when 'H' then ( lv_inv_amount * -1 )
+-- 					 end 
+-- 			end;
+		INVOICE_VALUE = lv_inv_amount;
+			
+-- lt_output.INVOICE_VALUE[1] = :INV_VALUE;
+-- return :lt_output;
+-- return INV_VALUE;
+
+END

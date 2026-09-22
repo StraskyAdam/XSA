@@ -1,0 +1,298 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_checkPOExclusion"(lt_openpo   table ( 
+			       poowner_email varchar(255),
+    			   companyCode nvarchar(4),
+      			   purchasingUnit nvarchar(25),
+      			   region varchar(3),
+      			   cocdecurr varchar(5),
+      			   glaccount varchar(10),
+      			   costcenter varchar(10),
+      			   costcenterDesc varchar(40),
+      			   manageUnit varchar(35),
+      			   PONUMBER nvarchar(10),
+      			  -- docNumber varchar(10),
+	               itemno nvarchar(5),
+	               poCreatedAt date,
+				  supplierID nvarchar(10),
+				  suppliername varchar(50),
+      			   polinedesc varchar(100),
+      			   pstype varchar(1),
+      			   povalue decimal(13,2),
+      			   pocurrency varchar(3),
+      			   wrkStrtdate date,
+      			   wrkEnddate date,
+      			   totWrkCompAmt decimal(13,2),
+      			   totWrkCompAmt_cocdecurr decimal(13,2),
+      			   totWrkCompPer decimal(13,2),
+              	   internalOrder varchar(12),
+              	   assetId varchar(12),
+              	   profitCenter varchar(10),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(1),
+              	    markasreviewed varchar(1),
+              	   povalue_coco decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	    changeddate date,
+					changedtime time,
+					reviwed_by varchar(225),
+					 bbp_acc_no varchar(2),
+		     documentdate varchar(8),
+		     purchasingorganization varchar(4),
+		     orderquantity decimal(13,2),
+		     exchangerate decimal(9,6),
+		     po_preparer varchar(241))
+				 )		 
+       RETURNS  table (  PONUMBER nvarchar(10),
+				       	  itemno nvarchar(5),
+				       	  ruletype varchar(2)	)
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+  
+  
+   declare LT_ruleType table (  PONUMBER nvarchar(10),
+				       	  itemno nvarchar(5),
+				       	  ruletype varchar(2)	);
+  
+   declare lv_count integer;
+   declare lv_count1 integer;
+   declare lv_i integer;
+   declare lv_j integer;
+   declare lv_k integer default 1;
+   declare lv_bukrs nvarchar(4);
+   declare lv_bukrsfr nvarchar(4);
+   declare lv_bukrsto nvarchar(4);
+   declare lv_continue varchar(1);
+   declare lv_glaccountid nvarchar(10);
+   declare lv_saktoto  nvarchar(10);
+   declare lv_saktofr  nvarchar(10);
+   declare lv_excl varchar(1);
+   declare lv_ruletype varchar(2);
+   declare lv_po_num nvarchar(10);
+   declare lv_excl_po_num nvarchar(10);
+   declare lv_supplierID nvarchar(10);
+   declare lv_lifnr nvarchar(10);
+   declare lv_kostlfr nvarchar(10);
+   declare lv_kostlto nvarchar(10);
+   declare lv_internalOrd nvarchar(12);
+   declare lv_aufnrfr nvarchar(12);
+   declare lv_aufnrto nvarchar(12);
+   declare lv_costcenter nvarchar(10);
+   declare lv_profitCenter nvarchar(10);
+   declare lv_prctrto nvarchar(10);
+   declare lv_prctrfr nvarchar(10);
+   declare lv_itemno nvarchar(5);
+   
+   declare lv_n integer default '1';
+   declare i integer ;
+    lt_exclAccruacy=SELECT 
+				    "MANDT",
+				    "RULEID",
+				    "RULETYPE",
+				   (
+				     case when bukrsfr = ' ' and  bukrsto=' ' then '0000'
+				     else bukrsfr
+				   end )as bukrsfr,
+				   (
+				     case when bukrsfr = ' ' and  bukrsto=' ' then '9999'
+				     else bukrsto
+				    end )as bukrsto,
+				    
+				    "PONUM",
+				    "LIFNR",
+				    (
+				    	case 
+				    		when RULETYPE = 'GL' then 
+				    			case when SAKTOFR = ' ' and  SAKTOTO=' ' then '0000000000'
+				    			else SAKTOFR
+				    	end
+				   end )as SAKTOFR,
+				   (
+				   		case 
+				    		when RULETYPE = 'GL' then 
+							     case when SAKTOFR = ' ' and  SAKTOTO=' ' then '9999999999'
+							     else SAKTOTO
+						end	   
+				    end )as SAKTOTO,
+				(
+					case 
+				    		when RULETYPE = 'CC' then 
+								case 
+									when KOSTLFR = ' ' and  KOSTLTO=' ' then '0000000000'
+								   else KOSTLFR
+					end
+				   end )as KOSTLFR,
+				   (
+				   		case 
+				    		when RULETYPE = 'CC' then
+							     case when KOSTLFR = ' ' and  KOSTLTO=' ' then '9999999999'
+							     else KOSTLTO
+						end
+				    end )as KOSTLTO,
+				
+				 (    
+				 		case 
+				    		when RULETYPE = 'IV' then
+				 				case when AUFNRFR = ' ' and  AUFNRTO=' ' then '000000000000'
+				    			else AUFNRFR
+				    	end
+				   end )as AUFNRFR,
+				   (
+				   		case 
+				    		when RULETYPE = 'IV' then
+								     case when AUFNRFR = ' ' and  AUFNRTO=' ' then '999999999999'
+								     else AUFNRTO
+						end
+				    end )as AUFNRTO,
+				(
+				     case 
+				    		when RULETYPE = 'PC' then
+								     case when PRCTRFR = ' ' and  PRCTRTO=' ' then '00000000'
+								     else PRCTRFR
+					 end
+				   end )as PRCTRFR,
+				   (
+				   		case 
+				    		when RULETYPE = 'PC' then
+								     case when PRCTRFR = ' ' and  PRCTRTO=' ' then '9999'
+								     else PRCTRTO
+						end		     
+				    end )as PRCTRTO,
+				    "THRESHOLD"
+	FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZFI_ACCRUAL_EXCL.ZFI_ACCRUAL_EXCL";
+
+   select count(*) into lv_count from :lt_openpo;
+
+	
+		LT_ruleType2 = select distinct
+							openpo.ponumber, 
+							openpo.itemno,
+				
+							/* Rule Type = GL */
+							case
+								 
+								 when exclpo.bukrsfr =  openpo.companycode then  	
+										 			case
+										 				 when ltrim(SAKTOFR,'0') = openpo.glaccount then 'GL'
+										 				 when openpo.glaccount between ltrim(SAKTOFR,'0') and ltrim(SAKTOTO,'0') then 'GL'
+										 		    end
+									  
+								   
+								 when  openpo.companycode between exclpo.bukrsfr and exclpo.bukrsto  then 
+									 
+									 			case
+									 				 when ltrim(SAKTOFR,'0') = openpo.glaccount then 'GL'
+									 				 when openpo.glaccount between ltrim(SAKTOFR,'0') and ltrim(SAKTOTO,'0') then 'GL'
+									 		    end
+									    
+							end as ruleType,
+							/* Rule Type = CC  */
+							case
+								 when exclpo.bukrsfr =  openpo.companycode then  	
+								 			case
+								 				 when ltrim(kostlfr,'0') = openpo.costcenter then 'CC'
+								 				 when openpo.costcenter between ltrim(kostlfr,'0') and ltrim(kostlto,'0') then 'CC'
+								 		    end
+								   
+								 when  openpo.companycode between exclpo.bukrsfr and exclpo.bukrsto  then 
+									 
+									 			case
+									 				 when ltrim(kostlfr,'0') = openpo.costcenter then 'CC'
+									 				 when openpo.costcenter between ltrim(kostlfr,'0') and ltrim(kostlto,'0') then 'CC'
+									 		    end
+									    
+							end as ruleType2,
+							/* Rule Type = IV  */
+							case
+								 when exclpo.bukrsfr =  openpo.companycode then  	
+								 			case
+								 				 when ltrim(aufnrfr,'0') = openpo.internalOrder then 'IV'
+								 				 when openpo.internalOrder between ltrim(aufnrfr,'0') and ltrim(aufnrto,'0') then 'IV'
+								 		    end
+								   
+								 when  openpo.companycode between exclpo.bukrsfr and exclpo.bukrsto  then 
+									 
+									 			case
+									 				 when ltrim(aufnrfr,'0')  = openpo.internalOrder then 'IV'
+									 				 when openpo.internalOrder between ltrim(aufnrfr,'0') and ltrim(aufnrto,'0') then 'IV'
+									 		    end
+									    
+							end as ruleType3,
+							/* Rule Type = PC  */
+							case
+								 when exclpo.bukrsfr =  openpo.companycode then  	
+								 			case
+								 				 when ltrim(prctrfr,'0') = openpo.profitCenter then 'PC'
+								 				 when openpo.profitCenter between ltrim(prctrfr,'0')  and ltrim(prctrto,'0') then 'PC'
+								 		    end
+								   
+								 when  openpo.companycode between exclpo.bukrsfr and exclpo.bukrsto  then 
+									 
+									 			case
+									 				 when ltrim(prctrfr,'0') = lv_profitCenter then 'PC'
+									 				 when openpo.profitCenter between ltrim(prctrfr,'0')  and ltrim(prctrto,'0') then 'PC'
+									 		    end
+									    
+							end as ruleType4,
+							/* Rule Type = PO  */
+							case
+								 
+										 when exclpo.bukrsfr =  openpo.companycode then  	
+										 			case
+										 				 when ltrim(ponum,'0') = openpo.PONUMBER then 'PO'
+										 		    end
+									
+								   
+								 when  openpo.companycode between exclpo.bukrsfr and exclpo.bukrsto  then 
+									 
+									 		case
+									 		 	when ltrim(ponum,'0') = openpo.PONUMBER then 'PO'
+									 		end
+									    
+							end as ruleType5,
+							/* Rule Type = VD  */
+							case
+								 when exclpo.bukrsfr =  openpo.companycode then  	
+								 			case
+								 				 when ltrim(lifnr,'0') = ltrim(openpo.supplierID,'0') then 'VD'
+								 		    end
+								   
+								 when  openpo.companycode between exclpo.bukrsfr and exclpo.bukrsto  then 
+									 
+									 		case
+									 		 	when ltrim(lifnr,'0') = ltrim(openpo.supplierID,'0') then 'VD'
+									 		end
+									    
+							end as ruleType6
+			from :lt_exclAccruacy as exclpo
+			full outer join :lt_openpo  as openpo 
+			on openpo.PONUMBER is not null;
+			
+	LT_ruleType = select 
+			PONUMBER,
+			itemno,
+			case 
+				when ruletype is not null then 'GL'
+				when ruletype2 is not null then 'CC'
+				when ruletype3 is not null then 'IV'
+				when ruletype4 is not null then 'PC'
+				when ruletype5 is not null then 'PO'
+				when ruletype6 is not null then 'VD'
+			end as ruletype
+			from :LT_ruleType2
+			where ruletype is not null or 
+		ruletype2 is not null or 
+		ruletype3 is not null or 
+		ruletype4 is not null or 
+		ruletype5 is not  null or 
+		ruletype5 is not null ; 
+		
+
+return :LT_ruleType;
+ 
+END;	
+	
+		  
+   

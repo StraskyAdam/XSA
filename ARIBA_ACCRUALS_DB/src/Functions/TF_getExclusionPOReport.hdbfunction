@@ -1,0 +1,222 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getExclusionPOReport"(IP_EMAIL varchar(255),IP_POOWNER varchar(1) )
+        RETURNS table ( poowner_email varchar(255), 
+    				companyCode nvarchar(4),
+       			   purchasingUnit nvarchar(25),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(5000),
+       			   costcenter varchar(5000),
+       			   costcenterDesc varchar(40),
+       			   manageUnit varchar(5000),
+       			   PONUMBER nvarchar(10),
+       			  -- docNumber varchar(10),
+	              itemno nvarchar(5),
+	              poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,2),
+       			   pocurrency varchar(3),
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   totWrkCompAmt decimal(13,2),
+       			   totWrkCompAmt_cocdecurr decimal(13,2),
+       			   totWrkCompPer decimal(13,2),
+              	   internalOrder varchar(5000),
+              	   assetId varchar(12),
+              	   profitCenter varchar(5000),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(1),
+              	    markasreviewed varchar(1),
+              	   povalue_coco decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	   changeddate date,
+				   changedtime time,
+				 reviwed_by varchar(225),
+				 ruletype varchar(5000),
+				 RULETYPETEXT varchar(5000),
+				 po_preparer varchar(241),
+				 changed_on timestamp,
+				 pstype_text varchar(10),
+				 distPercentage decimal(3,1),
+				 po_closure varchar(5),
+				  documentdate varchar(8),
+				   bbp_acc_no varchar(5000),
+				   povalue_usd decimal(13,2),
+				   ZACTIVITYNBR nvarchar(200),
+				   totWrkCompAmt_usd decimal(13,2)
+				 )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+   declare lt_output table (poowner_email varchar(255), 
+    				companyCode nvarchar(4),
+       			   purchasingUnit nvarchar(25),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(10),
+       			   costcenter varchar(10),
+       			   costcenterDesc varchar(40),
+       			   manageUnit varchar(35),
+       			   PONUMBER nvarchar(10),
+       			  -- docNumber varchar(10),
+	              itemno nvarchar(5),
+	              poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,3),
+       			   pocurrency varchar(3),
+       			   
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   totWrkCompAmt decimal(13,2),
+       			   totWrkCompAmt_cocdecurr decimal(13,2),
+       			   totWrkCompPer decimal(13,2),
+              	   internalOrder varchar(12),
+              	   assetId varchar(12),
+              	   profitCenter varchar(10),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(1),
+              	    markasreviewed varchar(1),
+              	   povalue_coco decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	   changeddate date,
+				   changedtime time,
+				   reviwed_by varchar(225),
+				   ruletype varchar(2),
+				   RULETYPETEXT varchar(50),
+   				   po_preparer varchar(241),
+				   changed_on timestamp,
+				   po_closure varchar(5),
+				    documentdate varchar(8),
+				     bbp_acc_no varchar(5000),
+				     povalue_usd decimal(13,2),
+				     ZACTIVITYNBR nvarchar(200),
+				     totWrkCompAmt_usd decimal(13,2)
+   );
+   
+  declare lv_email varchar(255);
+
+if (:IP_EMAIL = '*') then 
+	lv_email = '%';
+else 
+	lv_email = :IP_EMAIL;
+end if;
+
+   -- Get the open POs
+	lt_openPO_mat = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1','0', :IP_EMAIL,:IP_POOWNER);
+	lt_openPO_serv = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1','9', :IP_EMAIL,:IP_POOWNER);
+	
+	lt_openPO_mat_below_threshold = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2','0', :IP_EMAIL,:IP_POOWNER);
+	lt_openPO_serv_below_threshold  = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2','9', :IP_EMAIL,:IP_POOWNER);
+
+	lt_openpo = select * from :lt_openPO_mat 
+			union all select * from :lt_openPO_serv
+			union all select * from :lt_openPO_mat_below_threshold
+			union all select * from :lt_openPO_serv_below_threshold;
+   
+	
+	lt_po_excluded = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_checkPOExcl_Mod"(:lt_openpo);
+	
+	-- --Get all the PO's excluding exclusion PO's	 
+	lt_PODetails= select * from :lt_openpo
+					where (ebeln,ebelp)   in (SELECT PONUMBER, ITEMNO FROM :lt_po_excluded);
+	
+	
+	-- Get the PO Details
+	lt_exclPO_Detail = select * from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPODetail"(:lt_PODetails) order by poCreatedAt asc;
+					
+lt_finalPODetails = select 
+					PO.poowner_email , 
+    				PO.companyCode ,
+       			   PO.purchasingUnit ,
+       			   PO.region ,
+       			   PO.cocdecurr ,
+       			   PO.glaccount ,
+       			   PO.costcenter,
+       			   PO.costcenterDesc,
+       			   PO.manageUnit ,
+       			   PO.PONUMBER ,
+	              PO.itemno,
+	              PO.poCreatedAt ,
+				   PO.supplierID,
+				   PO.suppliername ,
+       			   PO.polinedesc ,
+       			   PO.pstype ,
+       			   PO.povalue ,
+       			   PO.pocurrency ,
+       			   PO.wrkStrtdate ,
+       			   PO.wrkEnddate ,
+       			   PO.totWrkCompAmt ,
+       			   PO.totWrkCompAmt_cocdecurr ,
+       			   PO.totWrkCompPer ,
+              	   PO.internalOrder ,
+              	   PO.assetId ,
+              	   PO.profitCenter ,
+              	   PO.epnumber ,
+              	   PO.status,
+              	   PO.lastMonthwrkcomp ,
+              	   PO.straightlinemthd ,
+              	   PO.markasreviewed ,
+              	   PO.povalue_coco ,
+              	   --PO.accrualMethod ,
+              	   (case when PO.accrualMethod ='WTD' then 'Work To Date'
+              	   when PO.accrualMethod='STL' then 'Straight Line'
+              	   else PO.accrualMethod end) as accrualMethod,
+              	   PO.edgewtdamt ,
+              	   PO.changeddate ,
+				   PO.changedtime ,
+				   PO.reviwed_by ,
+				   excl.ruletype,
+				   (case when excl.ruletype='GL' then 'Cost Element (GL/BL)'
+					    when excl.ruletype='CC' then 'Cost Center'
+					    when excl.ruletype='PC' then 'Profit Centre'
+					    when excl.ruletype='PO' then 'Purchase Order'
+					    when excl.ruletype='VD' then 'Vendor'
+					    when excl.ruletype='IV' then 'Internal Order'
+					end)as ruletypetext,
+			  	 po.po_preparer,
+				 PO.changed_on,
+				  (case when PO.PSTYPE='0' then 'Material'
+					when PO.PSTYPE='9' then 'Service'
+					end
+				)as pstype_text,
+				PO.distPercentage,
+				(case when PO.po_closure is null then 'false'
+				else PO.po_closure
+				end ) as po_closure,
+				 PO.documentdate,
+				 PO.bbp_acc_no,
+				 PO.povalue_usd,
+				 ZACTIVITYNBR,
+				 case PO.pocurrency
+					when 'JPY' then 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt/100,pocurrency, 'USD', exchangerate).ev_targetAmount
+					when 'VND' then 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt/100,pocurrency, 'USD', exchangerate).ev_targetAmount
+					else 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt,pocurrency, 'USD', exchangerate).ev_targetAmount
+				end   as totWrkCompAmt_usd
+				 from :lt_exclPO_Detail as PO
+				 inner join :lt_po_excluded as excl
+				 on PO.PONUMBER=excl.PONUMBER and 
+				 PO.itemno=excl.itemno;
+				 
+
+  
+				
+				 
+				 
+
+  RETURN :lt_finalPODetails;
+
+END;

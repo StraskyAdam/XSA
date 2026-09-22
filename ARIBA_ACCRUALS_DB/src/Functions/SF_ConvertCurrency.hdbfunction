@@ -1,0 +1,33 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"( iv_amount varchar(255) default '0.00',
+																		  iv_sourceCurrency varchar(3) ,
+																		  iv_targetCurrency varchar(3),
+																		  iv_exchangerate decimal(15,6)
+)
+	
+								
+       RETURNS ev_targetAmount decimal(13,2)
+       LANGUAGE SQLSCRIPT 
+      -- SQL SECURITY INVOKER 
+       AS 
+BEGIN 
+
+-- Local variable declaration
+declare lv_amount_decimal decimal(15,2);
+
+-- Check if the amount is null or space 
+if iv_amount = '' or iv_amount = ' ' then 
+ lv_amount_decimal = 0.00;
+else 
+ lv_amount_decimal = to_decimal(iv_amount,15,2);
+end if;
+
+-- for JPY and VND Currency, multiply by 100
+if  iv_sourceCurrency = 'JPY' OR iv_sourceCurrency = 'VND' then 
+ lv_amount_decimal = lv_amount_decimal*100;
+end if;
+
+
+-- Multiply the amount with the exchange rate.
+ev_targetAmount = round((lv_amount_decimal * iv_exchangerate),2);
+
+END;

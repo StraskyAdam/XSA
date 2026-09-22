@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getVideoLinks" applyPrivilegeType="NONE" dataCategory="DIMENSION" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="Calculation View for Video Links"/>
+<localVariables>
+  <variable id="IP_LANG" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="NVARCHAR" length="13" mandatory="false">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+</localVariables>
+<variableMappings/>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VIDEOLINKS">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VIDEOLINKS</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VIDEOLINKS" filterExpressionLanguage="SQL">
+  <attributes>
+    <attribute id="ROLE" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Role"/>
+      <keyMapping columnObjectName="ZT_CONFIG_VIDEOLINKS" columnName="ROLE"/>
+    </attribute>
+    <attribute id="VIDEO_ID" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Video ID"/>
+      <keyMapping columnObjectName="ZT_CONFIG_VIDEOLINKS" columnName="VIDEO_ID"/>
+    </attribute>
+    <attribute id="VIDEO_DESC" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Video Description"/>
+      <keyMapping columnObjectName="ZT_CONFIG_VIDEOLINKS" columnName="VIDEO_DESC"/>
+    </attribute>
+    <attribute id="VIDEO_LINK" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Video Link"/>
+      <keyMapping columnObjectName="ZT_CONFIG_VIDEOLINKS" columnName="VIDEO_LINK"/>
+    </attribute>
+    <attribute id="LANGUAGE" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Language Code"/>
+      <keyMapping columnObjectName="ZT_CONFIG_VIDEOLINKS" columnName="LANGUAGE"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+  <filter>&quot;LANGUAGE&quot; in ('$$IP_LANG$$')</filter>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

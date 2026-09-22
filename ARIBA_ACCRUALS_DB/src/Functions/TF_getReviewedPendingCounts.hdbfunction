@@ -1,0 +1,38 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getReviewedPendingCount"(
+																					IP_EMAIL varchar(255) ,
+																					IP_POOWNER VARCHAR(1)) 
+       RETURNS table (
+       revPOCount integer, 
+       	pendPOCount integer
+       )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+declare lv_email varchar(255);
+
+
+if (:IP_EMAIL = '*') then 
+	lv_email = '%';
+else 
+	lv_email = :IP_EMAIL;
+end if;
+
+lt_count=
+select 
+	count( case when status = 'Reviewed' and (pstype='9' or pstype='0') then 1 else null end) revPOCount,
+	count( case when status = 'Pending'and (pstype='9' or pstype='0') then 1 else null end) pendPOCount
+	from 
+	"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"(placeholder."$$IP_PSTYPE$$"=>'0', placeholder."$$IP_EMAIL$$"=>:lv_email,placeholder."$$IP_POOWNER$$"=>:IP_POOWNER)
+union	
+	select 
+	count( case when status = 'Reviewed' and (pstype='9' or pstype='0') then 1 else null end) revPOCount,
+	count( case when status = 'Pending'and (pstype='9' or pstype='0') then 1 else null end) pendPOCount
+	from 
+	"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"(placeholder."$$IP_PSTYPE$$"=>'9', placeholder."$$IP_EMAIL$$"=>:lv_email,placeholder."$$IP_POOWNER$$"=>:IP_POOWNER);
+return	
+	select sum(revPOCount) as revPOCount,
+			sum(pendPOCount) as pendPOCount
+			from :lt_count;
+			
+end;

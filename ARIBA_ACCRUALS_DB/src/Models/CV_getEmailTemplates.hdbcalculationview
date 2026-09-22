@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getEmailTemplates" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="Get Email Templates"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EMAIL_TEMPLATE_CONFIG">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EMAIL_TEMPLATE_CONFIG</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EMAIL_TEMPLATE_CONFIG">
+  <attributes>
+    <attribute id="TEMPLATE_NAME" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Template Name"/>
+      <keyMapping columnObjectName="ZT_EMAIL_TEMPLATE_CONFIG" columnName="TEMPLATE_NAME"/>
+    </attribute>
+    <attribute id="LANGUAGE" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Language"/>
+      <keyMapping columnObjectName="ZT_EMAIL_TEMPLATE_CONFIG" columnName="LANGUAGE"/>
+    </attribute>
+    <attribute id="SUBJECT" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Subject"/>
+      <keyMapping columnObjectName="ZT_EMAIL_TEMPLATE_CONFIG" columnName="SUBJECT"/>
+    </attribute>
+    <attribute id="BODY" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="body"/>
+      <keyMapping columnObjectName="ZT_EMAIL_TEMPLATE_CONFIG" columnName="BODY"/>
+    </attribute>
+    <attribute id="STATUS" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Status"/>
+      <keyMapping columnObjectName="ZT_EMAIL_TEMPLATE_CONFIG" columnName="STATUS"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

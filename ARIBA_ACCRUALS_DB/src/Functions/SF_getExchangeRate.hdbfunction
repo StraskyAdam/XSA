@@ -1,0 +1,24 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_getExchangeRate"( iv_sourceCurrency varchar(3),
+																	      iv_targetCurrency varchar(3),
+																		  iv_ref_date varchar(8)
+)
+       RETURNS ev_exchangerate decimal(13,6)
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN
+
+
+-- Standard function to convert to target currency
+ select   CONVERT_CURRENCY( AMOUNT => 1.00,
+                        SOURCE_UNIT => iv_sourceCurrency ,--po currency
+                        SCHEMA => 'ACCRUAL',
+                        TARGET_UNIT => iv_targetCurrency,
+                        REFERENCE_DATE => iv_ref_date,
+                        CLIENT => '100',
+                        ACCURACY => 'HIGHEST',
+                        CONVERSION_TYPE => 'NYB2',
+ 	    				STEPS => 'shift_back,convert'
+ ) into ev_exchangerate 
+            	from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";    
+              
+END;

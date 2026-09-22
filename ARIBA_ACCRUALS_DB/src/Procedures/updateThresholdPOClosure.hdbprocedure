@@ -1,0 +1,21 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::updateThresholdPOClosure"( 
+															IN statusPO "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Tabletypes::TT_updatePOClosure",
+															OUT EX_STATUS VARCHAR(50),
+	                                                        OUT EX_cODE INTEGER
+)
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA 
+   AS
+BEGIN
+   UPSERT "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" 
+         ("PONUMBER","LINEITEM","CHANGEDDATE","CHANGEDTIME","REVIWED_BY","CHANGED_ON",
+          "PO_CLOSURE" --MVP2
+         	
+         )
+     SELECT  "PONUMBER","LINEITEM",CURRENT_DATE,CURRENT_UTCTIME,"REVIWED_BY",CURRENT_UTCTIMESTAMP ,"PO_CLOSURE" from :statusPO;
+    
+        EX_STATUS :='Record updated successfully !';
+	    EX_CODE := 1;
+END

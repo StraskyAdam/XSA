@@ -1,0 +1,272 @@
+{
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO": {
+    "target": {
+      "object": "ACCRUAL::EKKO.EKKO",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO": {
+    "target": {
+      "object": "ACCRUAL::EKPO.EKPO",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::LFA1.LFA1": {
+    "target": {
+      "object": "ACCRUAL::LFA1.LFA1",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE": {
+    "target": {
+      "object": "ACCRUAL::EKBE.EKBE",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_EDGE_SERVICEPO_STATUS",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001": {
+    "target": {
+      "object": "ACCRUAL::T001.T001",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS": {
+    "target": {
+      "object": "ACCRUAL::CSKS.CSKS",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN": {
+    "target": {
+      "object": "ACCRUAL::EKKN.EKKN",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKT.CSKT": {
+    "target": {
+      "object": "ACCRUAL::CSKT.CSKT",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_AUDITLOG": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_EDGE_AUDITLOG",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TCURN.TCURN": {
+    "target": {
+      "object": "TCURN",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TCURR.TCURR": {
+    "target": {
+      "object": "TCURR",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TCURX.TCURX": {
+    "target": {
+      "object": "TCURX",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TCURV.TCURV": {
+    "target": {
+      "object": "TCURV",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TCURF.TCURF": {
+    "target": {
+      "object": "TCURF",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZFI_ACCRUAL_EXCL.ZFI_ACCRUAL_EXCL": {
+    "target": {
+      "object": "ACCRUAL::ZFI_ACCRUAL_EXCL.ZFI_ACCRUAL_EXCL",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_CONFIG_COUNTRY",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_CONFIG_VALUES",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY": {
+    "target": {
+      "object": "DUMMY",
+      "schema": "SYS"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR01.USR01": {
+    "target": {
+      "object": "ACCRUAL::USR01.USR01",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR02.USR02": {
+    "target": {
+      "object": "ACCRUAL::USR02.USR02",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ADR6.ADR6": {
+    "target": {
+      "object": "ACCRUAL::ADR6.ADR6",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::USR21.USR21": {
+    "target": {
+      "object": "ACCRUAL::USR21.USR21",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ADRP.ADRP": {
+    "target": {
+      "object": "ACCRUAL::ADRP.ADRP",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_PO_THRESHOLD": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_PO_THRESHOLD",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_CONFIG_ROLES",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_POST_POCHANGE_AUDIT": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_POST_POCHANGE_AUDIT",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_POLINE_AUDIT": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_POLINE_AUDIT",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EMAIL_TEMPLATE_CONFIG": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_EMAIL_TEMPLATE_CONFIG",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_LANGUAGES": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_CONFIG_LANGUAGES",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_EDGE_EXCLUSIONPO",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_EDGE_EXCHANGERATE",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_HELPLINKS": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_CONFIG_HELPLINKS",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SPLITFILE": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_EDGE_SPLITFILE",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_USER_LANGUAGE": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_USER_LANGUAGE",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_MONTHLY_RECONCILIATION": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_MONTHLY_RECONCILIATION",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_TEXT_TRANSLATIONS": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_TEXT_TRANSLATIONS",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EMAIL_LOG": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_EDGE_EMAIL_LOG",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VIDEOLINKS": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_CONFIG_VIDEOLINKS",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_REC_ARIBA_STAT": {
+    "target": {
+      "object": "ACCRUAL.Tables::ZT_REC_ARIBA_STAT",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TB_PO_THRESHOLD": {
+    "target": {
+      "object": "ACCRUAL.Tables::TB_PO_THRESHOLD",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::TB_PENDING_PO_DETAILS": {
+    "target": {
+      "object": "ACCRUAL.Tables::TB_PENDING_PO_DETAILS",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_POSITN_INFO": {
+    "target": {
+      "object": "SAPHANADB_ZMD_POSITN_INFO",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_CONTACT_INFO": {
+    "target": {
+      "object": "SAPHANADB_ZMD_CONTACT_INFO",
+      "schema": "ACCRUAL"
+    }
+  },
+  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::SAPHANADB_ZMD_WORKER_NAME": {
+    "target": {
+      "object": "SAPHANADB_ZMD_WORKER_NAME",
+      "schema": "ACCRUAL"
+    }
+  }
+}

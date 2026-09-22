@@ -1,0 +1,40 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_filterPOByThreshold"( iv_threshold varchar(1),
+																	           ip_openPO  table ( ebeln nvarchar(10), 
+																							      ebelp nvarchar(5),
+																							      poowner_email varchar(255)  ))
+       RETURNS   table ( ebeln nvarchar(10), 
+					   ebelp nvarchar(5),
+					   poowner_email varchar(255) ) 
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+if :iv_threshold = '1' then
+lt_openPO = select openpo.ebeln as ebeln, 
+				   openpo.ebelp as ebelp,
+				   openpo.poowner_email as poowner_email
+			from :ip_openPO as openpo
+			left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+			on ekko.ebeln = openpo.ebeln
+			left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo 
+			on ekpo.ebeln = openpo.ebeln
+			and ekpo.ebelp = openpo.ebelp
+			left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_PO_THRESHOLD" as thresholdPO
+					on thresholdPO.currency = ekko.waers
+			where ekpo.netwr > thresholdPO.po_threshold;				
+else 
+lt_openPO = select openpo.ebeln as ebeln, 
+				   openpo.ebelp as ebelp,
+				   openpo.poowner_email as poowner_email
+			from :ip_openPO as openpo
+			left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko 
+			on ekko.ebeln = openpo.ebeln
+			left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo 
+			on ekpo.ebeln = openpo.ebeln
+			and ekpo.ebelp = openpo.ebelp
+			left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_PO_THRESHOLD" as thresholdPO
+					on thresholdPO.currency = ekko.waers
+			where ekpo.netwr <= thresholdPO.po_threshold;
+end if;
+return :lt_openPO;
+END;

@@ -1,0 +1,16 @@
+fioriHtmlRunner.html
+.*/fioriHtmlRunner.html
+mock_preview_sapui5.html
+.*/mock_preview_sapui5.html
+extended_runnable_file.html
+.*/extended_runnable_file.html
+sap-ui-cachebuster-info.json
+/mta_archives/
+# auto generated wildcard
+ARIBA_ACCRUALS_DB/.env
+
+# package-lock.json/
+# package-lock.json
+node_modules/
+node_modules
+.env

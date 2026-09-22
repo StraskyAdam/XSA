@@ -1,0 +1,12 @@
+service{
+"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Views::readPoThreshold" as "threshold"
+keys("CURRENCY", "COMPANY_CODE");
+}
+
+settings {
+              support null;
+              content cache-control "no-store";
+              metadata cache-control "max-age=3600,must-revalidate";
+}
+	    
+	

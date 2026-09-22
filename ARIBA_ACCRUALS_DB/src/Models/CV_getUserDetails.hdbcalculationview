@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getUserDetails" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="CV_getUserDetails"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getSingleUserDetails" type="TABLE_FUNCTION">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getSingleUserDetails</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getSingleUserDetails">
+  <attributes>
+    <attribute id="USERNAME" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="USERNAME"/>
+      <keyMapping columnObjectName="TF_getSingleUserDetails" columnName="USERNAME"/>
+    </attribute>
+    <attribute id="DECIMAL_FORMAT" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DECIMAL_FORMAT"/>
+      <keyMapping columnObjectName="TF_getSingleUserDetails" columnName="DECIMAL_FORMAT"/>
+    </attribute>
+    <attribute id="DATFM" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DATFM"/>
+      <keyMapping columnObjectName="TF_getSingleUserDetails" columnName="DATFM"/>
+    </attribute>
+    <attribute id="EMAILADDR_SAP" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="EMAILADDR_SAP"/>
+      <keyMapping columnObjectName="TF_getSingleUserDetails" columnName="EMAILADDR_SAP"/>
+    </attribute>
+    <attribute id="FULL_NAME" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="FULL_NAME"/>
+      <keyMapping columnObjectName="TF_getSingleUserDetails" columnName="FULL_NAME"/>
+    </attribute>
+    <attribute id="EMAILADDR" order="6" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="EMAILADDR"/>
+      <keyMapping columnObjectName="TF_getSingleUserDetails" columnName="EMAILADDR"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

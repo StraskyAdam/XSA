@@ -1,0 +1,248 @@
+name: "Build and Deploy"
+
+on:
+  push:
+    branches:
+      - develop-run
+      - develop-impl
+      - validation
+
+  workflow_dispatch:
+
+env:
+  CAN_PUBLISH_ARTIFACTS: false
+  ORG: orgname
+  SPACE: ACCRUALS
+  SAP_URL: https://takhddh22001.onetakeda.com:32030
+  SAP_USER: GITHUB
+
+jobs:
+  Build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # set a timestamp for use in the build
+      - name: Set TIMESTAMP variable
+        id: date
+        run: |
+          timedatectl
+          echo "TIMESTAMP=$(date -u +'%m-%d-%Y-%H-%M')" >> $GITHUB_ENV
+
+      # set branch name var
+      - name: Set BRANCH variable
+        run: echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+      
+      - name: workflow permission
+        if: endsWith(github.ref, 'main')
+        uses: 74th/workflow-permission-action@1.0.0        
+        with:
+          users: RadovanNieslanik,AhamadZameer,lee-zandro-trazo,mariamichelledelgadotakeda,RenzCoria
+        
+      - name: Set CF memory, disk-quota and instances based on environment
+        if: endsWith(github.ref, 'validation')
+        run: |
+          sed -i 's/a_disk-quota: 1024M/disk-quota: 4096M/' mta.yaml
+          sed -i 's/a_memory: 1024M/memory: 6144M/' mta.yaml
+          sed -i 's/a_instances: 4/instances: 20/' mta.yaml
+          sed -i 's/s_disk-quota: 1024M/disk-quota: 4096M/' mta.yaml
+          sed -i 's/s_memory: 1024M/memory: 3072M/' mta.yaml
+          sed -i 's/s_instances: 4/instances: 4/' mta.yaml 
+          
+      - name: Set CF memory, disk-quota and instances based on environment
+        if: endsWith(github.ref, 'main')
+        run: |
+          sed -i 's/a_disk-quota: 1024M/disk-quota: 12288M/' mta.yaml
+          sed -i 's/a_memory: 1024M/memory: 12288M/' mta.yaml
+          sed -i 's/a_instances: 4/instances: 16/' mta.yaml
+          sed -i 's/s_disk-quota: 1024M/disk-quota: 4096M/' mta.yaml
+          sed -i 's/s_memory: 1024M/memory: 3072M/' mta.yaml
+          sed -i 's/s_instances: 4/instances: 5/' mta.yaml    
+
+      - name: Set CAN_PUBLISH_ARTIFACTS variable
+        if: github.ref == 'refs/heads/validation' || github.ref == 'refs/heads/main'
+        run: echo "CAN_PUBLISH_ARTIFACTS=true" >> $GITHUB_ENV
+
+      # set mtar filename and filepath env vars
+      - name: Set mtar filename variable
+        run: echo "MTAR_FILENAME=${BRANCH}-${TIMESTAMP}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ID}.mtar" >> $GITHUB_ENV
+      
+      - name: Set mtar filepath variable
+        run: echo "MTAR_FILEPATH=./mta_archives/${MTAR_FILENAME}" >> $GITHUB_ENV
+
+      # debugging tasks
+      # - run: pwd
+      #   name: "DEBUG: Show current working directory"
+      # - run: ls -al
+      #   name: "DEBUG: Show current directory files and directories"
+      # - run: printenv | sort
+      #   name: "DEBUG: Show environment variables"
+      # - name: "DEBUG: Show mtar filepath"
+      #   run: echo "MTAR_FILEPATH=${{ env.MTAR_FILEPATH }}"
+
+      # setup node
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # install mbt
+      - name: Install MBT build tool
+        run: npm install -g mbt --unsafe-perm=true --allow-root
+         
+      # build
+      - name: Build
+        run: mbt build -p=xsa --mtar=${{ env.MTAR_FILENAME }}
+        
+      # store artifacts
+      - name: Setup JFrog CLI
+        if: env.CAN_PUBLISH_ARTIFACTS == 'true'
+        uses: jfrog/setup-jfrog-cli@v4
+
+      - name: Setup JFrog Credentials
+        if: env.CAN_PUBLISH_ARTIFACTS == 'true'
+        run: |
+          jfrog config add --artifactory-url="https://takedaawsuseast.jfrog.io/artifactory/" --user='${{ secrets.EDGE_JFROG_USER }}' --password='${{ secrets.EDGE_JFROG_PASSWORD }}'
+          jfrog rt upload "${MTAR_FILEPATH}" "edge-generic-local/${GITHUB_REPOSITORY#*/}/" --build-name="${GITHUB_WORKFLOW}" --build-number="${GITHUB_RUN_ID}"
+
+      # upload artifacts to github for use in the deployment job
+      - name: upload artifact - build package
+        uses: actions/upload-artifact@v4
+        with:
+          name: build_artifact
+          path: ${{ env.MTAR_FILEPATH }}
+
+      - name: create build variables file
+        run: echo "export MTAR_FILENAME=${MTAR_FILENAME}" > build_variables.sh
+
+      - name: "DEBUG: Show current working directory"
+        run: ls -al
+
+      - name: upload artifact - build variables
+        uses: actions/upload-artifact@v4
+        with:
+          name: build_variables_file
+          path: build_variables.sh
+
+  Deploy:
+    needs: Build
+    runs-on: [self-hosted,aws-rhel8]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # set a timestamp for use in the build
+      - name: Set TIMESTAMP variable
+        id: date
+        run: echo "TIMESTAMP=$(date -u +'%m-%d-%Y-%H-%M')" >> $GITHUB_ENV
+
+      # set branch name var
+      - name: Set BRANCH variable
+        run: echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+        
+      - name: Set CF memory, disk-quota and instances based on environment
+        if: endsWith(github.ref, 'validation')
+        run: |
+          sed -i 's/a_disk-quota: 1024M/disk-quota: 4096M/' mta.yaml
+          sed -i 's/a_memory: 1024M/memory: 6144M/' mta.yaml
+          sed -i 's/a_instances: 4/instances: 20/' mta.yaml
+          sed -i 's/s_disk-quota: 1024M/disk-quota: 4096M/' mta.yaml
+          sed -i 's/s_memory: 1024M/memory: 3072M/' mta.yaml
+          sed -i 's/s_instances: 4/instances: 4/' mta.yaml 
+          
+      - name: Set CF memory, disk-quota and instances based on environment
+        if: endsWith(github.ref, 'main')
+        run: |
+          sed -i 's/a_disk-quota: 1024M/disk-quota: 12288M/' mta.yaml
+          sed -i 's/a_memory: 1024M/memory: 12288M/' mta.yaml
+          sed -i 's/a_instances: 4/instances: 16/' mta.yaml
+          sed -i 's/s_disk-quota: 1024M/disk-quota: 4096M/' mta.yaml
+          sed -i 's/s_memory: 1024M/memory: 3072M/' mta.yaml
+          sed -i 's/s_instances: 4/instances: 5/' mta.yaml   
+
+      # set environment based vars
+      - name: Set env variable to testing
+        if: github.ref == 'refs/heads/validation'
+        run: |
+          echo "SAP_URL=https://takhdqh23001.onetakeda.com:33030" >> $GITHUB_ENV
+          
+          
+      - name: Set env variable to production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "SAP_URL=https://takhdph24001.onetakeda.com:34030" >> $GITHUB_ENV
+          
+
+      - name: Set CAN_PUBLISH_ARTIFACTS variable
+        if: github.ref == 'refs/heads/validation' || github.ref == 'refs/heads/main'
+        run: echo "CAN_PUBLISH_ARTIFACTS=true" >> $GITHUB_ENV
+
+      # set mtar filename and filepath env vars
+      - name: Set mtar filename variable
+        run: echo "MTAR_FILENAME=${BRANCH}-${TIMESTAMP}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ID}.mtar" >> $GITHUB_ENV
+      
+      - name: Set mtar filepath variable
+        run: echo "MTAR_FILEPATH=./mta_archives/${MTAR_FILENAME}" >> $GITHUB_ENV
+
+      - name: Set tag variable
+        run: echo "TAG_NAME=${BRANCH}-${TIMESTAMP}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ID}" >> $GITHUB_ENV
+
+      - name: download build variables artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build_variables_file
+          path: .
+      
+      - name: download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build_artifact
+          path: .
+          
+      - name: Get Token for Org Actions GitHub App
+        #uses: navikt/github-app-token-generator@v1
+        uses: actions/create-github-app-token@v1
+        
+        id: githubApp
+        with: 
+          app-id: 101770
+          private-key: ${{ secrets.ORG_ACTIONS_PRIVATE_KEY }}
+          owner: oneTakeda
+          repositories: devops-actions-sap-xs
+
+      - name: Download custom action
+        uses: actions/checkout@v4
+        with:
+          repository: oneTakeda/devops-actions-sap-xs
+          ref: ${{ env.SAP_ACTION_REF }}
+          token: ${{ steps.githubApp.outputs.token }}
+          path: ./.github/actions/devops-actions-sap-xs
+
+      - name: Deploy - (Execute XS cli action)
+        uses: ./.github/actions/devops-actions-sap-xs
+        with:
+          SAP_URL: ${{ env.SAP_URL }}
+          SAP_USER: ${{ env.SAP_USER }}
+          SAP_PASSWORD: ${{ secrets.EDGE_SAP_PASSWORD }}
+          ORG: ${{ env.ORG }}
+          SPACE: ${{ env.SPACE }}
+          MTAR_PATH: ${{ env.MTAR_FILENAME }}
+          MTA_EXTENSION: ''
+
+      # tag
+      - name: 'Tag'
+        uses: tvdias/github-tagger@v0.0.2
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          tag: "${{ env.TAG_NAME }}"
+
+      # cleanup
+      - name: Cleanup Artifacts
+        uses: geekyeggo/delete-artifact@v2.0.0
+        if: always()
+        with:
+          name: |
+            build_variables_file
+            build_artifact
+          failOnError: false

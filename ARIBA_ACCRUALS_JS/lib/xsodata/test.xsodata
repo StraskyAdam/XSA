@@ -1,0 +1,11 @@
+service {
+
+	"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_test" as "openPO"
+	keys("PONUMBER","ITEMNO")
+	parameters via entity;
+
+}
+		
+annotations {
+   enable OData4SAP;
+}

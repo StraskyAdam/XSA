@@ -1,0 +1,147 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"( IN iv_povalue decimal(18,3),
+																		IN iv_pocurrency varchar(3) ,
+																		IN iv_pstyp varchar(1),
+																		IN iv_wrkStrtdate DATE,
+																		IN iv_wrkEnddate DATE,
+																		IN iv_accrualmethod varchar(50),
+																		IN iv_totWrkCompAmt varchar(20),
+																		IN iv_totWrkCompPer decimal(13,1) default '0.0',--
+																		IN iv_edgeWTDAmt decimal(13,2) default '0.00',
+																		IN iv_exchangerate decimal(13,6)
+																	)
+       RETURNS 
+       			   totWrkCompAmt_out decimal(13,2),
+       			   totWrkCompAmt_usd_out decimal(13,2),
+       			   totWrkCompPer_out decimal(13,1),
+              	   straightlinemthd varchar(1),
+              	   accrualMethod_out varchar(50)
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+declare lv_edgewtdamt decimal(13,2);
+declare lv_po_currency varchar(3) ;
+declare lv_povalue decimal(18,2);
+declare lv_wrkstartdate date;
+declare lv_wrkenddate date;
+declare lv_edgewtdper  decimal(13,2);
+declare lv_edgewtdamt_usd decimal(13,2);
+declare lv_totWrkCompAmt_usd decimal(13,2);
+declare lv_stl_amt_usd decimal(13,2);
+declare lv_stl_amt decimal(13,2);--
+declare lv_stl_amt_cocdecurr decimal(13,2);
+declare lv_stl_per decimal(13,2);
+
+-- Assign to local variables
+lv_edgewtdamt = :iv_edgeWTDAmt;
+lv_po_currency=	:iv_pocurrency;
+lv_povalue = :iv_povalue;
+lv_wrkstartdate = :iv_wrkStrtdate;
+lv_wrkenddate = :iv_wrkEnddate;
+
+if ( iv_pstyp = '9') then 
+
+	lv_totWrkCompAmt_usd = "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:iv_totWrkCompAmt,
+																					       :lv_po_currency,
+																							'USD',
+																							:iv_exchangerate
+	).ev_targetAmount;
+	-- Convert EDGE WTD Amount to common Currency
+	if (lv_edgewtdamt is not null or lv_edgewtdamt > 0.00 ) then
+	   lv_edgewtdamt_usd =  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_edgewtdamt,
+																							:lv_po_currency,
+																							'USD',
+	   																						:iv_exchangerate
+	   ).ev_targetamount;
+		
+	-- If the PO value is greater than 0, else it will result in dump
+		if :lv_povalue > 0 then 
+			lv_edgewtdper = ( :lv_edgewtdamt / :lv_povalue ) * 100; 
+		end if;
+		
+	end if;
+	-- Get the Straight Line Amount
+	lv_stl_amt = "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_calcSTL_wtdAmountPer"( 
+					:lv_povalue, 
+					:lv_po_currency, 
+					:lv_wrkstartdate, 
+					:lv_wrkenddate,
+					:iv_exchangerate
+					).stl_amt;
+	-- Get the Straight Line Amount in USD ( Common Currency)
+	lv_stl_amt_usd = "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_calcSTL_wtdAmountPer"( 
+					:lv_povalue, 
+					:lv_po_currency, 
+					:lv_wrkstartdate, 
+					:lv_wrkenddate,
+					:iv_exchangerate).stl_amt_usd;
+	-- Get the Straight Line Percentage			
+	lv_stl_per = "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_calcSTL_wtdAmountPer"( 
+					:lv_povalue, 
+					:lv_po_currency, 
+					:lv_wrkstartdate, 
+					:lv_wrkenddate,
+					:iv_exchangerate).stl_per;
+	
+	
+	-- check the accrual method is null 
+	 if :iv_accrualmethod is null then 
+	 	if (:iv_totWrkCompAmt = ' ' or  :iv_totWrkCompAmt = '')  then
+	  -- Calculation logic for Straight line 
+	 		totWrkCompAmt_out = :lv_stl_amt;
+	 		totWrkCompAmt_usd_out = :lv_stl_amt_usd;
+	 		totWrkCompper_out = :lv_stl_per;
+	 		accrualMethod_out = 'STL';
+	 		straightlinemthd = 'X';
+	 	else  
+	 	  accrualMethod_out = 'WTD';
+	 	  straightlinemthd = '';
+	 	  totWrkCompAmt_out = :iv_totWrkCompAmt;
+	 	  totWrkCompAmt_usd_out = :lv_totWrkCompAmt_usd;
+	      totWrkCompper_out = :iv_totWrkCompPer;
+	 	end if;
+	 	
+	 else if :iv_accrualmethod = 'WTD' then 
+		 	-- if :iv_edgeWTDAmt is not null then 
+		 	-- 	totWrkCompAmt_out = :lv_edgewtdamt; 
+		 	-- 	totWrkCompper_out = :lv_edgewtdper;
+		 	-- 	totWrkCompAmt_usd_out = :lv_edgewtdamt_usd; 
+		 	-- 	accrualMethod_out = 'WTD';
+		 	--     straightlinemthd = '';
+		 	-- else 
+		 		if (:iv_totWrkCompAmt = ' ' or  :iv_totWrkCompAmt = '')  then 
+		 			totWrkCompAmt_out =  :lv_stl_amt;
+	 	    		totWrkCompAmt_usd_out = :lv_stl_amt_usd;
+	        		totWrkCompper_out = :lv_stl_per;
+	        		accrualMethod_out = 'STL';
+		 			straightlinemthd = 'X';
+	            else 
+	            	totWrkCompAmt_out = :iv_totWrkCompAmt;
+	 	    		totWrkCompAmt_usd_out = :lv_totWrkCompAmt_usd;
+	        		totWrkCompper_out = :iv_totWrkCompPer;
+	        		accrualMethod_out = 'WTD';
+		 			straightlinemthd = '';
+	        	end if;
+		 	-- end if;
+		 	
+	 	  
+	 else if :iv_accrualmethod = 'STL' then 
+	 -- Calculation logic for Straight line
+			totWrkCompAmt_out = :lv_stl_amt;
+			totWrkCompAmt_usd_out = :lv_stl_amt_usd;
+	 		totWrkCompper_out = :lv_stl_per;
+		 	accrualMethod_out = 'STL';
+		 	straightlinemthd = 'X';
+		      end if;
+	 end if;
+	 end if;
+	 
+-- if pstype = 0, then do not do anything 
+else
+	totWrkCompAmt_out = 0.00;
+	totWrkCompAmt_usd_out = 0.00;
+	totWrkCompPer_out = 0.0;
+	straightlinemthd = '';
+	accrualMethod_out = 'STL';
+end if;
+END;

@@ -1,0 +1,221 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPODetailQuery"(ip_po table ( ebeln nvarchar(10), 
+																				 ebelp nvarchar(5),
+																		         poowner_email varchar(255)),
+																		   IP_THRESHOLD varchar(1) default '1'
+																          )
+       RETURNS table (
+				  	poowner_email varchar(255),
+       			    companyCode nvarchar(4),
+       			   purchasingUnit varchar(255),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(10),
+       			   costcenter varchar(10),
+       			   costcenterDesc nvarchar(50),
+       			   manageUnit varchar(35),
+       			   PONUMBER nvarchar(10),
+       			  -- docNumber varchar(10),
+	               itemno nvarchar(5),
+	               poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,2),
+       			   pocurrency varchar(3),
+       			   invoice_currency varchar(3),
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   --totWrkCompAmt decimal(13,2),--,
+       			   --totWrkCompAmt_cocdecurr decimal(13,2),--,
+       			   totWrkCompAmt varchar(20),--,
+       			   totWrkCompAmt_cocdecurr  varchar(20),--,
+       			   totWrkCompPer varchar(50),--,
+              	   internalOrder varchar(12),
+              	   assetId varchar(12),
+              	   profitCenter varchar(10),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(1),
+              	    markasreviewed varchar(1),
+              	   povalue_coco  decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	   changeddate date,
+				 changedtime time,
+				 reviwed_by varchar(225),
+				 
+				 bbp_acc_no varchar(2),
+		     documentdate varchar(8),
+		     purchasingorganization varchar(4),
+		     orderquantity decimal(13,2),
+		     exchangerate decimal(9,6),
+		     po_preparer varchar(241),
+		     changed_on timestamp,
+		     --mvp2
+		     povalue_usd decimal(13,2),
+		     po_closure varchar(5),
+		     distPercentage decimal(3,1),
+		     quantity decimal(13,3),
+		     ZACTIVITYNBR nvarchar(200)
+   )
+              	 
+              	  
+       
+       LANGUAGE SQLSCRIPT 
+      -- SQL SECURITY INVOKER 
+      AS 
+BEGIN 
+DECLARE lv_bukrs VARCHAR(5000);
+
+-- Japan and Brazil ---
+
+ select config_value into lv_bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+			where config_name = 'Japan_Brazil';
+
+lt_values = select OUTPUT_SPLIT as company_code from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs);
+
+---End---
+
+lt_opn_po = select 
+		    select_po.poowner_email as	 poowner_email,
+		    T001.bukrs as companyCode,
+		    T001.BUTXT as purchasingUnit,
+		    T001.land1 as region,
+		    T001.waers as cocdecurr,
+		    -- ekkn.sakto as glaccount,
+		    LTRIM (ekkn.sakto,'0') as glaccount,
+		    -- ekkn.kostl as costcenter,
+		    LTRIM (ekkn.kostl,'0') as costcenter,
+		    cskt.ltext as costcenterDesc,
+		    -- csks.name1 as manageUnit,
+		    csks.zzrptun as manageUnit,
+	    	ekpo.ebeln as ponumber, 
+	    	--mseg.mblnr as docNumber,
+			ekpo.ebelp as itemno,
+			to_dats(ekko.aedat) as poCreatedAt,
+			ltrim(ekko.lifnr,'0') as supplierid,
+			lfa1.name1 as suppliername,
+			ekpo.txz01 as polinedesc,
+			case when (ekpo.pstyp = '0' and T001.bukrs in (select company_code from :lt_values) and 
+																			ekpo.zstart_date <> '00000000') then '9'
+			else ekpo.pstyp end as pstype,
+				-- In case of JPY AND VND, multiple by 100
+			case 
+			 when ekko.waers = 'JPY' OR ekko.waers = 'VND'
+				then ekpo.brtwr*100
+			  else ekpo.brtwr
+			end as povalue,
+			-- ekpo.brtwr as povalue,
+			ekko.waers as pocurrency,
+			 --"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_getInvoiceCurrency"(ekpo.ebeln,ekpo.ebelp) as invoice_currency,
+			 --ekbe.waers as invoice_currency,
+			 ' ' as invoice_currency,
+			to_dats(ekpo.zstart_date) as wrkStrtdate,
+			to_dats(ekpo.zend_date) as wrkEnddate,
+			ltrim(ekpo.zserv_amt) as totWrkCompAmt,
+			ltrim(ekpo.zserv_amt) as totWrkCompAmt_cocdecurr,
+			(case when ekpo.zserv_perc IN(' ', '') then 0.0
+			else ekpo.zserv_perc 
+			end )as totWrkCompPer,
+			LTRIM (ekkn.aufnr,'0') as internalOrder,
+			ltrim(ekkn.anln1,'0') as assetId,
+			ekkn.prctr as profitCenter,
+			ekko.unsez as epNumber,
+			-- If EDGE Status is empty, then set it to Pending
+			case 
+				when edgePO.PO_CLOSURE = 'true' then 'Reviewed'
+				when edgePO.status is null then 'Pending'
+				else edgePO.status
+			end as status,
+			edgePO.workcomplastmonthamt as lastMonthwrkcomp,
+			
+		
+			-- If the WTD amount is null, then set the straightlinemthd to 'X'
+			case 
+				when (ekpo.pstyp = '9' or (ekpo.pstyp = '0' and ekpo.bukrs in (select company_code from :lt_values) and 
+																			ekpo.zstart_date <> '00000000'))
+				then 
+					case
+						when (ekpo.zserv_amt = '0.00' or ltrim(ekpo.zserv_amt) IN(' ', ''))  then 'X'
+						else edgePO.straightlinemthd
+					end
+				else ' '
+			end as straightlinemthd,
+			edgePO.markasreviewed as markasreviewed,
+			-- 	AS povalue_coco,
+			-- In case of JPY AND VND, multiple by 100
+			case 
+			 when ekko.waers = 'JPY' OR ekko.waers = 'VND'
+				then ekpo.brtwr*100
+			  else ekpo.brtwr
+			end as povalue_coco,
+			-- ekpo.brtwr as 	povalue_coco,
+			 edgePO.accrualMethod as accrualMethod,
+		    edgePO.totalworkcompltodate as edgewtdamt,
+		    edgePO.changeddate as changeddate,
+		    edgePO.changedtime as changedtime,
+		    edgePO.reviwed_by as reviwed_by,
+		    ekkn.zekkn as bbp_acc_no,
+		    ekko.bedat as documentdate,
+		    ekko.ekorg as purchasingorganization,
+		    ekpo.menge as orderquantity,
+		    exchangeTab.exchange_rate as exchangerate,
+		    LOWER(ekpo.PO_PREPARER) as po_preparer,
+			UTCTOLOCAL(edgePO.changed_on,'CET') as changed_on,
+------->>>>>>>>> MVP2 Changes>>>>>>>>>------- 
+			-- PO Value in USD 
+			case  when ekko.waers = 'JPY' OR ekko.waers = 'VND'
+			then
+			 "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(ekpo.brtwr,ekko.waers, 'USD', exchangeTab.exchange_rate).ev_targetAmount 
+             else "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(ekpo.brtwr,ekko.waers, 'USD', exchangeTab.exchange_rate).ev_targetAmount 
+			end as povalue_usd,
+             
+             edgePO.PO_CLOSURE AS po_closure,
+            -- Distribution Percentage
+            ekkn.vproz as distPercentage,
+            ekkn.menge as quantity,
+            ekpo.ZACTIVITYNBR
+-------<<<<<<<<<< MVP2 Changes <<<<<<<<<<>------- 
+			from :ip_po as select_po
+			left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+			on select_po.ebeln = ekpo.ebeln 
+			and  select_po.ebelp = ekpo.ebelp
+			left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO" as ekko
+			on ekpo.ebeln = ekko.ebeln
+			left outer  join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::LFA1.LFA1" as lfa1
+			on ekko.lifnr = lfa1.lifnr
+			left outer  join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::T001.T001" as T001
+			on ekko.bukrs = T001.bukrs
+			left outer  join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKN.EKKN" as ekkn
+			on ekkn.ebeln = ekpo.ebeln 
+			and ekkn.ebelp = ekpo.ebelp
+			
+			-- left outer  join  (select ebeln, ebelp,waers
+			-- 				from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE" 
+							
+			-- ) as ekbe
+			
+			-- on ekbe.ebeln = ekpo.ebeln 
+			-- and ekbe.ebelp = ekpo.ebelp
+			left outer join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKT.CSKT" as cskt
+			on cskt.kostl = ekkn.kostl
+			and cskt.spras  = 'E' 
+			and cskt.kokrs = ekkn.kokrs
+			and cskt.datbi >= CURRENT_DATE
+			left outer join  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CSKS.CSKS" as csks
+			on csks.kostl = ekkn.kostl
+			and csks.kokrs = ekkn.kokrs
+			and csks.datbi >= CURRENT_DATE
+			left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_SERVICEPO_STATUS" as edgePO
+			on edgepo.ponumber = ekpo.ebeln 
+			and edgepo.lineitem = ekpo.ebelp
+			left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exchangeTab
+			on ekko.waers = exchangeTab.source_curr
+		;
+			
+			
+return :lt_opn_po;
+
+END;

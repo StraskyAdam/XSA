@@ -1,0 +1,135 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_accrualMethod"( IN iv_povalue decimal(13,3),
+																		IN iv_pocurrency varchar(3) ,
+																		IN iv_wrkStrtdate DATE,
+																		IN iv_wrkEnddate DATE,
+																		IN iv_accrualmethod varchar(50),
+																		IN iv_totWrkCompAmt varchar(20),
+																		IN iv_totWrkCompPer decimal(13,1) default '0.0',--
+																		IN iv_edgeWTDAmt decimal(13,2) default '0.00',
+																		IN iv_pstyp varchar(1),
+																		IN iv_company nvarchar(4)
+)
+       RETURNS table(
+       			straightlinemthd varchar(1),
+       			accrualMethod varchar(50),
+       			totWrkCompAmt decimal(13,2),
+       			totWrkCompAmt_cocdecurr decimal(13,2),
+       			 totWrkCompPer decimal(13,1)
+     	
+       )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+
+declare lv_year varchar(4);
+declare lv_ddmm varchar(4);
+declare lv_ref_date varchar(8);
+declare lv_exchange_rate decimal(13,2);
+declare lv_date nvarchar(10);
+declare lv_bukrs varchar(255);
+
+-- Yearly Budget rates for 01. April 
+select YEAR(CURRENT_DATE) into lv_year from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  
+SELECT CONCAT ('04', '01') INTO lv_ddmm FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";
+SELECT CONCAT (lv_year, lv_ddmm) INTO lv_ref_date FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";
+
+select "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_getExchangeRate"(iv_pocurrency, 'USD', lv_ref_date).ev_exchangerate into lv_exchange_rate 
+from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";
+
+select replace(to_nvarchar(:iv_wrkStrtdate),'-','') into lv_date from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY"; 
+
+--- Japan and Brazil ---
+ select config_value into lv_bukrs from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_VALUES"
+			where config_name = 'Japan_Brazil';
+
+lt_values = select OUTPUT_SPLIT as company_code from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_splitString"(:lv_bukrs);
+---- End ----
+
+return
+    SELECT "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"(:iv_povalue,
+                                                                         :iv_pocurrency,
+                                                                         case 
+																			when :lv_date <> '00000000' and :iv_pstyp = '0'
+																				and :iv_company in
+																				(select company_code from :lt_values) then
+																				'9'
+																				else
+																			:iv_pstyp end,
+                                                                         --'9',
+                                                                         :iv_wrkStrtdate ,
+                                                                         :iv_wrkEnddate,
+                                                                          :iv_accrualmethod ,
+                                                                          :iv_totWrkCompAmt,
+                                                                         :iv_totWrkCompPer,
+                                                                          :iv_edgeWTDAmt ,
+                                                                          :lv_exchange_rate).STRAIGHTLINEMTHD AS straightlinemthd,
+       "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"(:iv_povalue,
+                                                                         :iv_pocurrency,
+                                                                         case 
+																			when :lv_date <> '00000000' and :iv_pstyp = '0'
+																				and :iv_company in
+																				(select company_code from :lt_values) then
+																				'9'
+																				else
+																			:iv_pstyp end,
+                                                                         --'9',
+                                                                         :iv_wrkStrtdate ,
+                                                                         :iv_wrkEnddate,
+                                                                          :iv_accrualmethod ,
+                                                                          :iv_totWrkCompAmt,
+                                                                         :iv_totWrkCompPer,
+                                                                          :iv_edgeWTDAmt ,
+                                                                          :lv_exchange_rate).ACCRUALMETHOD_OUT AS accrualMethod,
+      "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"(:iv_povalue,
+                                                                         :iv_pocurrency,
+                                                                         case 
+																			when :lv_date <> '00000000' and :iv_pstyp = '0'
+																				and :iv_company in
+																				(select company_code from :lt_values) then
+																				'9'
+																				else
+																			:iv_pstyp end,
+                                                                         --'9',
+                                                                         :iv_wrkStrtdate ,
+                                                                         :iv_wrkEnddate,
+                                                                          :iv_accrualmethod ,
+                                                                          :iv_totWrkCompAmt,
+                                                                         :iv_totWrkCompPer,
+                                                                          :iv_edgeWTDAmt ,
+                                                                          :lv_exchange_rate).TOTWRKCOMPAMT_OUT AS totWrkCompAmt,
+      "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"(:iv_povalue,
+                                                                         :iv_pocurrency,
+                                                                         case 
+																			when :lv_date <> '00000000' and :iv_pstyp = '0'
+																				and :iv_company in
+																				(select company_code from :lt_values) then
+																				'9'
+																				else
+																			:iv_pstyp end,
+                                                                         --'9',
+                                                                         :iv_wrkStrtdate ,
+                                                                         :iv_wrkEnddate,
+                                                                          :iv_accrualmethod ,
+                                                                          :iv_totWrkCompAmt,
+                                                                         :iv_totWrkCompPer,
+                                                                          :iv_edgeWTDAmt ,
+                                                                          :lv_exchange_rate).TOTWRKCOMPAMT_USD_OUT AS totWrkCompAmt_cocdecurr,
+     "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_accrualMethod"(:iv_povalue,
+                                                                         :iv_pocurrency,
+                                                                         case 
+																			when :lv_date <> '00000000' and :iv_pstyp = '0'
+																				and :iv_company in
+																				(select company_code from :lt_values) then
+																				'9'
+																				else
+																			:iv_pstyp end,
+                                                                         --'9',
+                                                                         :iv_wrkStrtdate ,
+                                                                         :iv_wrkEnddate,
+                                                                          :iv_accrualmethod ,
+                                                                          :iv_totWrkCompAmt,
+                                                                         :iv_totWrkCompPer,
+                                                                          :iv_edgeWTDAmt ,
+                                                                          :lv_exchange_rate).TOTWRKCOMPPER_OUT AS totWrkCompPer
+FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";
+END;

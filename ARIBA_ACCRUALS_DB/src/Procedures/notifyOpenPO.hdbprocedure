@@ -1,0 +1,37 @@
+-- not needed
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::notifyOpenPO"( IN IP_EMAIL VARCHAR(225),IP_POOWNER VARCHAR(1) default '')
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   READS SQL DATA AS
+BEGIN
+
+lt_output_mat = select pocurrency,ponumber,status,grvalue,totwrkcompamt,invvalue,povalue,amountaccrued ,pstype,companycode from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"(placeholder."$$IP_PSTYPE$$"=>'0', placeholder."$$IP_EMAIL$$"=>:IP_EMAIL,placeholder."$$IP_POOWNER$$"=>:IP_POOWNER)
+				where status='Pending' and companycode='3032';
+lt_output_serv = select pocurrency,ponumber,status,grvalue,totwrkcompamt,invvalue,povalue,amountaccrued ,pstype,companycode from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPO"(placeholder."$$IP_PSTYPE$$"=>'9', placeholder."$$IP_EMAIL$$"=>:IP_EMAIL,placeholder."$$IP_POOWNER$$"=>:IP_POOWNER)
+				 where status='Pending' and companycode='3032';
+lt_union = select * from :lt_output_mat union all  select * from :lt_output_serv ;
+
+lt_result= select pocurrency,
+				ponumber,
+				status,
+				grvalue,
+				companycode,
+				(case when totwrkcompamt > 0 then totwrkcompamt
+				else 0
+				end)as totwrkcompamt,invvalue,povalue,
+				(case when amountaccrued > 0 then amountaccrued
+				else 0
+				end)as amountaccrued ,pstype from  :lt_union;
+
+
+ select 
+		pocurrency,
+		companycode,
+		count(ponumber) as poCount,
+		count( case when pstype = '0' then 1 else null end) matPOCount,
+		count( case when pstype = '9' then 1 else null end) servPOCount
+		from :lt_result group by  pocurrency,companycode;
+ 		
+
+END

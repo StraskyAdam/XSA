@@ -1,0 +1,328 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenThresholdPOFinal"(IP_PSTYPE varchar(1), 
+																		IP_EMAIL varchar(255),
+																		IP_POOWNER VARCHAR(1) )
+       RETURNS table(
+       				poowner_email varchar(255),
+    			   companyCode nvarchar(4),
+       			   purchasingUnit varchar(255),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(5000),
+       			   costcenter varchar(5000),
+       			   manageUnit varchar(5000),
+       			   PONUMBER nvarchar(10),
+	               itemno nvarchar(5),
+	               poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,2),
+       			   pocurrency varchar(3),
+       			   invoice_currency varchar(3),
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   totWrkCompAmt decimal(13,2),
+       			   totWrkCompAmt_cocdecurr decimal(13,2),
+       			   totWrkCompPer decimal(13,1),
+       			   totWrkCompPer_char varchar(5000),
+              	   internalOrder varchar(5000),
+              	   assetId varchar(5000),
+              	   profitCenter varchar(5000),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(5),
+              	   markasreviewed varchar(5),
+              	   povalue_coco decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	   changeddate date,
+				   changedtime time,
+				   reviwed_by varchar(225),
+				   po_preparer varchar(241),
+				  changed_on timestamp,
+				  bbp_acc_no varchar(5000),
+		    	  documentdate varchar(8),
+		     purchasingorganization varchar(4),
+		     orderquantity decimal(13,2),
+		     exchangerate_dec decimal(9,6),
+		     exchangerate VARCHAR(5000),
+		     pstype_text varchar(10),
+		     povalue_usd decimal(13,2),
+		     totWrkCompAmt_usd decimal(13,2),
+		      totWrkCompAmt_usd_char varchar(500),
+		     po_closure varchar(5),
+		      totwrkcompamt_char varchar(500),
+			       poclosure_flag integer,
+			        checkFlag varchar(10),
+			        GRVALUE decimal(13,2),
+			        AMOUNTACCRUED decimal(13,2),
+		    		AMOUNTACCRUED_CHAR varchar(500),
+		    		AMOUNTACCRUED_COCDECURR decimal(13,2),
+		    		AMOUNTACCRUED_USD decimal(13,2),
+		    		AMOUNTACCRUED_USD_CHAR varchar(500),
+		    		INVVALUE_COCDECURR decimal(13,2),
+		    		GRVALUE_COCDECURR decimal(13,2),
+		    		INVVALUE decimal(13,2),
+		    		USERNAME varchar(12),
+		    		FULL_NAME varchar(80),
+		    		DECIMAL_FORMAT nvarchar(1),
+		    		DATFM nvarchar(1),
+		    		INVVALUE_CAL decimal(13,2),
+		    		INVVALUE_USD decimal(13,2),
+		    		GRVALUE_USD decimal(13,2),
+		    		POCLOSURE_FLAG_LOCAL varchar(1),
+		    		ZACTIVITYNBR nvarchar(200),
+		    		DISTPERCENTAGE NVARCHAR(5000)
+       )
+		    		 
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+    /*****************************
+        Write your function logic
+    ****************************/
+    declare lv_delimiter varchar(1);
+    
+    lt_decimalFormat=SELECT 
+			"DECIMAL_FORMAT",
+			"EMAILADDR"
+			FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getUserDetails"
+			where EMAILADDR=:IP_EMAIL;
+
+	 lv_delimiter=:lt_decimalFormat.DECIMAL_FORMAT[1];
+ 
+	--set delimiter to 'X' when it is null
+	 if :lv_delimiter is null then 
+		lv_delimiter='X';
+	end if;
+
+	lt_final = SELECT 
+					poowner_email ,
+    			   companyCode ,
+       			   purchasingUnit ,
+       			   region ,
+       			   cocdecurr ,
+       			   glaccount ,
+       			   costcenter ,
+       			   manageUnit ,
+       			   PONUMBER ,
+	               itemno ,
+	               poCreatedAt ,
+				   supplierID ,
+				   suppliername ,
+       			   polinedesc ,
+       			   pstype ,
+      -- 			   (case when :lv_delimiter =' ' then 
+			   -- 								case when povalue=00.00 then  replace(replace(replace(TO_NVARCHAR(povalue, '0.00'),',','x'),'.',','),'x','.')
+			   -- 								else replace(replace(replace(TO_NVARCHAR(povalue, '0,0.00'),',','x'),'.',','),'x','.') 
+			   -- 								end 
+			   --           	  when :lv_delimiter ='X' then 
+			   --           							case when  povalue=00.00 then TO_NVARCHAR(povalue, '0.00')
+			   --           							else TO_NVARCHAR(povalue, '0,0.00')
+			   --           							end 
+			   --           	  when :lv_delimiter ='Y' then 
+			   --           								case when povalue=00.00 then  replace(replace(replace(TO_NVARCHAR(povalue, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  else replace(replace(replace(TO_NVARCHAR(povalue, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  end
+						-- end) as
+       			   povalue ,
+       			   pocurrency ,
+       			   invoice_currency ,
+       			   wrkStrtdate ,
+       			   wrkEnddate ,
+       			   totWrkCompAmt ,
+       			   totWrkCompAmt_cocdecurr ,
+       			   totWrkCompPer ,
+       			   (case when :lv_delimiter IN (' ', '') then 
+			    								case when totWrkCompPer=00.00 then  replace(replace(replace(TO_NVARCHAR(totWrkCompPer, '0.00'),',','x'),'.',','),'x','.')
+			    								else replace(replace(replace(TO_NVARCHAR(totWrkCompPer, '0,0.00'),',','x'),'.',','),'x','.') 
+			    								end 
+			              	  when :lv_delimiter ='X' then 
+			              							case when  totWrkCompPer=00.00 then TO_NVARCHAR(totWrkCompPer, '0.00')
+			              							else TO_NVARCHAR(totWrkCompPer, '0,0.00')
+			              							end 
+			              	  when :lv_delimiter ='Y' then 
+			              								case when totWrkCompPer=00.00 then  replace(replace(replace(TO_NVARCHAR(totWrkCompPer, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  else replace(replace(replace(TO_NVARCHAR(totWrkCompPer, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  end
+						end) as totWrkCompPer_char ,
+              	   internalOrder ,
+              	   assetId ,
+              	   profitCenter ,
+              	   epnumber ,
+              	   status ,
+              	   lastMonthwrkcomp ,
+              	   straightlinemthd ,
+              	   markasreviewed ,
+              	   povalue_coco ,
+              	   accrualMethod ,
+              	   edgewtdamt ,
+              	   changeddate ,
+				   changedtime ,
+				   reviwed_by ,
+				   po_preparer ,
+				  changed_on ,
+				  bbp_acc_no ,
+		    	  documentdate ,
+		     purchasingorganization ,
+		     orderquantity ,
+		     exchangerate as exchangerate_dec ,
+			       ( case when :lv_delimiter IN (' ', '') then 
+			    								case when exchangerate=0.000000 then  replace(replace(replace(TO_NVARCHAR(exchangerate, '0.000000'),',','x'),'.',','),'x','.')
+			    								else replace(replace(replace(TO_NVARCHAR(exchangerate, '0.000000'),',','x'),'.',','),'x','.') 
+			    								end 
+			              	  when :lv_delimiter ='X' then 
+			              							case when  exchangerate=0.000000 then TO_NVARCHAR(exchangerate, '0.000000')
+			              							else TO_NVARCHAR(exchangerate, '0.000000')
+			              							end 
+			              	  when :lv_delimiter ='Y' then 
+			              								case when exchangerate=0.000000 then  replace(replace(replace(TO_NVARCHAR(exchangerate, '0.000000'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  else replace(replace(replace(TO_NVARCHAR(exchangerate, '0.000000'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  end
+						end) as
+						exchangerate ,
+		     pstype_text ,
+		    --  (case when :lv_delimiter =' ' then 
+			   -- 								case when povalue_usd is null then replace(replace(replace('0.00',',','x'),'.',','),'x','.')
+			   -- 									when povalue_usd=00.00 then  replace(replace(replace(TO_NVARCHAR(povalue_usd, '0.00'),',','x'),'.',','),'x','.')
+			   -- 								else replace(replace(replace(TO_NVARCHAR(povalue_usd, '0,0.00'),',','x'),'.',','),'x','.') 
+			   -- 								end 
+			   --           	  when :lv_delimiter ='X' then 
+			   --           							case when povalue_usd is null then '0.00'
+			   --           								when  povalue_usd=00.00 then TO_NVARCHAR(povalue_usd, '0.00')
+			   --           							else TO_NVARCHAR(povalue_usd, '0,0.00')
+			   --           							end 
+			   --           	  when :lv_delimiter ='Y' then 
+			   --           								case when povalue_usd is null then  replace(replace(replace('0.00', ',' ,'x'), '.', ','), 'x', ' ')
+			   --           									 when povalue_usd=00.00 then  replace(replace(replace(TO_NVARCHAR(povalue_usd, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  else replace(replace(replace(TO_NVARCHAR(povalue_usd, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  end
+						-- end) as
+			       povalue_usd ,
+			       totWrkCompAmt_usd,
+		     (case when :lv_delimiter IN (' ', '') then 
+			    								case when totWrkCompAmt_usd=00.00 then  replace(replace(replace(TO_NVARCHAR(totWrkCompAmt_usd, '0.00'),',','x'),'.',','),'x','.')
+			    								else replace(replace(replace(TO_NVARCHAR(totWrkCompAmt_usd, '0,0.00'),',','x'),'.',','),'x','.') 
+			    								end 
+			              	  when :lv_delimiter ='X' then 
+			              							case when  totWrkCompAmt_usd=00.00 then TO_NVARCHAR(totWrkCompAmt_usd, '0.00')
+			              							else TO_NVARCHAR(totWrkCompAmt_usd, '0,0.00')
+			              							end 
+			              	  when :lv_delimiter ='Y' then 
+			              								case when totWrkCompAmt_usd=00.00 then  replace(replace(replace(TO_NVARCHAR(totWrkCompAmt_usd, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  else replace(replace(replace(TO_NVARCHAR(totWrkCompAmt_usd, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  end
+						end) as totWrkCompAmt_usd_char ,
+		     po_closure ,
+		      totwrkcompamt_char ,
+			       poclosure_flag ,
+			        checkFlag ,
+			   --     (case when :lv_delimiter =' ' then 
+			   -- 								case when GRVALUE=00.00 then  replace(replace(replace(TO_NVARCHAR(GRVALUE, '0.00'),',','x'),'.',','),'x','.')
+			   -- 								else replace(replace(replace(TO_NVARCHAR(GRVALUE, '0,0.00'),',','x'),'.',','),'x','.') 
+			   -- 								end 
+			   --           	  when :lv_delimiter ='X' then 
+			   --           							case when  GRVALUE=00.00 then TO_NVARCHAR(GRVALUE, '0.00')
+			   --           							else TO_NVARCHAR(GRVALUE, '0,0.00')
+			   --           							end 
+			   --           	  when :lv_delimiter ='Y' then 
+			   --           								case when GRVALUE=00.00 then  replace(replace(replace(TO_NVARCHAR(GRVALUE, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  else replace(replace(replace(TO_NVARCHAR(GRVALUE, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  end
+						-- end) as
+			        GRVALUE ,
+			        AMOUNTACCRUED,
+		    		(case when :lv_delimiter IN (' ', '') then 
+			    								case when AMOUNTACCRUED=00.00 then  replace(replace(replace(TO_NVARCHAR(AMOUNTACCRUED, '0.00'),',','x'),'.',','),'x','.')
+			    								else replace(replace(replace(TO_NVARCHAR(AMOUNTACCRUED, '0,0.00'),',','x'),'.',','),'x','.') 
+			    								end 
+			              	  when :lv_delimiter ='X' then 
+			              							case when  AMOUNTACCRUED=00.00 then TO_NVARCHAR(AMOUNTACCRUED, '0.00')
+			              							else TO_NVARCHAR(AMOUNTACCRUED, '0,0.00')
+			              							end 
+			              	  when :lv_delimiter ='Y' then 
+			              								case when AMOUNTACCRUED=00.00 then  replace(replace(replace(TO_NVARCHAR(AMOUNTACCRUED, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  else replace(replace(replace(TO_NVARCHAR(AMOUNTACCRUED, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  end
+						end) as AMOUNTACCRUED_CHAR ,
+		    		AMOUNTACCRUED_COCDECURR ,
+		    		AMOUNTACCRUED_USD,
+		    		(case when :lv_delimiter IN (' ', '') then 
+			    								case when AMOUNTACCRUED_USD=00.00 then  replace(replace(replace(TO_NVARCHAR(AMOUNTACCRUED_USD, '0.00'),',','x'),'.',','),'x','.')
+			    								else replace(replace(replace(TO_NVARCHAR(AMOUNTACCRUED_USD, '0,0.00'),',','x'),'.',','),'x','.') 
+			    								end 
+			              	  when :lv_delimiter ='X' then 
+			              							case when  AMOUNTACCRUED_USD=00.00 then TO_NVARCHAR(AMOUNTACCRUED_USD, '0.00')
+			              							else TO_NVARCHAR(AMOUNTACCRUED_USD, '0,0.00')
+			              							end 
+			              	  when :lv_delimiter ='Y' then 
+			              								case when AMOUNTACCRUED_USD=00.00 then  replace(replace(replace(TO_NVARCHAR(AMOUNTACCRUED_USD, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  else replace(replace(replace(TO_NVARCHAR(AMOUNTACCRUED_USD, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  end
+						end) as AMOUNTACCRUED_USD_CHAR ,
+		    		INVVALUE_COCDECURR ,
+		    		GRVALUE_COCDECURR ,
+		    -- 		(case when :lv_delimiter =' ' then 
+			   -- 								case when INVVALUE=00.00 then  replace(replace(replace(TO_NVARCHAR(INVVALUE, '0.00'),',','x'),'.',','),'x','.')
+			   -- 								else replace(replace(replace(TO_NVARCHAR(INVVALUE, '0,0.00'),',','x'),'.',','),'x','.') 
+			   -- 								end 
+			   --           	  when :lv_delimiter ='X' then 
+			   --           							case when  INVVALUE=00.00 then TO_NVARCHAR(INVVALUE, '0.00')
+			   --           							else TO_NVARCHAR(INVVALUE, '0,0.00')
+			   --           							end 
+			   --           	  when :lv_delimiter ='Y' then 
+			   --           								case when INVVALUE=00.00 then  replace(replace(replace(TO_NVARCHAR(INVVALUE, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  else replace(replace(replace(TO_NVARCHAR(INVVALUE, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  end
+						-- end) as
+		    		INVVALUE ,
+		    		USERNAME ,
+		    		FULL_NAME ,
+		    		DECIMAL_FORMAT ,
+		    		DATFM ,
+		    		INVVALUE_CAL ,
+		    -- 		(case when :lv_delimiter =' ' then 
+			   -- 								case when INVVALUE_USD is null then replace(replace(replace('0.00',',','x'),'.',','),'x','.')
+			   -- 								when INVVALUE_USD=00.00 then  replace(replace(replace(TO_NVARCHAR(INVVALUE_USD, '0.00'),',','x'),'.',','),'x','.')
+			   -- 								else replace(replace(replace(TO_NVARCHAR(INVVALUE_USD, '0,0.00'),',','x'),'.',','),'x','.') 
+			   -- 								end 
+			   --           	  when :lv_delimiter ='X' then 
+			   --           							case when  INVVALUE_USD is null then '0.00'
+			   --           							when  INVVALUE_USD=00.00 then TO_NVARCHAR(INVVALUE_USD, '0.00')
+			   --           							else TO_NVARCHAR(INVVALUE_USD, '0,0.00')
+			   --           							end 
+			   --           	  when :lv_delimiter ='Y' then 
+			   --           								case when INVVALUE_USD is null then  replace(replace(replace('0.00', ',' ,'x'), '.', ','), 'x', ' ')
+			   --           								when INVVALUE_USD=00.00 then  replace(replace(replace(TO_NVARCHAR(INVVALUE_USD, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  else replace(replace(replace(TO_NVARCHAR(INVVALUE_USD, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  end
+						-- end) as
+			       INVVALUE_USD ,
+		    -- 		(case when :lv_delimiter =' ' then 
+			   -- 								case when GRVALUE_USD is null then  replace(replace(replace('0.00',',','x'),'.',','),'x','.')
+			   -- 									 when GRVALUE_USD=00.00 then  replace(replace(replace(TO_NVARCHAR(GRVALUE_USD, '0.00'),',','x'),'.',','),'x','.')
+			   -- 								else replace(replace(replace(TO_NVARCHAR(GRVALUE_USD, '0,0.00'),',','x'),'.',','),'x','.') 
+			   -- 								end 
+			   --           	  when :lv_delimiter ='X' then 
+			   --           							case when  GRVALUE_USD is null then '0.00'
+			   --           								 when  GRVALUE_USD=00.00 then TO_NVARCHAR(GRVALUE_USD, '0.00')
+			   --           							else TO_NVARCHAR(GRVALUE_USD, '0,0.00')
+			   --           							end 
+			   --           	  when :lv_delimiter ='Y' then 
+			   --           								case when GRVALUE_USD is null then  replace(replace(replace('0.00', ',' ,'x'), '.', ','), 'x', ' ')
+			   --           									when GRVALUE_USD=00.00 then  replace(replace(replace(TO_NVARCHAR(GRVALUE_USD, '0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  else replace(replace(replace(TO_NVARCHAR(GRVALUE_USD, '0,0.00'), ',' ,'x'), '.', ','), 'x', ' ')
+			   --           							  end
+						-- end) as
+			       GRVALUE_USD,
+			       ' ' as POCLOSURE_FLAG_LOCAL,
+			       ZACTIVITYNBR,
+			       DISTPERCENTAGE
+		    		FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getThresholdPO"
+						(placeholder."$$IP_PSTYPE$$"=>:IP_PSTYPE, 
+						placeholder."$$IP_EMAIL$$"=>:IP_EMAIL, 
+						placeholder."$$IP_POOWNER$$"=>:IP_POOWNER);
+		return :lt_final;			
+END;

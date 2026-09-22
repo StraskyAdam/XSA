@@ -1,0 +1,34 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::insertCountryConfig"(ip_countrycode varchar(3),
+	                                                                        ip_countryName varchar(50),
+																			ip_companyCode  varchar(4) ,                                               
+																			OUT EX_STATUS VARCHAR(50),
+	                                                                        OUT EX_cODE INTEGER )
+
+LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+--   READS SQL DATA 
+AS
+BEGIN
+
+declare lv_count integer;
+
+select count(*) into lv_count from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY" 
+   where country_code = :ip_countrycode and 
+		country_name = :ip_countryName
+		and 	bukrs = :ip_companyCode;
+
+if lv_count = 0 then 
+	insert into "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::CONFIG.COUNTRY"
+	values ( :ip_countrycode,:ip_countryName, :ip_companyCode );
+	
+	EX_STATUS :='Record inserted successfully !';
+	EX_CODE := 1;
+else
+    EX_STATUS :='Record already exists !';
+	EX_CODE := 1;
+end if;
+
+
+
+END

@@ -1,0 +1,107 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPOGRValue"(IP_PSTYPE varchar(1), 
+																		IP_EMAIL varchar(255) default '*' ,
+																		IP_POOWNER varchar(1))
+      RETURNS  table( ebeln varchar(10),
+    				  ebelp varchar(5),
+    				  grvalue DECIMAL(13,2),
+      	    		  grvalue_cocdecurr DECIMAL(13,2), 
+      	    		  grvalue_usd decimal(13,2)
+    			 )
+	LANGUAGE SQLSCRIPT
+	--SQL SECURITY INVOKER
+	AS
+BEGIN
+
+-- Get the open POs - Material and Service
+-- lt_open_po = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQuery"('0') order by ebeln asc;
+	
+ lt_output =  select ekbe.ebeln as ebeln, 
+	   ekbe.ebelp as ebelp, 
+	    --Based on the Debit / Credit Indicator 
+	   sum( case ekko.waers
+				when 'JPY' then 
+					case shkzg
+					 when 'S' then ( ekbe.menge * ekpo.netpr*100 )/ ekpo.peinh
+					 when 'H' then ( ekbe.menge * ekpo.netpr*100 * -1 )/ ekpo.peinh
+					 end  
+				when 'VND' then 
+					case shkzg
+					 when 'S' then ( ekbe.menge * ekpo.netpr*100 )/ ekpo.peinh
+					 when 'H' then ( ekbe.menge * ekpo.netpr*100 * -1 )/ ekpo.peinh
+					 end   
+				else
+					case shkzg
+					 when 'S' then ( ekbe.menge * ekpo.netpr )/ekpo.peinh
+					 when 'H' then ( ekbe.menge * ekpo.netpr * -1 )/ekpo.peinh
+					 end 
+			end ) as grvalue,
+		--Based on the Debit / Credit Indicator 
+		sum( case ekko.waers
+				when 'JPY' then 
+					case shkzg
+					 when 'S' then ( ekbe.menge * ekpo.netpr*100 )/ekpo.peinh
+					 when 'H' then ( ekbe.menge * ekpo.netpr*100 * -1 )/ekpo.peinh
+					 end  
+				when 'VND' then 
+					case shkzg
+					 when 'S' then ( ekbe.menge * ekpo.netpr*100 )/ekpo.peinh
+					 when 'H' then ( ekbe.menge * ekpo.netpr*100 * -1 )/ekpo.peinh
+					 end 
+				else
+					case shkzg
+					 when 'S' then ( ekbe.menge * ekpo.netpr )/ekpo.peinh
+					 when 'H' then ( ekbe.menge * ekpo.netpr * -1 )/ekpo.peinh
+					 end 
+			end ) as grvalue_cocdecurr,
+		-- sum( case shkzg
+		--  when 'S' then ( ekbe.menge * ekpo.netpr )
+		--  when 'H' then ( ekbe.menge * ekpo.netpr * -1)
+		--  end ) as grvalue_cocdecurr,
+		--Based on the Debit / Credit Indicator 
+		sum( case ekko.waers
+				when 'JPY' then 
+					case shkzg
+					 when 'S' then round(((( ekbe.menge * ekpo.netpr *100 )/ekpo.peinh) * exchangeTab.exchange_rate),2)
+					 when 'H' then round(((( ekbe.menge * ekpo.netpr * -100 )/ekpo.peinh) * exchangeTab.exchange_rate ),2)
+					 end   
+				when 'VND' then 
+					case shkzg
+					 when 'S' then round(((( ekbe.menge * ekpo.netpr *100 )/ekpo.peinh) * exchangeTab.exchange_rate),2)
+					 when 'H' then round(((( ekbe.menge * ekpo.netpr * -100 )/ekpo.peinh) * exchangeTab.exchange_rate ),2)
+					 end   
+				else
+					case shkzg
+					 when 'S' then round(((( ekbe.menge * ekpo.netpr * 1 )/ekpo.peinh) * exchangeTab.exchange_rate ),2)
+					 when 'H' then round(((( ekbe.menge * ekpo.netpr * -1 )/ekpo.peinh) * exchangeTab.exchange_rate ),2)
+					 end 
+			end ) as grvalue_usd
+		
+		-- sum( case shkzg
+		--  when 'S' then  round((( ekbe.menge * ekpo.netpr ) * exchangeTab.exchange_rate),2)
+		--  when 'H' then  round((( ekbe.menge * ekpo.netpr * -1 ) * exchangeTab.exchange_rate ),2)
+		--  end ) as grvalue_usd
+		 
+		 
+     from (select ebeln, ebelp, menge, shkzg
+    					from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE" 
+     	    			where bewtp = 'E' -- GR
+     	    			and budat <= 
+    	(case when extract(day from current_date) <= 6 then last_day(add_months(current_date,-1))--current date is between 1 & 5 pick lastday of last month
+    		else last_day(current_date)--last day of current month is greater than posting date 
+    		end))
+     as ekbe
+     right outer join (select ebeln,ebelp from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('3','0',:IP_EMAIL,:IP_POOWNER)) as openpo
+     on ekbe.ebeln = openpo.ebeln and ekbe.ebelp = openpo.ebelp
+     inner join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKPO.EKPO" as ekpo
+      on ekpo.ebeln = openpo.ebeln and ekpo.ebelp = openpo.ebelp
+     left outer join (select ebeln, waers from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO"
+    					where bsart = 'ZARP') as ekko
+	 on ekpo.ebeln = ekko.ebeln
+     left join "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE" as exchangeTab
+	   on ekko.waers = exchangeTab.source_curr
+    
+     group by ekbe.ebeln, ekbe.ebelp;
+     
+  
+return :lt_output;
+END;

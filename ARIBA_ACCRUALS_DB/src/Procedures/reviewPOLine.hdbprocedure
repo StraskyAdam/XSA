@@ -1,0 +1,144 @@
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::reviewPOLine"(	IN PODETAILS "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Tabletypes::TT_reviewPOLinework",
+																		IN  IP_USER varchar(225),
+																		OUT EX_STATUS VARCHAR(100))
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   --READS SQL DATA 
+   AS
+BEGIN
+
+-- Get the PO Details from the Calculation Views  for the selected POs 	
+ LT_FIRST=SELECT 
+				"COMPANYCODE",
+				"POOWNER_EMAIL",
+				last_day(current_utctimestamp) AS "KEYDAY",
+				"PONUMBER",
+				"ITEMNO",
+				"PO_PREPARER"
+			FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPOReport"
+				(placeholder."$$IP_PSTYPE$$"=>'*', 
+				placeholder."$$IP_EMAIL$$"=>'*', 
+				placeholder."$$IP_POOWNER$$"=>'')
+				where  (PONUMBER,ITEMNO) IN (SELECT PONUMBER ,ITEMNO FROM :PODETAILS) 
+			GROUP BY 	"COMPANYCODE",
+				"POOWNER_EMAIL",
+				"PONUMBER",
+				"ITEMNO",
+				"PO_PREPARER";
+
+	
+	
+--  audit log to get existing record from audit ( Check if the PO# was notified before 24 Hrs )
+LT_AUDIT_24 = SELECT PONUMBER,LINEITEM FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_POLINE_AUDIT"
+			 WHERE (PONUMBER,LINEITEM) IN (SELECT PONUMBER ,ITEMNO FROM :PODETAILS)  and 
+			 --   PONUMBER IN (SELECT PONUMBER FROM :PODETAILS) AND 
+				-- LINEITEM IN (SELECT ITEMNO FROM :PODETAILS) AND
+				( CHANGEDON >=  add_days(current_utctimestamp, -1)
+				and CHANGEDON <=  current_utctimestamp );
+
+-- TO be notified
+LT_PO_TOBE_NOTIFIED = SELECT 
+						"COMPANYCODE",
+						"POOWNER_EMAIL",
+						last_day(current_utctimestamp) AS "KEYDAY",
+						"PONUMBER",
+						"ITEMNO",
+						"PO_PREPARER",
+						:IP_USER as "PO_NOTIFIER"
+					FROM :LT_FIRST
+						where  (PONUMBER,ITEMNO) NOT IN (SELECT PONUMBER ,LINEITEM FROM :LT_AUDIT_24) 
+					GROUP BY 	"COMPANYCODE",
+						"POOWNER_EMAIL",
+						"PONUMBER",
+						"ITEMNO",
+						"PO_PREPARER";
+
+-- NOT TO be notified
+LT_PO_NOTTOBE_NOTIFIED = SELECT 
+						"COMPANYCODE",
+						"POOWNER_EMAIL",
+						last_day(current_utctimestamp) AS "KEYDAY",
+						"PONUMBER",
+						"ITEMNO",
+						"PO_PREPARER",
+						:IP_USER as "PO_NOTIFIER"
+					FROM :LT_FIRST
+						where  (PONUMBER,ITEMNO)  IN (SELECT PONUMBER ,LINEITEM FROM :LT_AUDIT_24) 
+					GROUP BY 	"COMPANYCODE",
+						"POOWNER_EMAIL",
+						"PONUMBER",
+						"ITEMNO",
+						"PO_PREPARER";
+
+				
+IF RECORD_COUNT(:LT_PO_TOBE_NOTIFIED) > 0  THEN 
+	
+-- Get the Details of the PO from the Calcualtion View
+	lt_output = SELECT 
+				"COMPANYCODE",
+				"POOWNER_EMAIL",
+				last_day(current_utctimestamp) AS "KEYDAY",
+				"PONUMBER",
+				"ITEMNO",
+				"PO_PREPARER",
+				'X' as "NOTIFY" -- TO be Notified Flag
+			FROM :LT_PO_TOBE_NOTIFIED
+			GROUP BY 	"COMPANYCODE",
+				"POOWNER_EMAIL",
+				"PONUMBER",
+				"ITEMNO",
+				"PO_PREPARER";
+	
+-- Insert the records into the PO Audit line table 	
+			insert into "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_POLINE_AUDIT"("PONUMBER",
+																					"LINEITEM",
+																					"CHANGEDON",
+																					"CHANGEDBY",
+																					"FLAG",
+																					"POOWNER_EMAIL",
+																					"PO_PREPARER",
+																					"PO_NOTIFIEDBY"
+			)
+		SELECT PONUMBER,ITEMNO,CURRENT_UTCTIMESTAMP,'','X',POOWNER_EMAIL,PO_PREPARER, "PO_NOTIFIER" FROM :LT_PO_TOBE_NOTIFIED 
+				WHERE  	(POOWNER_EMAIL <> ' ' or PO_PREPARER <> ' ') ;
+		EX_STATUS:='successfull';
+END IF;
+IF RECORD_COUNT(:LT_PO_NOTTOBE_NOTIFIED) > 0  THEN 
+	lt_output2 = 	SELECT 
+				"COMPANYCODE",
+				"POOWNER_EMAIL",
+				last_day(current_utctimestamp) AS "KEYDAY",
+				"PONUMBER",
+				"ITEMNO",
+				"PO_PREPARER",
+				'' as "NOTIFY" -- TO be Notified Flag
+			FROM :LT_PO_NOTTOBE_NOTIFIED
+			GROUP BY 	"COMPANYCODE",
+				"POOWNER_EMAIL",
+				"PONUMBER",
+				"ITEMNO",
+				"PO_PREPARER";
+		EX_STATUS:='successfull';
+END IF;
+
+-- Combine the Notify and No Notify 
+select          "COMPANYCODE",
+				"POOWNER_EMAIL",
+				last_day(current_utctimestamp) AS "KEYDAY",
+				"PONUMBER",
+				"ITEMNO",
+				"PO_PREPARER",
+				"NOTIFY"
+			from :lt_output union all 
+select      	"COMPANYCODE",
+				"POOWNER_EMAIL",
+				last_day(current_utctimestamp) AS "KEYDAY",
+				"PONUMBER",
+				"ITEMNO",
+				"PO_PREPARER",
+				"NOTIFY"
+			from :lt_output2;
+	
+	
+END

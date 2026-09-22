@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getUserRoleConfig" applyPrivilegeType="NONE" dataCategory="DIMENSION" dimensionType="STANDARD" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="Get User Role Configuration"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_CONFIG_ROLES">
+  <attributes>
+    <attribute id="USER_ROLE" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="User Role"/>
+      <keyMapping columnObjectName="ZT_CONFIG_ROLES" columnName="USER_ROLE"/>
+    </attribute>
+    <attribute id="USER_EMAILID" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="User EmailID"/>
+      <keyMapping columnObjectName="ZT_CONFIG_ROLES" columnName="USER_EMAILID"/>
+    </attribute>
+    <attribute id="USER_ACCESS" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="User Access"/>
+      <keyMapping columnObjectName="ZT_CONFIG_ROLES" columnName="USER_ACCESS"/>
+    </attribute>
+    <attribute id="COMPANY_CODE" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Company Code"/>
+      <keyMapping columnObjectName="ZT_CONFIG_ROLES" columnName="COMPANY_CODE"/>
+    </attribute>
+  
+    <attribute id="MANAGEMENT_UNIT" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Management Unit"/>
+      <keyMapping columnObjectName="ZT_CONFIG_ROLES" columnName="MANAGEMENT_UNIT"/>
+    </attribute>
+    <attribute id="COST_CENTER" order="6" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="Cost center"/>
+      <keyMapping columnObjectName="ZT_CONFIG_ROLES" columnName="COST_CENTER"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures/>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

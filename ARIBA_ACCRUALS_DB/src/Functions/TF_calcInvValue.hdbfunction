@@ -1,0 +1,117 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_calcInvValue"( ip_poNumber nvarchar(10),
+iv_ebelp varchar(5)
+)
+       RETURNS  TABLE(INVOICE_AMT DECIMAL(13,2))
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+    /*****************************
+        Write your function logic
+    ****************************/
+    -- declare B varchar(3) array;
+    -- A = select top 10 waers from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE"
+    -- ;
+    -- B = ARRAY_AGG((select top 10 waers from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE").waers);
+    DECLARE lv_inv_amount DECIMAL(13,2);
+      DECLARE lv_sum_amount DECIMAL(13,2);
+    declare LV_CURR_EKKO  varchar(3);
+declare lv_waers varchar(3);
+declare lv_shkzg varchar(1);
+declare curr_flag varchar(1);
+declare i integer;
+declare k integer;
+declare j integer;
+
+declare lv_waers_wrbtr varchar(20);
+declare Lv_exchange_rate decimal (13,6);
+declare lt_amount table(INVOICE_AMT DECIMAL(13,2));
+
+
+select waers into LV_CURR_EKKO FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO"
+where ebeln = :ip_poNumber;
+
+lt_waers_ekbe = 
+select waers,wrbtr,shkzg from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE"
+where ebeln = :ip_poNumber and ebelp = :iv_ebelp;
+lv_inv_amount = '0';
+
+
+lt_distinct_waers = 
+select distinct waers from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKBE.EKBE"
+where ebeln = :ip_poNumber and ebelp = :iv_ebelp;
+
+if (record_count(:lt_distinct_waers) > 1) then 
+	curr_flag = 'X';
+else 
+	curr_flag = ' ';
+end if;
+-- for k in 1..record_count() do
+
+-- end for;
+if(curr_flag = 'X') then
+for i in 1..record_count(:lt_waers_ekbe) do
+lv_sum_amount = 0;
+lv_waers = :lt_waers_ekbe.waers[i];
+lv_waers_wrbtr = :lt_waers_ekbe.wrbtr[i];
+lv_shkzg = :lt_waers_ekbe.shkzg[i];
+
+select EXCHANGE_RATE into Lv_exchange_rate from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE"
+where SOURCE_CURR = :lv_waers;
+
+
+lv_sum_amount = "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_waers_wrbtr,:lv_waers, :lv_waers, :Lv_exchange_rate).ev_targetAmount;
+-- insert into "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_waers_wrbtr,:lv_waers, :LV_CURR_EKKO, :iv_exchange_rate).ev_targetAmount
+ lv_sum_amount = case :LV_CURR_EKKO
+				when 'JPY' then 
+					case lv_shkzg
+					 when 'S' then ( lv_sum_amount*100 )
+					 when 'H' then ( lv_sum_amount*100 * -1 )
+					 end   
+				else
+					case lv_shkzg
+					 when 'S' then ( lv_sum_amount * 1 )
+					 when 'H' then ( lv_sum_amount * -1 )
+					 end 
+			end;
+			
+			
+	lv_inv_amount = lv_sum_amount + lv_inv_amount;
+end for;
+
+else 
+for j in 1..record_count(:lt_waers_ekbe) do
+
+lv_sum_amount = 0;
+
+lv_waers = :lt_waers_ekbe.waers[j];
+lv_waers_wrbtr = :lt_waers_ekbe.wrbtr[j];
+lv_shkzg = :lt_waers_ekbe.shkzg[j];
+
+select EXCHANGE_RATE into Lv_exchange_rate from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE"
+where SOURCE_CURR = :lv_waers;
+
+
+lv_sum_amount = "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_waers_wrbtr,:lv_waers, :lv_waers, :Lv_exchange_rate).ev_targetAmount;
+-- insert into "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(:lv_waers_wrbtr,:lv_waers, :LV_CURR_EKKO, :iv_exchange_rate).ev_targetAmount
+ lv_sum_amount = case :LV_CURR_EKKO
+				when 'JPY' then 
+					case lv_shkzg
+					 when 'S' then ( lv_sum_amount*100 )
+					 when 'H' then ( lv_sum_amount*100 * -1 )
+					 end   
+				else
+					case lv_shkzg
+					 when 'S' then ( lv_sum_amount * 1 )
+					 when 'H' then ( lv_sum_amount * -1 )
+					 end 
+			end;
+			
+			
+	lv_inv_amount = lv_sum_amount + lv_inv_amount;
+end for;
+end if;
+
+    lt_amount.INVOICE_AMT[1] = :lv_inv_amount;
+    RETURN
+    SELECT INVOICE_AMT AS INVOICE_AMT from :lt_amount;
+END;

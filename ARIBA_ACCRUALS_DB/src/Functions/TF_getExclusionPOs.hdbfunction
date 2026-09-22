@@ -1,0 +1,435 @@
+FUNCTION "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getExclusionPOs"( IP_EMAIL varchar(255),IP_POOWNER varchar(1) )
+        RETURNS table ( poowner_email varchar(255), 
+    				companyCode nvarchar(4),
+       			   purchasingUnit nvarchar(25),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(5000),
+       			   costcenter varchar(5000),
+       			   costcenterDesc varchar(40),
+       			   manageUnit varchar(5000),
+       			   PONUMBER nvarchar(10),
+       			  -- docNumber varchar(10),
+	              itemno nvarchar(5),
+	              poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,2),
+       			   pocurrency varchar(3),
+       			   invoice_currency varchar(3),
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   totWrkCompAmt decimal(13,2),
+       			   totWrkCompAmt_cocdecurr decimal(13,2),
+       			   totWrkCompPer decimal(13,2),
+              	   internalOrder varchar(5000),
+              	   assetId varchar(5000),
+              	   profitCenter varchar(5000),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(1),
+              	    markasreviewed varchar(1),
+              	   povalue_coco decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	   changeddate date,
+				   changedtime time,
+				 reviwed_by varchar(225),
+				 ruletype varchar(5000),
+				 RULETYPETEXT varchar(5000),
+				 po_preparer varchar(241),
+				 changed_on timestamp,
+				 pstype_text varchar(10),
+				 --mvp2
+				 povalue_usd decimal(13,2),
+				 exchangerate_dec decimal(9,6),
+			       exchangerate varchar(5000),
+				  totWrkCompAmt_usd decimal(13,2),
+				   po_closure varchar(5),
+				    documentdate varchar(8),
+				    poclosure_flag integer,
+				     checkFlag varchar(10),
+				     ZACTIVITYNBR nvarchar(200),
+				     distPercentage nvarchar(5000)
+				 )
+       LANGUAGE SQLSCRIPT 
+       SQL SECURITY INVOKER AS 
+BEGIN 
+   declare lt_output table (poowner_email varchar(255), 
+    				companyCode nvarchar(4),
+       			   purchasingUnit nvarchar(25),
+       			   region varchar(3),
+       			   cocdecurr varchar(5),
+       			   glaccount varchar(10),
+       			   costcenter varchar(10),
+       			   costcenterDesc varchar(40),
+       			   manageUnit varchar(35),
+       			   PONUMBER nvarchar(10),
+       			  -- docNumber varchar(10),
+	              itemno nvarchar(5),
+	              poCreatedAt date,
+				   supplierID nvarchar(10),
+				   suppliername varchar(500),
+       			   polinedesc varchar(5000),
+       			   pstype varchar(1),
+       			   povalue decimal(13,3),
+       			   pocurrency varchar(3),
+       			   invoice_currency varchar(3),
+       			   wrkStrtdate date,
+       			   wrkEnddate date,
+       			   totWrkCompAmt decimal(13,2),
+       			   totWrkCompAmt_cocdecurr decimal(13,2),
+       			   totWrkCompPer decimal(13,2),
+              	   internalOrder varchar(12),
+              	   assetId varchar(5000),
+              	   profitCenter varchar(10),
+              	   epnumber varchar(12),
+              	   status varchar(20),
+              	   lastMonthwrkcomp decimal(13,2),
+              	   straightlinemthd varchar(1),
+              	    markasreviewed varchar(1),
+              	   povalue_coco decimal(13,2),
+              	   accrualMethod varchar(50),
+              	   edgewtdamt decimal(13,2),
+              	   changeddate date,
+				   changedtime time,
+				   reviwed_by varchar(225),
+				   ruletype varchar(2),
+				   RULETYPETEXT varchar(50),
+   				   po_preparer varchar(241),
+				   changed_on timestamp,
+				   --mvp2
+				   povalue_usd decimal(13,2),
+				   po_closure varchar(5),
+				   documentdate varchar(8),
+				   poclosure_flag integer,
+				    checkFlag varchar(10),
+				    ZACTIVITYNBR nvarchar(200),
+				    distPercentage nvarchar(5000)
+   );
+   
+  declare lv_email varchar(255);
+declare lv_delimiter varchar(1);
+    
+    lt_decimalFormat=SELECT 
+			"DECIMAL_FORMAT",
+			"EMAILADDR"
+			FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getUserDetails"
+			where EMAILADDR=:IP_EMAIL;
+
+	 lv_delimiter=:lt_decimalFormat.DECIMAL_FORMAT[1];
+ 
+	--set delimiter to 'X' when it is null
+	 if :lv_delimiter is null then 
+		lv_delimiter='X';
+	end if;
+	
+if (:IP_EMAIL = '*') then 
+	lv_email = '%';
+else 
+	lv_email = :IP_EMAIL;
+end if;
+
+-- Get the open POs
+lt_openPO_mat = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1','0', :IP_EMAIL,:IP_POOWNER);
+lt_openPO_serv = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('1','9', :IP_EMAIL,:IP_POOWNER);
+
+lt_openPO_mat_below_threshold = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2','0', :IP_EMAIL,:IP_POOWNER);
+lt_openPO_serv_below_threshold  = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOQueryWithEmail"('2','9', :IP_EMAIL,:IP_POOWNER);
+
+lt_openpo = select * from :lt_openPO_mat 
+			union all select * from :lt_openPO_serv
+			union all select * from :lt_openPO_mat_below_threshold
+			union all select * from :lt_openPO_serv_below_threshold;
+
+
+-- lt_po_excluded = select * from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_checkPOExcl_Mod"(:lt_openpo);
+lt_po_excluded = select 
+PONUMBER,
+ITEMNO,
+STRING_AGG(RULETYPE,';') as RULETYPE,
+STRING_AGG(
+(case when RULETYPE='GL' then 'Cost Element (GL/BL)'
+					    when ruletype='CC' then 'Cost Center'
+					    when ruletype='PC' then 'Profit Centre'
+					    when ruletype='PO' then 'Purchase Order'
+					    when ruletype='VD' then 'Vendor'
+					    when ruletype='IV' then 'Internal Order'
+					end), ';' ) as ruletypetext,
+PSTYPE
+from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCLUSIONPO"
+GROUP BY
+PONUMBER,
+ITEMNO,
+PSTYPE
+;
+-- --Get all the PO's excluding exclusion PO's	 
+lt_PODetails= select * from :lt_openpo
+			where (ebeln,ebelp)   in (SELECT PONUMBER, ITEMNO FROM :lt_po_excluded);
+
+
+-- Get the PO Details
+lt_exclPO_Detail = select * from  "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getPODetail"(:lt_PODetails) order by poCreatedAt asc;
+					
+lt_finalPODetails = select 
+					PO.poowner_email , 
+    				PO.companyCode ,
+       			   PO.purchasingUnit ,
+       			   PO.region ,
+       			   PO.cocdecurr ,
+       			   PO.glaccount ,
+       			   PO.costcenter,
+       			   PO.costcenterDesc,
+       			   PO.manageUnit ,
+       			   PO.PONUMBER ,
+	              PO.itemno,
+	              PO.poCreatedAt ,
+				   PO.supplierID,
+				   PO.suppliername ,
+       			   PO.polinedesc ,
+       			   PO.pstype ,
+       			   PO.povalue ,
+       			   PO.pocurrency ,
+       			   PO.invoice_currency,
+       			   PO.wrkStrtdate ,
+       			   PO.wrkEnddate ,
+       			   PO.totWrkCompAmt ,
+       			   PO.totWrkCompAmt_cocdecurr ,
+       			   PO.totWrkCompPer ,
+              	   PO.internalOrder ,
+              	   --case when (PO.assetId = '' or PO.assetId = ' ') then null
+              	   --else PO.assetId end as 
+              	   PO.assetId as assetId ,
+              	   PO.profitCenter ,
+              	   PO.epnumber ,
+              	   PO.status,
+              	   PO.lastMonthwrkcomp ,
+              	   PO.straightlinemthd ,
+              	   PO.markasreviewed ,
+              	   PO.povalue_coco ,
+              	   --PO.accrualMethod ,
+              	   (case when PO.accrualMethod ='WTD' then 'Work To Date'
+              	   when PO.accrualMethod='STL' then 'Straight Line'
+              	   else PO.accrualMethod end) as accrualMethod,
+              	   PO.edgewtdamt ,
+              	   PO.changeddate ,
+				   PO.changedtime ,
+				   PO.reviwed_by ,
+				   excl.ruletype,
+				   excl.ruletypetext,
+			  	 po.po_preparer,
+				 PO.changed_on,
+				 --mvp2
+				 PO.povalue_usd,
+				 PO.exchangerate,
+				 PO.PO_CLOSURE,
+				 ZACTIVITYNBR,
+				 PO.documentdate,
+				 PO.distPercentage
+				 from :lt_exclPO_Detail as PO
+				 inner join :lt_po_excluded as excl
+				 on PO.PONUMBER=excl.PONUMBER and 
+				 PO.itemno=excl.itemno;
+				 
+-- to perform  string aggregation
+lt_aggrfinalPODetails = select 
+					PO.poowner_email , 
+    				PO.companyCode ,
+       			   PO.purchasingUnit ,
+       			   PO.region ,
+       			   PO.cocdecurr ,
+       			   STRING_AGG(PO.glaccount,';') as glaccount,
+       			   STRING_AGG(PO.costcenter,';') as costcenter,
+       			   null as costcenterDesc,
+       			   STRING_AGG(PO.manageUnit,';') as manageUnit,
+       			   PO.PONUMBER ,
+	               PO.itemno,
+	               PO.poCreatedAt ,
+				   PO.supplierID,
+				   PO.suppliername ,
+       			   PO.polinedesc ,
+       			   PO.pstype ,
+       			   PO.povalue ,
+       			   PO.pocurrency ,
+       			   PO.invoice_currency,
+       			   PO.wrkStrtdate ,
+       			   PO.wrkEnddate ,
+       			   PO.totWrkCompAmt ,
+       			   PO.totWrkCompAmt_cocdecurr ,
+       			   PO.totWrkCompPer ,
+       			   STRING_AGG(PO.internalOrder,';') as internalOrder,
+              	   case when (STRING_AGG(case when (assetId = '' or  assetId = ' ') then null else assetId end,';')) is null then '' 
+					else STRING_AGG(case when (assetId = '' or  assetId = ' ') then null else assetId end,';') end as "ASSETID" ,
+              	   STRING_AGG(PO.profitCenter,';') as profitCenter,
+              	   PO.epnumber ,
+              	   PO.status,
+              	   PO.lastMonthwrkcomp ,
+              	   PO.straightlinemthd ,
+              	   PO.markasreviewed ,
+              	   PO.povalue_coco ,
+              	   PO.accrualMethod ,
+              	   PO.edgewtdamt ,
+              	   PO.changeddate ,
+				   PO.changedtime ,
+				   PO.reviwed_by ,
+				   PO.ruletype,
+				   PO.ruletypetext,
+				   po.po_preparer,
+				   PO.changed_on,
+				   (case when PO.PSTYPE='0' then 'Material'
+					when PO.PSTYPE='9' then 'Service'
+					end
+				)as pstype_text,
+					PO.povalue_usd,
+					PO.exchangerate,
+					(case when PO.po_closure is null then 'false'
+				else PO.po_closure
+				end ) as po_closure,
+				ZACTIVITYNBR,
+					 PO.documentdate,
+					 STRING_AGG(PO.distPercentage,';') as distPercentage
+				 from :lt_finalPODetails as PO
+				 group by 
+				 PO.poowner_email , 
+				 PO.companyCode ,
+   			     PO.purchasingUnit ,
+   			     PO.region ,
+   			     PO.cocdecurr ,
+   			     --PO.costcenterDesc,
+       			 PO.PONUMBER ,
+                 PO.itemno,
+                 PO.poCreatedAt ,
+			     PO.supplierID,
+			     PO.suppliername ,
+   			     PO.polinedesc ,
+   			     PO.pstype ,
+   			     PO.povalue ,
+   			     PO.pocurrency ,
+   			     PO.invoice_currency,
+   			     PO.wrkStrtdate ,
+   			   PO.wrkEnddate ,
+   			   PO.totWrkCompAmt ,
+   			   PO.totWrkCompAmt_cocdecurr ,
+   			   PO.totWrkCompPer ,
+          	   --PO.assetId ,
+          	   PO.epnumber ,
+          	   PO.status,
+          	   PO.lastMonthwrkcomp ,
+          	   PO.straightlinemthd ,
+          	   PO.markasreviewed ,
+          	   PO.povalue_coco ,
+          	   PO.accrualMethod ,
+          	   PO.edgewtdamt ,
+          	   PO.changeddate ,
+			   PO.changedtime ,
+			   PO.reviwed_by,
+			   po.po_preparer,
+		       PO.changed_on,
+		       PO.povalue_usd,
+		       PO.exchangerate,
+		       PO.po_closure,
+		       ZACTIVITYNBR,
+		       	 PO.documentdate,
+		       	 PO.ruletype,
+		       	 PO.ruletypetext;
+ --to eleminate ; in blank data fields
+ lt_finalOutput= select 
+					poowner_email , 
+    				companyCode ,
+       			   purchasingUnit ,
+       			   region ,
+       			   cocdecurr ,
+       			   (case when glaccount like ' ; %' then ' '
+       			   else glaccount
+       			   end )as  glaccount,
+       			   (case when costcenter like ' ; %' then ' '
+       			   else costcenter
+       			   end )as  costcenter,
+       			   costcenterDesc,
+       			  (case when manageUnit like ' ; %' then ' '
+       			   else manageUnit
+       			   end )as  manageUnit,
+       			   PONUMBER ,
+	               itemno,
+	              poCreatedAt ,
+				   supplierID,
+				   suppliername ,
+       			   polinedesc ,
+       			   pstype ,
+       			   povalue ,
+       			  pocurrency ,
+       			  invoice_currency,
+       			   wrkStrtdate ,
+       			   wrkEnddate ,
+       			   totWrkCompAmt ,
+       			   totWrkCompAmt_cocdecurr ,
+       			   totWrkCompPer ,
+       			   (case when internalOrder like ' ; %' then ' '
+       			   else internalOrder
+       			   end )as  internalOrder,
+              	   --case when assetId is null then '' else assetId end as 
+              	   assetId ,
+              	   (case when profitCenter like ' ; %' then ' '
+       			   else profitCenter
+       			   end )as profitCenter,
+              	  epnumber ,
+              	   status,
+              	  lastMonthwrkcomp ,
+              	   straightlinemthd ,
+              	   markasreviewed ,
+              	   povalue_coco ,
+              	   accrualMethod ,
+              	   edgewtdamt ,
+              	  changeddate ,
+				   changedtime ,
+				   reviwed_by ,
+				   (case when ruletype like ' ; %' then ' '
+       			   else ruletype
+       			   end )as ruletype,
+				  (case when ruletypetext like ' ; %' then ' '
+       			   else ruletypetext
+       			   end )as ruletypetext,
+				  po_preparer,
+				   changed_on,
+				   pstype_text,
+				   povalue_usd,
+				   exchangerate as exchangerate_dec ,
+			      ( case when :lv_delimiter IN (' ', '') then 
+			    								case when exchangerate=0.000000 then  replace(replace(replace(TO_NVARCHAR(exchangerate, '0.000000'),',','x'),'.',','),'x','.')
+			    								else replace(replace(replace(TO_NVARCHAR(exchangerate, '0.000000'),',','x'),'.',','),'x','.') 
+			    								end 
+			              	  when :lv_delimiter ='X' then 
+			              							case when  exchangerate=0.000000 then TO_NVARCHAR(exchangerate, '0.000000')
+			              							else TO_NVARCHAR(exchangerate, '0.000000')
+			              							end 
+			              	  when :lv_delimiter ='Y' then 
+			              								case when exchangerate=0.000000 then  replace(replace(replace(TO_NVARCHAR(exchangerate, '0.000000'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  else replace(replace(replace(TO_NVARCHAR(exchangerate, '0.000000'), ',' ,'x'), '.', ','), 'x', ' ')
+			              							  end
+						end) as
+						exchangerate ,
+				   case pocurrency
+					when 'JPY' then 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt/100,pocurrency, 'USD', exchangerate).ev_targetAmount
+					when 'VND' then 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt/100,pocurrency, 'USD', exchangerate).ev_targetAmount
+					else 
+						"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt,pocurrency, 'USD', exchangerate).ev_targetAmount
+				end   as totWrkCompAmt_usd,
+				   --"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_ConvertCurrency"(totWrkCompAmt,pocurrency, 'USD', exchangerate).ev_targetAmount as totWrkCompAmt_usd,
+				    po_closure,
+				   documentdate ,
+				    case when po_closure is null or po_closure='false' then 0
+				else 1
+				end as poclosure_flag,
+				'' as checkFlag,
+				ZACTIVITYNBR,
+				 (case when distPercentage like ' ; %' then ' '
+       			   else distPercentage
+       			   end )as  distPercentage
+				 from :lt_aggrfinalPODetails ;
+  RETURN :lt_finalOutput;
+END;

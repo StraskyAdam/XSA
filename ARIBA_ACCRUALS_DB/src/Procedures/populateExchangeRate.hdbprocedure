@@ -1,0 +1,45 @@
+-- This Procudure is scheduled yearly
+
+PROCEDURE "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Procedures::populateExchangeRate"( )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+  -- READS SQL DATA 
+  AS
+BEGIN
+
+declare lv_year varchar(4);
+declare lv_ddmm varchar(4);
+declare lv_ref_date varchar(8);
+
+-- Yearly Budget rates for 01. April 
+select YEAR(CURRENT_DATE) into lv_year from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";  
+SELECT CONCAT ('04', '01') INTO lv_ddmm FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";
+SELECT CONCAT (lv_year, lv_ddmm) INTO lv_ref_date FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::DUMMY";
+
+
+-- Get all the unique currency codes from the EKKO table 
+lt_waers = select distinct waers from "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::EKKO.EKKO";
+
+-- delete records from table to maintan latest entries
+DELETE FROM "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE";
+
+--  insert records into table 
+INSERT INTO "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.synonyms::ZT_EDGE_EXCHANGERATE"("SOURCE_CURR",
+																			"TARGET_CURR",
+																			"EXCHANGE_RATE",
+																			"REFERENCE_DATE",
+																			"LAST_REPLICATED_AT",
+																			"REV_EXCHANGE_RATE"
+	
+	) select waers as source_currency,
+	   'USD' as target_currency,
+	   "ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_getExchangeRate"(waers, 'USD', lv_ref_date).ev_exchangerate
+		as exchange_rate,
+		lv_ref_date,
+		CURRENT_UTCTIMESTAMP,
+		"ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::SF_getExchangeRate"('USD', waers, lv_ref_date).ev_exchangerate
+		as rev_exchange_rate
+		from :lt_waers;
+	
+END

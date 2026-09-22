@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" xmlns:Variable="http://www.sap.com/ndb/BiModelVariable.ecore" id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Models::CV_getOpenPOFinal" applyPrivilegeType="NONE" dataCategory="CUBE" schemaVersion="3.0" outputViewType="Projection" cacheInvalidationPeriod="NONE" enforceSqlExecution="false">
+<descriptions defaultDescription="CV_getOpenPOFinal"/>
+<localVariables>
+  <variable id="IP_PSTYPE" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="NVARCHAR" length="13" mandatory="true">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+  <variable id="IP_EMAIL" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="NVARCHAR" length="13" mandatory="false">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+  <variable id="IP_POOWNER" parameter="true">
+    <descriptions defaultDescription=""/>
+    <variableProperties datatype="NVARCHAR" length="13" mandatory="false">
+      <valueDomain type="empty"/>
+      <selection multiLine="false" type="SingleValue"/>
+    </variableProperties>
+  </variable>
+</localVariables>
+<variableMappings>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOFinal">
+    <targetVariable name="IP_PSTYPE" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOFinal"/>
+    <localVariable>IP_PSTYPE</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOFinal">
+    <targetVariable name="IP_EMAIL" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOFinal"/>
+    <localVariable>IP_EMAIL</localVariable>
+  </mapping>
+  <mapping xsi:type="Variable:VariableMapping" dataSource="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOFinal">
+    <targetVariable name="IP_POOWNER" resourceUri="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOFinal"/>
+    <localVariable>IP_POOWNER</localVariable>
+  </mapping>
+</variableMappings>
+<dataSources>
+  <DataSource id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOFinal" type="TABLE_FUNCTION">
+    <resourceUri>ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOFinal</resourceUri>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="ARIBA_ACCRUAL.ARIBA_ACCRUALS_DB.Functions::TF_getOpenPOFinal">
+  <attributes>
+    <attribute id="FULL_NAME" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="FULL_NAME"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="FULL_NAME"/>
+    </attribute>
+    <attribute id="REGION" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REGION"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="REGION"/>
+    </attribute>
+    <attribute id="PURCHASINGORGANIZATION" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PURCHASINGORGANIZATION"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="PURCHASINGORGANIZATION"/>
+    </attribute>
+    <attribute id="PSTYPE" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PSTYPE"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="PSTYPE"/>
+    </attribute>
+    <attribute id="PO_CLOSURE" order="6" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PO_CLOSURE"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="PO_CLOSURE"/>
+    </attribute>
+    <attribute id="STRAIGHTLINEMTHD" order="7" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="STRAIGHTLINEMTHD"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="STRAIGHTLINEMTHD"/>
+    </attribute>
+    <attribute id="DECIMAL_FORMAT" order="8" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DECIMAL_FORMAT"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="DECIMAL_FORMAT"/>
+    </attribute>
+    <attribute id="COCDECURR" order="9" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COCDECURR"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="COCDECURR"/>
+    </attribute>
+    <attribute id="MARKASREVIEWED" order="10" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="MARKASREVIEWED"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="MARKASREVIEWED"/>
+    </attribute>
+    <attribute id="DATFM" order="11" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DATFM"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="DATFM"/>
+    </attribute>
+    <attribute id="GLACCOUNT" order="12" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="GLACCOUNT"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="GLACCOUNT"/>
+    </attribute>
+    <attribute id="POCURRENCY" order="13" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POCURRENCY"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="POCURRENCY"/>
+    </attribute>
+    <attribute id="CHECKFLAG" order="14" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CHECKFLAG"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="CHECKFLAG"/>
+    </attribute>
+    <attribute id="COSTCENTER" order="15" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COSTCENTER"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="COSTCENTER"/>
+    </attribute>
+    <attribute id="PO_PREPARER" order="16" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PO_PREPARER"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="PO_PREPARER"/>
+    </attribute>
+    <attribute id="INVOICE_CURRENCY" order="17" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="INVOICE_CURRENCY"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="INVOICE_CURRENCY"/>
+    </attribute>
+    <attribute id="ACCRUALMETHOD" order="18" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ACCRUALMETHOD"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="ACCRUALMETHOD"/>
+    </attribute>
+    <attribute id="MANAGEUNIT" order="19" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="MANAGEUNIT"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="MANAGEUNIT"/>
+    </attribute>
+    <attribute id="WRKSTRTDATE" order="20" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WRKSTRTDATE"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="WRKSTRTDATE"/>
+    </attribute>
+    <attribute id="PONUMBER" order="22" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PONUMBER"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="PONUMBER"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPAMT_CHAR" order="23" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPAMT_CHAR"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="TOTWRKCOMPAMT_CHAR"/>
+    </attribute>
+    <attribute id="WRKENDDATE" order="24" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="WRKENDDATE"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="WRKENDDATE"/>
+    </attribute>
+    <attribute id="CHANGEDDATE" order="25" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CHANGEDDATE"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="CHANGEDDATE"/>
+    </attribute>
+    <attribute id="ITEMNO" order="27" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ITEMNO"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="ITEMNO"/>
+    </attribute>
+    <attribute id="ASSETID" order="28" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ASSETID"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="ASSETID"/>
+    </attribute>
+    <attribute id="POCREATEDAT" order="29" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POCREATEDAT"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="POCREATEDAT"/>
+    </attribute>
+    <attribute id="NOTIF_24_HR" order="30" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="NOTIF_24_HR"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="NOTIF_24_HR"/>
+    </attribute>
+    <attribute id="PROFITCENTER" order="31" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PROFITCENTER"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="PROFITCENTER"/>
+    </attribute>
+    <attribute id="POOWNER_EMAIL" order="32" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POOWNER_EMAIL"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="POOWNER_EMAIL"/>
+    </attribute>
+    <attribute id="REVIWED_BY" order="33" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REVIWED_BY"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="REVIWED_BY"/>
+    </attribute>
+    <attribute id="SUPPLIERID" order="34" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SUPPLIERID"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="SUPPLIERID"/>
+    </attribute>
+    <attribute id="PSTYPE_TEXT" order="35" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PSTYPE_TEXT"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="PSTYPE_TEXT"/>
+    </attribute>
+    <attribute id="EPNUMBER" order="36" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="EPNUMBER"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="EPNUMBER"/>
+    </attribute>
+    <attribute id="COMPANYCODE" order="37" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COMPANYCODE"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="COMPANYCODE"/>
+    </attribute>
+    <attribute id="BBP_ACC_NO" order="38" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="BBP_ACC_NO"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="BBP_ACC_NO"/>
+    </attribute>
+    <attribute id="SUPPLIERNAME" order="39" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SUPPLIERNAME"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="SUPPLIERNAME"/>
+    </attribute>
+    <attribute id="INTERNALORDER" order="40" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="INTERNALORDER"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="INTERNALORDER"/>
+    </attribute>
+    <attribute id="STATUS" order="41" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="STATUS"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="STATUS"/>
+    </attribute>
+    <attribute id="USERNAME" order="42" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="USERNAME"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="USERNAME"/>
+    </attribute>
+    <attribute id="PURCHASINGUNIT" order="43" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PURCHASINGUNIT"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="PURCHASINGUNIT"/>
+    </attribute>
+    <attribute id="DOCUMENTDATE" order="44" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DOCUMENTDATE"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="DOCUMENTDATE"/>
+    </attribute>
+    <attribute id="POLINEDESC" order="45" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POLINEDESC"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="POLINEDESC"/>
+    </attribute>
+    <attribute id="INVVALUE_USD" order="48" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="INVVALUE_USD"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="INVVALUE_USD"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPAMT_USD_CHAR" order="52" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPAMT_USD_CHAR"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="TOTWRKCOMPAMT_USD_CHAR"/>
+    </attribute>
+    <attribute id="AMOUNTACCRUED_CHAR" order="53" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="AMOUNTACCRUED_CHAR"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="AMOUNTACCRUED_CHAR"/>
+    </attribute>
+    <attribute id="AMOUNTACCRUED_USD_CHAR" order="54" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="AMOUNTACCRUED_USD_CHAR"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="AMOUNTACCRUED_USD_CHAR"/>
+    </attribute>
+    <attribute id="TOTWRKCOMPPER_CHAR" order="55" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TOTWRKCOMPPER_CHAR"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="TOTWRKCOMPPER_CHAR"/>
+    </attribute>
+    <attribute id="EXCHANGERATE" order="56" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="EXCHANGERATE"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="EXCHANGERATE"/>
+    </attribute> 
+    <attribute id="ZACTIVITYNBR" order="73" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ZACTIVITYNBR"/> 
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="ZACTIVITYNBR"/> 
+    </attribute>
+  
+    <attribute id="DISTPERCENTAGE" order="74" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DISTPERCENTAGE"/>
+      <keyMapping columnObjectName="TF_getOpenPOFinal" columnName="DISTPERCENTAGE"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures>
+    <measure id="TOTWRKCOMPAMT_USD" order="1" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="TOTWRKCOMPAMT_USD"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="TOTWRKCOMPAMT_USD"/>
+    </measure>
+    <measure id="AMOUNTACCRUED" order="21" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="AMOUNTACCRUED"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="AMOUNTACCRUED"/>
+    </measure>
+    <measure id="AMOUNTACCRUED_USD" order="26" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="AMOUNTACCRUED_USD"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="AMOUNTACCRUED_USD"/>
+    </measure>
+    <measure id="POVALUE" order="46" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="POVALUE"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="POVALUE"/>
+    </measure>
+    <measure id="GRVALUE" order="47" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="GRVALUE"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="GRVALUE"/>
+    </measure>
+    <measure id="GRVALUE_USD" order="49" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="GRVALUE_USD"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="GRVALUE_USD"/>
+    </measure>
+    <measure id="INVVALUE" order="50" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="INVVALUE"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="INVVALUE"/>
+    </measure>
+    <measure id="POVALUE_USD" order="51" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="POVALUE_USD"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="POVALUE_USD"/>
+    </measure>
+    <measure id="LASTMONTHWRKCOMP" order="57" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="LASTMONTHWRKCOMP"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="LASTMONTHWRKCOMP"/>
+    </measure>
+    <measure id="ORDERQUANTITY" order="58" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="ORDERQUANTITY"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="ORDERQUANTITY"/>
+    </measure>
+    <measure id="POCLOSURE_FLAG" order="59" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="POCLOSURE_FLAG"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="POCLOSURE_FLAG"/>
+    </measure>
+    <measure id="POVALUE_COCO" order="60" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="POVALUE_COCO"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="POVALUE_COCO"/>
+    </measure>
+    <measure id="INVVALUE_CAL" order="61" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="INVVALUE_CAL"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="INVVALUE_CAL"/>
+    </measure>
+    <measure id="CHANGED_ON" order="62" aggregationType="min" measureType="simple">
+      <descriptions defaultDescription="CHANGED_ON"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="CHANGED_ON"/>
+    </measure>
+    <measure id="EDGEWTDAMT" order="63" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="EDGEWTDAMT"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="EDGEWTDAMT"/>
+    </measure>
+    <measure id="AMOUNTACCRUED_COCDECURR" order="64" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="AMOUNTACCRUED_COCDECURR"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="AMOUNTACCRUED_COCDECURR"/>
+    </measure>
+    <measure id="LAST_NOTIF_ON" order="65" aggregationType="min" measureType="simple">
+      <descriptions defaultDescription="LAST_NOTIF_ON"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="LAST_NOTIF_ON"/>
+    </measure>
+    <measure id="TOTWRKCOMPAMT" order="66" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="TOTWRKCOMPAMT"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="TOTWRKCOMPAMT"/>
+    </measure>
+    <measure id="INVVALUE_COCDECURR" order="67" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="INVVALUE_COCDECURR"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="INVVALUE_COCDECURR"/>
+    </measure>
+    <measure id="CHANGEDTIME" order="68" aggregationType="min" measureType="simple">
+      <descriptions defaultDescription="CHANGEDTIME"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="CHANGEDTIME"/>
+    </measure>
+    <measure id="TOTWRKCOMPAMT_COCDECURR" order="69" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="TOTWRKCOMPAMT_COCDECURR"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="TOTWRKCOMPAMT_COCDECURR"/>
+    </measure>
+    <measure id="GRVALUE_COCDECURR" order="70" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="GRVALUE_COCDECURR"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="GRVALUE_COCDECURR"/>
+    </measure>
+    <measure id="TOTWRKCOMPPER" order="71" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="TOTWRKCOMPPER"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="TOTWRKCOMPPER"/>
+    </measure>
+    <measure id="EXCHANGERATE_DEC" order="72" aggregationType="sum" measureType="simple">
+      <descriptions defaultDescription="EXCHANGERATE_DEC"/>
+      <measureMapping columnObjectName="TF_getOpenPOFinal" columnName="EXCHANGERATE_DEC"/>
+    </measure>
+  </baseMeasures>
+  <calculatedMeasures/>
+  <restrictedMeasures/>
+  <localDimensions/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>
